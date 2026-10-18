@@ -78,6 +78,9 @@ test('baseline needs 7 earlier days, then compares the 7-day average with the no
   low.push({ id: 't', t: now, pos: 'lying', ln: 3.5, hr: 62, quality: 'good' });
   const b2 = A.baseline(low, 'lying', now);
   assert.equal(b2.status, 'low'); assert.ok(b2.todayZ < -2); assert.ok(b2.hrDelta > 5);
+  // spot checks never change the baseline
+  const spot = R.concat([{ id: 's', t: now - 3600e3, pos: 'lying', ln: 1.5, hr: 90, quality: 'good', type: 'spot' }]);
+  assert.equal(A.baseline(spot, 'lying', now).status, 'steady');
   // other positions don't count, and too few days isn't ready
   assert.equal(A.baseline(R, 'sitting', now).ready, false);
   assert.equal(A.baseline(R.slice(-4), 'lying', now).ready, false);

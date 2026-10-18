@@ -231,3 +231,16 @@ body:not(.tabbed) .tabs{display:none}
 #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px -8px rgba(0,0,0,.4)}
 @keyframes pulse{50%{opacity:.35}}
 @media (prefers-reduced-motion: reduce){.live-chip i,.dot.busy{animation:none!important}.ring-fg{transition:none}}
+
+/* home choices */
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:border-color .15s,transform .15s}
+.choice:hover{border-color:var(--accent)}
+.choice:active{transform:scale(.99)}
+.choice:disabled{opacity:.5;cursor:not-allowed}
+.ch-ic{width:44px;height:44px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.ch-ic svg{width:24px;height:24px}
+.ch-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ch-t b{font-size:16.5px;font-weight:600}
+.ch-t small{color:var(--muted);font-size:13.5px;line-height:1.35}
+.ch-badge{flex:none;font-size:12px;font-weight:600;color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:999px;padding:4px 10px}

@@ -23,14 +23,25 @@ where you can sit down straight away.
 - **Google Chrome on Android.** On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.
 - The app opened from its https address: https://stillpoint.anonacondacodelab.com
 
-No strap to hand? **Try a simulated strap** on the Today tab produces made-up heart beats so you can explore the app.
-Readings made with it are saved like real ones, so delete them afterwards (Trends → open the reading → Delete).
+No strap to hand? **Try a simulated strap** on the Home screen produces made-up heart beats so you can explore the app.
+At the end of a reading, tap **Discard** so made-up readings stay out of your history.
+
+## Choosing what to do
+The **Home** screen asks what you'd like to do:
+- **Morning reading**: the daily check-in that builds your baseline.
+- **Morning reading + standing test**: the same reading, then you stand up for 2 minutes (see below).
+- **Spot check**: a reading at any other time. It is saved and charted but never changes your baseline, because HRV
+  naturally runs lower later in the day.
+- **Breathe**: the breathing guide.
 
 ## The morning reading
 1. Moisten the electrodes, put the strap on and close other apps connected to it.
-2. On **Today**, tap **Connect H10** and choose your strap.
-3. Pick your **position** and **reading length**. Two minutes is plenty; use the same choices every day.
-4. Tap **Begin reading**. The first 15 seconds let you settle; then the reading runs. Stay still and breathe normally.
+2. On **Home**, tap **Connect H10** and choose your strap.
+3. Choose **Morning reading**, then your **position** and **reading length**. Two minutes is plenty; use the same
+   choices every day. The app remembers them.
+4. Tap **Begin**. The first 15 seconds let you settle; then the reading runs. Stay still and breathe normally.
+5. When it finishes, look over the result and tap **Save reading**, or **Discard** if something went wrong (you moved,
+   talked, or it wasn't your usual routine).
 
 **Get the most from it:** read at the same time each morning, soon after waking, after the bathroom and before coffee,
 food or exercise, in the same position. Consistency matters far more than the exact routine you choose.
@@ -57,7 +68,8 @@ each reading is compared with your own usual range:
 Only the first good reading of each day counts, and each position has its own baseline.
 
 ## The standing test
-Switch on **Then stand up** before you begin (from lying or sitting). After the reading, a chime asks you to **stand up
+Choose **Morning reading + standing test** (from lying or sitting). It uses your morning position and length, so the
+reading part joins your baseline as usual. After the reading, a chime asks you to **stand up
 calmly** and stay standing, still, for 2 minutes. You'll see:
 - **Peak after standing**: your highest heart rate in the first 30 seconds, and how far it rose.
 - **Standing, last minute**: where your heart rate settled, compared with lying or sitting.
@@ -85,8 +97,10 @@ At one particular pace, usually between 4.5 and 6.5 breaths a minute, the swing 
 results and your breathing minutes. Tap any item in the history to open it.
 
 ## Your data
-Everything is stored in this browser on this device. **Settings → Export history** saves a backup file; **Import history**
-on another phone brings your readings and sessions across. Clearing the browser's site data deletes them, so export
+Nothing is kept until you tap **Save**. Saved readings and sessions are stored in this browser on this device.
+- **Save to file** (open any saved reading) saves that one reading, with all its beat-to-beat intervals, as a file.
+- **Settings → Export history** saves everything as one backup file.
+- **Settings → Import history** brings a history file or a single reading file back in, for example on a new phone. Clearing the browser's site data deletes them, so export
 from time to time.
 
 ## Troubleshooting

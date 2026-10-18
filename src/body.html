@@ -29,11 +29,9 @@
     </div>
   </section>
 
-  <!-- TODAY: morning reading -->
+  <!-- HOME: choose what to do -->
   <section id="scrToday" class="screen tab-screen">
-    <div class="greet"><h1 id="greetH">Good morning</h1><p id="greetP" class="dev-meta"></p></div>
-
-    <div id="todayResult" class="card result-card" hidden></div>
+    <div class="greet"><h1 id="greetH">Hello</h1><p id="greetP" class="dev-meta">What would you like to do?</p></div>
 
     <div class="card" id="connCard">
       <div class="dev-row">
@@ -46,17 +44,32 @@
     </div>
     <div id="envNote" class="note" hidden></div>
 
+    <div class="choices" id="choices">
+      <button class="choice" data-go="morning"><span class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="14" r="4"/><path d="M12 4v2M5 7.5l1.4 1.4M19 7.5l-1.4 1.4M3 20h18"/></svg></span>
+        <span class="ch-t"><b>Morning reading</b><small id="chMorning">2 minutes on waking. Builds your baseline.</small></span><span class="ch-badge" id="chMorningBadge" hidden>Done today</span></button>
+      <button class="choice" data-go="standing"><span class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18h7M17 6v12M14 9l3-3 3 3"/></svg></span>
+        <span class="ch-t"><b>Morning reading + standing test</b><small>The morning reading, then stand up for 2 minutes.</small></span></button>
+      <button class="choice" data-go="spot"><span class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
+        <span class="ch-t"><b>Spot check</b><small>A reading at any time of day. Doesn’t change your baseline.</small></span></button>
+      <button class="choice" data-go="breathe"><span class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5" opacity=".5"/><circle cx="12" cy="12" r="4.5"/></svg></span>
+        <span class="ch-t"><b>Breathe</b><small>Slow, guided breathing from 3 to 7 breaths a minute.</small></span></button>
+    </div>
+
+    <div id="todayResult" class="card result-card" hidden></div>
+  </section>
+
+  <!-- READING SETUP -->
+  <section id="scrSetup" class="screen" hidden>
+    <div class="acts-row"><button id="btnSetupBack" class="btn">‹ Back</button></div>
+    <div class="greet"><h1 id="setupH">Morning reading</h1><p id="setupP" class="dev-meta"></p></div>
     <div class="card setup">
       <div class="field"><label>Position</label><div class="chips" id="posChips" role="radiogroup" aria-label="Position"></div></div>
       <div class="field"><label>Reading length</label><div class="chips" id="lenChips" role="radiogroup" aria-label="Reading length"></div></div>
-      <div class="auto">
-        <label class="switch"><input type="checkbox" id="orthoOn"><span class="track"><span class="knob"></span></span><span>Then stand up <small class="opt">standing test, +2 min</small></span></label>
-      </div>
       <p class="dev-meta" id="setupHint" style="margin:0"></p>
     </div>
-
-    <button id="btnBegin" class="btn-start" disabled>Begin reading</button>
-    <p class="hint">Same time, same position, before coffee. Breathe normally.</p>
+    <div id="setupConn" class="note" hidden><b>Connect your strap first.</b> <button class="linkbtn" id="btnSetupConnect">Connect H10</button> or <button class="linkbtn" id="btnSetupDemo">try a simulated strap</button>.</div>
+    <button id="btnBegin" class="btn-start" disabled>Begin</button>
+    <p class="hint" id="beginHint">Breathe normally and keep still.</p>
   </section>
 
   <!-- READING IN PROGRESS -->
@@ -81,7 +94,8 @@
   <!-- READING RESULT -->
   <section id="scrResult" class="screen" hidden>
     <div id="resultBody"></div>
-    <div class="acts-row" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultDelete" class="btn ghost">Delete this reading</button></div>
+    <div class="acts-row" id="resActsNew" style="justify-content:center"><button id="btnResSave" class="btn primary">Save reading</button><button id="btnResDiscard" class="btn ghost">Discard</button></div>
+    <div class="acts-row" id="resActsSaved" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultFile" class="btn">Save to file</button><button id="btnResultDelete" class="btn ghost">Delete</button></div>
   </section>
 
   <!-- BREATHE -->
@@ -134,7 +148,8 @@
   <!-- BREATHING DONE -->
   <section id="scrSessDone" class="screen" hidden>
     <div id="sessDoneBody"></div>
-    <div class="acts-row" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button></div>
+    <div class="acts-row" id="sessActsNew" style="justify-content:center"><button id="btnSessSave" class="btn primary">Save session</button><button id="btnSessDiscard" class="btn ghost">Discard</button></div>
+    <div class="acts-row" id="sessActsSaved" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button><button id="btnSessDelete" class="btn ghost">Delete</button></div>
   </section>
 
   <!-- TRENDS -->
@@ -176,7 +191,7 @@
 </main>
 
 <nav class="tabs" id="tabs" aria-label="Sections">
-  <button data-tab="scrToday" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="4"/><path d="M12 3v2M4.9 6l1.4 1.4M19.1 6l-1.4 1.4M3 20h18"/></svg>Today</button>
+  <button data-tab="scrToday" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>Home</button>
   <button data-tab="scrBreathe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" opacity=".5"/><circle cx="12" cy="12" r="4.5"/></svg>Breathe</button>
   <button data-tab="scrTrends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 7-8"/><path d="M3 21h18"/></svg>Trends</button>
 </nav>

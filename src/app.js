@@ -7,7 +7,7 @@ let FRAMED = false; try { FRAMED = window.top !== window.self; } catch (e) { FRA
 const SETTLE = 15, STAND = 120, LEAD = 5;
 const POS = { lying: 'Lying', sitting: 'Sitting', standing: 'Standing' };
 const LENS = [60, 120, 180, 300];
-const HIST_FORMAT = 'still-point-history';
+const HIST_FORMAT = 'still-point-history', READING_FORMAT = 'still-point-reading';
 
 const S = {
   device: null, hrc: null, connected: false, battery: null, demo: false, sim: null, demoT0: 0, demoTimer: null,
@@ -74,7 +74,8 @@ async function loadAll() {
   S.sessions = ((await idb('sessions', 'readonly', s => s.getAll())) || []).sort((a, b) => a.t - b.t);
 }
 async function persistStorage() { try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) {} }
-const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, ln: r.m.ln, hr: r.m.hr, quality: r.m.quality });
+const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, type: r.type || 'morning', ln: r.m.ln, hr: r.m.hr, quality: r.m.quality });
+const allReadings = () => S.pending && !S.readings.some(x => x.id === S.pending.id) ? S.readings.concat([S.pending]) : S.readings;
 
 /* compute everything for a reading from its beat intervals (also used for imports, so stored numbers always match the data) */
 function computeReading(r) {
@@ -112,7 +113,7 @@ function setDev(state, name, meta) {
   $('#btnDemo').hidden = state === 'on';
   const on = state === 'on';
   $('#strapPill').hidden = !on; $('#strapPillTxt').textContent = S.demo ? 'Simulated' : 'H10' + (S.battery != null ? ' · ' + S.battery + '%' : '');
-  $('#btnBegin').disabled = !on; updateBreatheAvail();
+  updateBreatheAvail(); if (document.body.dataset.screen === 'scrSetup') setupHint();
 }
 async function connectFlow() {
   if (!acked()) { show('scrAck'); return; }
@@ -167,7 +168,7 @@ function startDemo() {
     while (S.sim.t < target) out.push(S.sim.next(simCtx())[1]);
     if (out.length) beats(out, now, Math.round(60000 / out[out.length - 1]));
   }, 1000);
-  setDev('on', 'Simulated strap', 'Made-up heart beats for trying the app. Readings are saved like real ones; delete them afterwards.');
+  setDev('on', 'Simulated strap', 'Made-up heart beats for trying the app. Tap Discard at the end so they stay out of your history.');
 }
 function stopDemo() { clearInterval(S.demoTimer); S.demo = false; S.connected = false; S.sim = null; setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.'); }
 function simCtx() {
@@ -205,32 +206,58 @@ function seg(el, val, onPick) {
   }
 }
 
-/* ---------- TODAY ---------- */
+/* ---------- HOME and reading setup ---------- */
+const TYPES = {
+  morning: { title: 'Morning reading', sub: 'On waking, before coffee, in the same position each day. This builds your baseline.', type: 'morning', ortho: false },
+  standing: { title: 'Morning reading + standing test', sub: 'The morning reading, then a chime asks you to stand up calmly and stay standing for 2 minutes.', type: 'morning', ortho: true },
+  spot: { title: 'Spot check', sub: 'A reading at any time of day, for example after a busy afternoon or before bed. It is saved but doesn’t change your baseline.', type: 'spot', ortho: false }
+};
+const CFG_DEFAULT = { morning: { pos: 'lying', len: 120 }, standing: { pos: 'lying', len: 120 }, spot: { pos: 'sitting', len: 120 } };
+const cfgKey = k => k === 'standing' ? 'morning' : k; /* the standing test uses the morning settings so its reading joins the same baseline */
+const cfgOf = k => Object.assign({}, CFG_DEFAULT[cfgKey(k)], (getSettings().cfg || {})[cfgKey(k)]);
+function setCfg(k, p) { const c = Object.assign({}, getSettings().cfg); c[cfgKey(k)] = Object.assign(cfgOf(k), p); patchSettings({ cfg: c }); }
+const typeLabel = r => r.type === 'spot' ? 'Spot check' : r.o ? 'Morning + standing' : 'Morning reading';
+
 function greeting() { const h = new Date().getHours(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; }
-function setupHint() {
-  const s = getSettings(), stand = s.pos === 'standing';
-  $('#orthoOn').disabled = stand; $('#orthoOn').checked = s.ortho && !stand;
-  const total = SETTLE + s.len + (s.ortho && !stand ? STAND : 0);
-  $('#setupHint').textContent = (s.ortho && !stand ? `After the reading you’ll be asked to stand up and stay standing for 2 minutes. ` : stand ? 'The standing test starts from lying or sitting. ' : '') + `About ${Math.ceil(total / 60)} min in total, including ${SETTLE} s to settle.`;
-}
 function renderToday() {
-  const s = getSettings();
   $('#greetH').textContent = greeting();
-  buildChips($('#posChips'), Object.entries(POS), s.pos, v => { patchSettings({ pos: v }); setupHint(); renderToday(); });
-  buildChips($('#lenChips'), LENS.map(x => [x, x / 60 + ' min']), s.len, v => { patchSettings({ len: +v }); setupHint(); });
-  setupHint();
-  const today = [...S.readings].reverse().find(r => dayKey(r.t) === dayKey(Date.now()) && r.pos === s.pos);
-  const b = baseline(S.readings.map(forBaseline), s.pos);
-  $('#greetP').textContent = today ? 'Today’s reading is done.' : !b.ready ? (b.have ? `Building your ${POS[s.pos].toLowerCase()} baseline: ${b.have} of ${b.need} days.` : 'Take a short reading when you wake, before coffee.') : 'Ready for your morning reading.';
+  $('#greetP').textContent = 'What would you like to do?';
+  const todays = S.readings.filter(r => dayKey(r.t) === dayKey(Date.now()));
+  const doneMorning = todays.some(r => r.type !== 'spot');
+  $('#chMorningBadge').hidden = !doneMorning;
+  const pos = cfgOf('morning').pos, b = baseline(S.readings.map(forBaseline), pos);
+  $('#chMorning').textContent = b.ready ? `${cfgOf('morning').len / 60} minutes on waking. Compared with your usual range.` : b.have ? `${cfgOf('morning').len / 60} minutes on waking. Baseline: ${b.have} of ${b.need} days.` : `${cfgOf('morning').len / 60} minutes on waking. Builds your baseline.`;
   const card = $('#todayResult');
-  if (today) {
-    const bt = baseline(S.readings.map(forBaseline), today.pos, today.t), v = verdictOf(bt, today);
-    card.innerHTML = `<div class="res-head">${scoreRing(today.m.score, 72)}<div><h2>${esc(v.title)}</h2><p>${esc(when(today.t))} · ${POS[today.pos]} · ${f1(today.m.ln)} lnRMSSD · ${f0(today.m.hr)} bpm</p></div></div>
-      <div class="acts-row"><button class="btn" id="btnTodayView">View reading</button></div>`;
-    card.hidden = false; $('#btnTodayView').onclick = () => openResult(today.id);
+  if (todays.length) {
+    card.innerHTML = `<div class="dev-name">Today</div><ul class="past">${todays.slice().reverse().map(r => `<li><button class="li-btn" data-id="${esc(r.id)}"><span class="meta"><b>${typeLabel(r)}</b><span>${esc(when(r.t).split(' · ')[1])} · ${POS[r.pos]} · ${f0(r.m.hr)} bpm</span></span><span class="val">${r.m.score ?? '—'}<small>SCORE</small></span></button></li>`).join('')}</ul>`;
+    card.hidden = false;
+    for (const x of card.querySelectorAll('.li-btn')) x.onclick = () => { S.resultBack = 'scrToday'; openResult(x.dataset.id); };
   } else card.hidden = true;
 }
-$('#orthoOn').onchange = e => { patchSettings({ ortho: e.target.checked }); setupHint(); };
+for (const c of document.querySelectorAll('#choices .choice')) c.onclick = () => {
+  if (!acked()) return show('scrAck');
+  if (c.dataset.go === 'breathe') return show('scrBreathe');
+  openSetup(c.dataset.go);
+};
+function openSetup(kind) {
+  S.setup = kind; const T = TYPES[kind], c = cfgOf(kind);
+  $('#setupH').textContent = T.title; $('#setupP').textContent = T.sub;
+  const posDefs = Object.entries(POS).filter(([k]) => !(T.ortho && k === 'standing'));
+  if (T.ortho && c.pos === 'standing') c.pos = 'lying';
+  buildChips($('#posChips'), posDefs, c.pos, v => { setCfg(kind, { pos: v }); setupHint(); });
+  buildChips($('#lenChips'), LENS.map(x => [x, x / 60 + ' min']), c.len, v => { setCfg(kind, { len: +v }); setupHint(); });
+  setupHint(); show('scrSetup');
+}
+function setupHint() {
+  const kind = S.setup; if (!kind) return;
+  const T = TYPES[kind], c = cfgOf(kind), total = SETTLE + c.len + (T.ortho ? STAND : 0);
+  $('#setupHint').textContent = `About ${Math.ceil(total / 60)} min in total, including ${SETTLE} s to settle.` + (kind !== 'spot' ? ' Use the same position and length every morning so readings compare.' : '');
+  $('#setupConn').hidden = S.connected; $('#btnBegin').disabled = !S.connected;
+  $('#beginHint').textContent = T.ortho ? 'Have somewhere to sit down nearby. Stop if you feel faint.' : 'Breathe normally and keep still.';
+}
+$('#btnSetupBack').onclick = () => show('scrToday');
+$('#btnSetupConnect').onclick = connectFlow;
+$('#btnSetupDemo').onclick = startDemo;
 $('#btnConnect').onclick = connectFlow;
 $('#btnDemo').onclick = startDemo;
 
@@ -241,9 +268,9 @@ function scoreRing(score, size = 104) {
 
 /* reading in progress */
 $('#btnBegin').onclick = async () => {
-  if (!S.connected) return;
-  const s = getSettings(), ortho = s.ortho && s.pos !== 'standing';
-  S.act = { kind: 'reading', t0: performance.now(), wall: Date.now(), list: [], beatClock: null, simOff: S.demo ? S.sim.t : null, pos: s.pos, len: s.len, ortho, standAt: null, phase: '' };
+  if (!S.connected || !S.setup) return;
+  const T = TYPES[S.setup], c = cfgOf(S.setup), ortho = T.ortho && c.pos !== 'standing';
+  S.act = { kind: 'reading', t0: performance.now(), wall: Date.now(), list: [], beatClock: null, simOff: S.demo ? S.sim.t : null, type: T.type, pos: c.pos, len: c.len, ortho, standAt: null, phase: '' };
   ensureAudio(); keepAwake(); show('scrReading');
   $('#rdConn').textContent = S.demo ? 'Simulated' : 'Connected'; $('#rdConn').classList.remove('bad');
   clearInterval(S.timer); S.timer = setInterval(tickReading, 250); tickReading();
@@ -271,19 +298,27 @@ function tickReading() {
   const recent = a.list.slice(-40);
   if (recent.length >= 15) { const C = cleanRR(recent), bad = C.OK.filter(x => !x).length / C.OK.length; const q = $('#rdQual'); q.textContent = bad <= 0.05 ? 'Good' : bad <= 0.15 ? 'Fair' : 'Poor'; q.className = bad <= 0.05 ? 'q-good' : 'q-weak'; }
 }
-$('#btnCancelReading').onclick = () => { endActivity(); show('scrToday'); toast('Reading cancelled.'); };
+$('#btnCancelReading').onclick = () => { endActivity(); show('scrSetup'); toast('Reading cancelled.'); };
 function endActivity() { clearInterval(S.timer); cancelAnimationFrame(S.raf); S.act = null; letSleep(); $('#dim').hidden = true; }
 async function finishReading() {
   const a = S.act; endActivity(); chime(392, false); chime(523, false, .3);
-  const r = computeReading({ id: 'r' + a.wall, t: a.wall + SETTLE * 1000, pos: a.pos, len: a.len, settle: SETTLE, standAt: a.standAt, rr: a.list });
-  if (r.m.beats < 30 || !fin(r.m.ln)) { toast('Not enough clean beats were received. Check the strap is moist and snug, then try again.', 7000); show('scrToday'); return; }
-  try { await idb('readings', 'readwrite', s => s.put(r)); } catch (e) { toast('The reading could not be saved on this device.'); }
-  await loadAll(); S.resultBack = null; openResult(r.id);
+  const r = computeReading({ id: 'r' + a.wall, t: a.wall + SETTLE * 1000, type: a.type, pos: a.pos, len: a.len, settle: SETTLE, standAt: a.standAt, rr: a.list });
+  if (r.m.beats < 30 || !fin(r.m.ln)) { toast('Not enough clean beats were received. Check the strap is moist and snug, then try again.', 7000); show('scrSetup'); return; }
+  S.pending = r; S.resultBack = 'scrToday'; openResult(r.id);
 }
 
 /* ---------- reading result ---------- */
+function spotVerdict(r) {
+  const prev = S.readings.filter(x => x.type === 'spot' && x.pos === r.pos && x.id !== r.id && x.m.quality !== 'poor' && x.m.quality !== 'short' && fin(x.m.score)).slice(-30).map(x => x.m.score);
+  const mb = baseline(allReadings().map(forBaseline), r.pos, r.t);
+  const parts = ['Spot checks are saved and charted but don’t change your morning baseline, because HRV naturally runs lower later in the day, after food, coffee or activity.'];
+  if (prev.length >= 3) parts.push(`Your ${POS[r.pos].toLowerCase()} spot checks usually score about ${Math.round(median(prev))}.`);
+  if (mb.ready) parts.push(`For reference, your morning usual range is ${Math.round(mb.lo * 100 / 6.5)}–${Math.round(mb.hi * 100 / 6.5)}.`);
+  return { cls: 'build', title: 'Spot check', text: parts.join(' ') };
+}
 function verdictOf(b, r) {
   if (r.m.quality === 'poor' || r.m.quality === 'short') return { cls: 'build', title: r.m.quality === 'poor' ? 'Noisy reading' : 'Too short to judge', text: r.m.quality === 'poor' ? `${f0(r.m.artPct)} % of beats had to be left out, so this reading doesn’t count towards your baseline. Moisten the electrodes and keep still, then take another.` : 'Too few clean beats for a reliable value. It doesn’t count towards your baseline.' };
+  if (r.type === 'spot') return spotVerdict(r);
   if (!b.ready) return { cls: 'build', title: 'Building your baseline', text: `Day ${b.have} of ${b.need}. After ${b.need} mornings in the same position, each reading is compared with your own usual range. Until then, the number on its own says little: HRV differs a lot from person to person.` };
   const parts = [];
   if (b.status === 'low') parts.push('Your 7-day average is below your usual range. This often follows hard training, short or poor sleep, alcohol, illness, travel or stress. An easier day and an early night are sensible.');
@@ -306,7 +341,7 @@ function bandHtml(b, r) {
 }
 function orthoHtml(r) {
   const o = r.o; if (!o) return '';
-  const prev = S.readings.filter(x => x.o && x.t < r.t && x.pos === r.pos && fin(x.o.rise)).slice(-20).map(x => x.o.rise);
+  const prev = S.readings.filter(x => x.o && x.id !== r.id && x.t < r.t && x.pos === r.pos && fin(x.o.rise)).slice(-20).map(x => x.o.rise);
   const usual = prev.length >= 3 ? median(prev) : NaN;
   return `<div class="sub-card"><h3>Standing test</h3>
     <div class="kv"><span>${POS[r.pos]} heart rate</span><b>${f0(o.lyingHr)} bpm</b></div>
@@ -317,25 +352,42 @@ function orthoHtml(r) {
     <p class="fine">${fin(usual) ? `Your usual rise is ${Math.round(usual)} bpm. ` : ''}A bigger rise or slower settling than your usual can go with fatigue or dehydration.${o.settle >= 30 ? ' If you often feel dizzy or faint when you stand, talk to a doctor.' : ''}</p></div>`;
 }
 function resultHtml(r) {
-  const b = baseline(S.readings.map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
+  const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
   const q = { good: 'good signal', fair: 'fair signal', poor: 'noisy signal', short: 'too short' }[m.quality];
   return `<div class="card result-card">
-    <div class="res-head">${scoreRing(m.score)}<div><h2>HRV score</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${r.len / 60} min · ${q}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
+    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${r.len / 60} min · ${q}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
-    <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${bandHtml(b, r)}</div>
+    <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${orthoHtml(r)}
     <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps. For general wellness only; not a medical assessment.</p>
   </div>`;
 }
 function openResult(id) {
-  const r = S.readings.find(x => x.id === id); if (!r) return;
-  $('#resultBody').innerHTML = resultHtml(r); S.openId = id; show('scrResult');
+  const pend = S.pending && S.pending.id === id, r = pend ? S.pending : S.readings.find(x => x.id === id); if (!r) return;
+  $('#resultBody').innerHTML = resultHtml(r); S.openId = id;
+  $('#resActsNew').hidden = !pend; $('#resActsSaved').hidden = pend; show('scrResult');
 }
-$('#btnResultDone').onclick = () => show(S.resultBack || 'scrToday');
+const resBack = () => show(S.resultBack || 'scrToday');
+$('#btnResSave').onclick = async () => {
+  const r = S.pending; if (!r) return;
+  try { await idb('readings', 'readwrite', s => s.put(r)); } catch (e) { toast('The reading could not be saved on this device: ' + (e && e.message || e), 7000); return; }
+  S.pending = null; await loadAll(); toast('Saved to your history.'); openResult(r.id);
+};
+$('#btnResDiscard').onclick = function () {
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to discard'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Discard'; }, 3500); return; }
+  delete this.dataset.arm; this.textContent = 'Discard'; S.pending = null; toast('Reading discarded.'); resBack();
+};
+$('#btnResultDone').onclick = resBack;
+$('#btnResultFile').onclick = () => {
+  const r = S.readings.find(x => x.id === S.openId); if (!r) return;
+  const d = new Date(r.t), stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
+  downloadFile(`{{FILE_PREFIX}}-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: '{{APP_NAME}} {{VERSION}}', exported: new Date().toISOString(),
+    reading: { id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr }, summary: { score: r.m.score, lnRMSSD: r.m.ln, rmssd: r.m.rmssd, hr: r.m.hr, quality: r.m.quality, standing: r.o } }));
+};
 $('#btnResultDelete').onclick = async function () {
-  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to delete'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Delete this reading'; }, 3500); return; }
-  delete this.dataset.arm; this.textContent = 'Delete this reading';
-  await idb('readings', 'readwrite', s => s.delete(S.openId)); await loadAll(); toast('Reading deleted.'); show(S.resultBack || 'scrToday');
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to delete'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Delete'; }, 3500); return; }
+  delete this.dataset.arm; this.textContent = 'Delete';
+  await idb('readings', 'readwrite', s => s.delete(S.openId)); await loadAll(); toast('Reading deleted.'); resBack();
 };
 
 /* ---------- sound and touch cues (gentle) ---------- */
@@ -460,8 +512,7 @@ async function finishSession(complete) {
     const done = a.steps.filter(st => st.t1 <= el + 1).map(st => ({ pace: st.pace, t0: st.t0, t1: st.t1 }));
     const res = resonanceOf(C, done); sess.rows = res.rows.map(r => ({ pace: r.pace, amp: r.amp, cycles: r.cycles, hr: r.hr, rmssd: r.rmssd, artPct: r.artPct })); sess.best = done.length >= 3 ? res.best : null;
   }
-  if (el >= 60) { try { await idb('sessions', 'readwrite', s => s.put(sess)); } catch (e) {} await loadAll(); }
-  S.resultBack = null; openSession(sess, el < 60);
+  S.resultBack = null; S.pendingSess = el >= 60 ? sess : null; openSession(sess, el < 60, true);
 }
 function sessionHtml(x, unsaved) {
   const mins = Math.round(x.dur / 60);
@@ -479,11 +530,30 @@ function sessionHtml(x, unsaved) {
     ${m ? `<div class="kpis"><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div><div><b>${f0(m.amp)}<small>bpm</small></b><span>Swing per breath</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div></div>
     <p class="fine">Swing per breath is how far your heart rate rose and fell with each breath. Bigger swings at a calm pace mean breath and heartbeat are moving together. RMSSD rises during slow breathing, so it isn’t comparable with your morning reading.</p>` : '<p class="fine">Connect your strap next time to see how your heart rate followed your breathing.</p>'}</div>`;
 }
-function openSession(x, unsaved) {
+function openSession(x, unsaved, fresh) {
+  S.openSess = x;
   $('#sessDoneBody').innerHTML = sessionHtml(x, unsaved); show('scrSessDone');
-  const u = $('#btnUseRes'); if (u) u.onclick = () => { patchSettings({ resPace: x.best, pace: x.best }); toast(`Your pace is now ${paceTxt(x.best)} breaths a minute.`); show('scrBreathe'); };
+  $('#sessActsNew').hidden = !(fresh && !unsaved); $('#sessActsSaved').hidden = !!(fresh && !unsaved);
+  $('#btnSessDelete').hidden = !!fresh;
+  const u = $('#btnUseRes'); if (u) u.onclick = async () => { patchSettings({ resPace: x.best, pace: x.best }); if (S.pendingSess === x) await saveSession(); toast(`Your pace is now ${paceTxt(x.best)} breaths a minute.`); show('scrBreathe'); };
 }
-$('#btnSessDone').onclick = () => show(S.resultBack || 'scrBreathe');
+async function saveSession() {
+  const x = S.pendingSess; if (!x) return;
+  try { await idb('sessions', 'readwrite', s => s.put(x)); } catch (e) { toast('The session could not be saved on this device.'); return; }
+  S.pendingSess = null; await loadAll();
+}
+const sessBack = () => show(S.resultBack || 'scrBreathe');
+$('#btnSessSave').onclick = async () => { await saveSession(); toast('Saved to your history.'); sessBack(); };
+$('#btnSessDiscard').onclick = function () {
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to discard'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Discard'; }, 3500); return; }
+  delete this.dataset.arm; this.textContent = 'Discard'; S.pendingSess = null; toast('Session discarded.'); sessBack();
+};
+$('#btnSessDone').onclick = sessBack;
+$('#btnSessDelete').onclick = async function () {
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = 'Tap again to delete'; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Delete'; }, 3500); return; }
+  delete this.dataset.arm; this.textContent = 'Delete';
+  if (S.openSess) await idb('sessions', 'readwrite', s => s.delete(S.openSess.id)); await loadAll(); toast('Session deleted.'); sessBack();
+};
 
 /* ---------- TRENDS ---------- */
 function lineChart(days, opts) {
@@ -504,8 +574,8 @@ function lineChart(days, opts) {
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">${s}</svg>`;
 }
 function renderTrends() {
-  const s = getSettings(), have = Object.keys(POS).filter(p => S.readings.some(r => r.pos === p));
-  const pos = S.trendPos && have.includes(S.trendPos) ? S.trendPos : have.includes(s.pos) ? s.pos : have[0] || s.pos;
+  const s = getSettings(), have = Object.keys(POS).filter(p => S.readings.some(r => r.pos === p && r.type !== 'spot'));
+  const mp = cfgOf('morning').pos, pos = S.trendPos && have.includes(S.trendPos) ? S.trendPos : have.includes(mp) ? mp : have[0] || mp;
   S.trendPos = pos;
   const segEl = $('#trendPos'); segEl.innerHTML = (have.length ? have : [pos]).map(p => `<button type="button" role="radio" data-v="${p}">${POS[p]}</button>`).join('');
   seg(segEl, pos, v => { S.trendPos = v; renderTrends(); }); segEl.hidden = have.length < 2;
@@ -519,24 +589,27 @@ function renderTrends() {
       <div class="legend"><span><i style="background:var(--fg);border-radius:50%;width:8px"></i>morning reading</span><span><i style="background:var(--accent);height:3px"></i>7-day average</span><span><i style="background:color-mix(in srgb,var(--ok) 25%,transparent)"></i>usual range</span></div></div>`;
     html += `<div class="card"><div><div class="dev-name">Resting heart rate</div><div class="dev-meta">${b.ready && fin(b.hrMean) ? `Usually about ${Math.round(b.hrMean)} bpm` : 'From the same readings'}</div></div>
       ${lineChart(tr.map(d => ({ t: d.t, v: d.hr })), { at: now, span: 60, keys: ['v'], line: 'v', lineCls: 'hrl', dots: 'v', label: 'Resting heart rate' })}</div>`;
-    const ot = S.readings.filter(r => r.pos === pos && r.o && fin(r.o.rise) && r.t >= dayStart(now) - 59 * DAY).map(r => ({ t: r.t, v: r.o.rise, w: r.o.settle }));
+    const ot = S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.o && fin(r.o.rise) && r.t >= dayStart(now) - 59 * DAY).map(r => ({ t: r.t, v: r.o.rise, w: r.o.settle }));
     if (ot.length) html += `<div class="card"><div><div class="dev-name">Standing test</div><div class="dev-meta">Heart-rate rise on standing (line) and after 2 minutes (dots), bpm</div></div>
       ${lineChart(ot, { at: now, span: 60, keys: ['v', 'w'], line: 'v', lineCls: 'avg', dots: 'w', label: 'Heart-rate rise on standing' })}</div>`;
   }
+  const sp = S.readings.filter(r => r.type === 'spot' && r.t >= dayStart(now) - 59 * DAY && fin(r.m.score));
+  if (sp.length) html += `<div class="card"><div><div class="dev-name">Spot checks</div><div class="dev-meta">${sp.length} in the last 60 days · not part of your baseline</div></div>
+      ${lineChart(sp.map(r => ({ t: r.t, v: r.m.score })), { at: now, span: 60, keys: ['v'], dots: 'v', label: 'Spot-check scores' })}</div>`;
   const since = now - 30 * DAY, br = S.sessions.filter(x => x.t >= since && x.kind === 'breath'), mins = Math.round(br.reduce((t, x) => t + x.dur, 0) / 60);
   if (S.sessions.length) html += `<div class="card"><div><div class="dev-name">Breathing, last 30 days</div><div class="dev-meta">${br.length} session${br.length === 1 ? '' : 's'} · ${mins} min${s.resPace ? ` · resonance pace ${paceTxt(s.resPace)}` : ''}</div></div></div>`;
   $('#trendBody').innerHTML = html;
   const items = [...S.readings.map(r => ({ r, t: r.t })), ...S.sessions.map(x => ({ x, t: x.t }))].sort((a, b) => b.t - a.t).slice(0, 80);
   const list = $('#histList');
   list.innerHTML = items.length ? items.map((it, i) => it.r
-    ? `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${POS[it.r.pos]} reading${it.r.o ? ' + standing' : ''}</b><span>${esc(when(it.t))}${it.r.m.quality === 'poor' ? ' · noisy' : ''}</span></span><span class="val">${it.r.m.score ?? '—'}<small>SCORE</small></span></button></li>`
+    ? `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${typeLabel(it.r)} · ${POS[it.r.pos].toLowerCase()}</b><span>${esc(when(it.t))}${it.r.m.quality === 'poor' ? ' · noisy' : ''}</span></span><span class="val">${it.r.m.score ?? '—'}<small>SCORE</small></span></button></li>`
     : `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${it.x.kind === 'resonance' ? 'Resonance test' : `Breathing · ${paceTxt(it.x.pace)}/min`}</b><span>${esc(when(it.t))} · ${Math.round(it.x.dur / 60)} min</span></span><span class="val">${it.x.kind === 'resonance' ? (it.x.best ? paceTxt(it.x.best) : '—') + '<small>PACE</small>' : it.x.m && fin(it.x.m.amp) ? Math.round(it.x.m.amp) + '<small>SWING</small>' : ''}</span></button></li>`).join('')
     : '<li class="empty">No readings yet.</li>';
   for (const b2 of list.querySelectorAll('.li-btn')) b2.onclick = () => { const it = items[+b2.dataset.i]; S.resultBack = 'scrTrends'; if (it.r) openResult(it.r.id); else openSession(it.x); };
 }
 
 /* ---------- settings, export / import ---------- */
-$('#btnSettings').onclick = () => { if (S.act) return; S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); show('scrSettings'); };
+$('#btnSettings').onclick = () => { if (S.act || S.pending || S.pendingSess) { if (!S.act) toast('Save or discard this first.'); return; } S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); show('scrSettings'); };
 $('#btnSettingsBack').onclick = () => show(S.settingsBack || 'scrToday');
 $('#btnHelp').onclick = () => { S.helpBack = 'scrSettings'; show('scrHelp'); };
 const helpBack = () => show(S.helpBack || 'scrToday'); $('#btnHelpBack').onclick = helpBack; $('#btnHelpBack2').onclick = helpBack;
@@ -544,7 +617,7 @@ const helpBtn2 = $('#btnHelp2'); if (helpBtn2) helpBtn2.onclick = () => { S.help
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
   const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: '{{APP_NAME}} {{VERSION}}', exported: new Date().toISOString(), settings: s,
-    readings: S.readings.map(r => ({ id: r.id, t: r.t, pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
+    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
   const d = new Date(); downloadFile(`{{FILE_PREFIX}}-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
 $('#btnImport').onclick = () => $('#histIn').click();
@@ -552,7 +625,7 @@ const num = v => fin(v) ? v : null, str = (v, n) => typeof v === 'string' ? v.re
 function cleanReadingIn(r) {
   if (!r || typeof r !== 'object' || !Array.isArray(r.rr) || !POS[r.pos] || !num(r.t) || !LENS.includes(r.len)) return null;
   const rr = r.rr.slice(0, 4000).filter(p => Array.isArray(p) && fin(p[0]) && fin(p[1]) && Math.abs(p[0]) < 1e4 && p[1] < 3000).map(p => [+p[0], +p[1]]);
-  return computeReading({ id: str(r.id, 40) || 'r' + r.t, t: r.t, pos: r.pos, len: r.len, settle: num(r.settle) ?? SETTLE, standAt: num(r.standAt), rr });
+  return computeReading({ id: str(r.id, 40) || 'r' + r.t, t: r.t, type: r.type === 'spot' ? 'spot' : 'morning', pos: r.pos, len: r.len, settle: num(r.settle) ?? SETTLE, standAt: num(r.standAt), rr });
 }
 function cleanSessionIn(x) {
   if (!x || typeof x !== 'object' || !num(x.t) || !['breath', 'resonance'].includes(x.kind)) return null;
@@ -565,7 +638,8 @@ $('#histIn').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try {
     if (f.size > 50e6) throw new Error('the file is too large');
-    const j = JSON.parse(await f.text()); if (!j || j.format !== HIST_FORMAT) throw new Error('this is not a {{APP_NAME}} history file');
+    const j = JSON.parse(await f.text()); if (!j || (j.format !== HIST_FORMAT && j.format !== READING_FORMAT)) throw new Error('this is not a {{APP_NAME}} history or reading file');
+    if (j.format === READING_FORMAT) j.readings = [j.reading];
     const R = (j.readings || []).map(cleanReadingIn).filter(Boolean), X = (j.sessions || []).map(cleanSessionIn).filter(Boolean);
     await idb('readings', 'readwrite', s => { for (const r of R) s.put(r); });
     await idb('sessions', 'readwrite', s => { for (const x of X) s.put(x); });
@@ -581,7 +655,7 @@ $('#btnClear').onclick = async function () {
 };
 
 /* ---------- tabs and start-up ---------- */
-for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { if (!S.act) { S.resultBack = null; show(b.dataset.tab); } };
+for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { if (!S.act && !S.pending && !S.pendingSess) { S.resultBack = null; show(b.dataset.tab); } };
 (async function init() {
   await loadAll();
   envCheck();

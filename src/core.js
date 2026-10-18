@@ -118,10 +118,12 @@ const RESONANCE_STEPS = [6.5, 6, 5.5, 5, 4.5];
    7-day rolling average (Plews et al. 2012; Kiviniemi et al. 2007). Needs 7 earlier days. */
 const dayKey = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 const dayStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+/* only morning readings build the baseline; spot checks (type 'spot') are kept out */
 function dailySeries(readings, pos) {
   const by = new Map();
   for (const r of [...readings].sort((a, b) => a.t - b.t)) {
     if (pos && r.pos !== pos) continue;
+    if (r.type && r.type !== 'morning') continue;
     if (!fin(r.ln) || r.quality === 'poor' || r.quality === 'short') continue;
     const k = dayKey(r.t); if (!by.has(k)) by.set(k, { day: k, t: r.t, ln: r.ln, hr: r.hr, id: r.id });
   }
