@@ -1,0 +1,185 @@
+<main id="app">
+  <header class="bar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="10" fill="var(--accent)"/><circle cx="16" cy="16" r="9.2" fill="none" stroke="var(--accent-fg)" stroke-width="1.6" opacity=".45"/><circle cx="16" cy="16" r="5" fill="var(--accent-fg)"/></svg>
+      <span>{{APP_NAME}}</span>
+    </div>
+    <div class="bar-r">
+      <span id="strapPill" class="pill" hidden><i></i><span id="strapPillTxt">H10</span></span>
+      <button id="btnSettings" class="icon-btn" aria-label="Settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.5 4.5l1.8 1.8M17.7 17.7l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.5 19.5l1.8-1.8M17.7 6.3l1.8-1.8"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- WELLNESS-USE ACKNOWLEDGEMENT (first run) -->
+  <section id="scrAck" class="screen" hidden>
+    <div class="intro"><h1>Before you start</h1><p>Please read this once.</p></div>
+    <div class="card ack">
+      <p class="ack-head">{{APP_NAME}} is a wellness tool for recovery tracking and relaxed breathing. <b>It is not a medical device.</b></p>
+      <ul>
+        <li>It is for <b>general wellness, training and relaxation only</b>.</li>
+        <li>Do <b>not</b> use it to diagnose, treat, rule out or monitor any illness or heart condition, or to make decisions about medicines or treatment.</li>
+        <li>Slow breathing can make some people light-headed. If that happens, stop and breathe normally. If you are pregnant or have a heart, lung or blood-pressure condition, check with your doctor before slow-breathing practice.</li>
+        <li>Do the standing test only where you can sit down straight away, and stop if you feel faint.</li>
+        <li><b>If you feel unwell, with chest pain or pressure, fainting, severe breathlessness, or a racing or very irregular heartbeat, call your local emergency number now.</b></li>
+      </ul>
+      <label class="ack-check"><input type="checkbox" id="ackBox"><span>I understand that {{APP_NAME}} is for general wellness only, is not a medical device, and that I will not use it to diagnose, treat or monitor any medical condition.</span></label>
+      <div class="acts-row"><button id="btnAck" class="btn primary" disabled>Continue</button><button id="btnAckManual" class="btn">Read the user manual</button></div>
+    </div>
+  </section>
+
+  <!-- TODAY: morning reading -->
+  <section id="scrToday" class="screen tab-screen">
+    <div class="greet"><h1 id="greetH">Good morning</h1><p id="greetP" class="dev-meta"></p></div>
+
+    <div id="todayResult" class="card result-card" hidden></div>
+
+    <div class="card" id="connCard">
+      <div class="dev-row">
+        <span id="devDot" class="dot"></span>
+        <div><div id="devName" class="dev-name">Polar H10 not connected</div>
+        <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
+      </div>
+      <div class="acts-row"><button id="btnConnect" class="btn primary">Connect H10</button><button id="btnDemo" class="btn ghost">Try a simulated strap</button></div>
+      <p class="dev-meta browser-req" style="margin:0"><b>On a phone, use Google Chrome on Android.</b> On a computer, use Chrome or Edge. iPhone, iPad, Safari and Firefox can’t connect to the strap.</p>
+    </div>
+    <div id="envNote" class="note" hidden></div>
+
+    <div class="card setup">
+      <div class="field"><label>Position</label><div class="chips" id="posChips" role="radiogroup" aria-label="Position"></div></div>
+      <div class="field"><label>Reading length</label><div class="chips" id="lenChips" role="radiogroup" aria-label="Reading length"></div></div>
+      <div class="auto">
+        <label class="switch"><input type="checkbox" id="orthoOn"><span class="track"><span class="knob"></span></span><span>Then stand up <small class="opt">standing test, +2 min</small></span></label>
+      </div>
+      <p class="dev-meta" id="setupHint" style="margin:0"></p>
+    </div>
+
+    <button id="btnBegin" class="btn-start" disabled>Begin reading</button>
+    <p class="hint">Same time, same position, before coffee. Breathe normally.</p>
+  </section>
+
+  <!-- READING IN PROGRESS -->
+  <section id="scrReading" class="screen" hidden>
+    <div class="rec-top"><span class="live-chip" id="rdChip"><i></i><span id="rdPhase">Settling</span></span><span id="rdConn" class="conn">Connected</span></div>
+    <div class="ring-wrap">
+      <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r="88" class="ring-bg"/>
+        <circle cx="100" cy="100" r="88" class="ring-fg" id="rdRing" pathLength="1000"/>
+      </svg>
+      <div class="ring-c"><div id="rdLeft" class="ring-num">0:15</div><div id="rdSub" class="ring-sub">settling</div></div>
+    </div>
+    <p id="rdMsg" class="rd-msg">Lie still and breathe normally.</p>
+    <div class="vitals v3">
+      <div><span id="rdHR">--</span><label>Heart rate</label></div>
+      <div><span id="rdBeats">0</span><label>Beats</label></div>
+      <div><span id="rdQual">—</span><label>Signal</label></div>
+    </div>
+    <button id="btnCancelReading" class="btn ghost" style="align-self:center">Cancel reading</button>
+  </section>
+
+  <!-- READING RESULT -->
+  <section id="scrResult" class="screen" hidden>
+    <div id="resultBody"></div>
+    <div class="acts-row" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultDelete" class="btn ghost">Delete this reading</button></div>
+  </section>
+
+  <!-- BREATHE -->
+  <section id="scrBreathe" class="screen tab-screen" hidden>
+    <div class="greet"><h1>Breathe</h1><p class="dev-meta">Slow, easy breathing with a gentle guide.</p></div>
+    <div class="card">
+      <div class="field"><label>Pace <small class="opt">breaths per minute</small></label>
+        <div class="chips pace" id="paceChips" role="radiogroup" aria-label="Breathing pace"></div>
+        <small id="paceHint"></small></div>
+      <div class="field"><label>Rhythm</label>
+        <div class="seg" id="ratioSeg" role="radiogroup" aria-label="Rhythm">
+          <button type="button" role="radio" data-v="0.4">Longer out</button><button type="button" role="radio" data-v="0.5">Even</button>
+        </div></div>
+      <div class="auto" style="border-top:none;padding-top:0">
+        <span class="lbl-strong">Length</span>
+        <div class="stepper"><button type="button" id="durMinus" aria-label="Shorter">−</button><output id="durVal">10 min</output><button type="button" id="durPlus" aria-label="Longer">+</button></div>
+      </div>
+      <div class="auto">
+        <label class="switch"><input type="checkbox" id="soundOn"><span class="track"><span class="knob"></span></span><span>Soft chime</span></label>
+        <label class="switch"><input type="checkbox" id="vibeOn"><span class="track"><span class="knob"></span></span><span>Vibrate</span></label>
+      </div>
+    </div>
+    <button id="btnBreathe" class="btn-start">Begin</button>
+    <p class="hint" id="breatheHint">Works without the strap. Connect it to see your heart rate follow your breath.</p>
+
+    <h2 class="sec">Resonance pace</h2>
+    <div class="card">
+      <p class="dev-meta" style="margin:0">Your heart rate rises as you breathe in and falls as you breathe out. At one particular pace, usually between 4.5 and 6.5 breaths a minute, that swing is largest. This test guides you through five paces for two minutes each and finds yours.</p>
+      <div id="resInfo" class="dev-meta"></div>
+      <button id="btnResonance" class="btn">Find my resonance pace · 10 min</button>
+    </div>
+  </section>
+
+  <!-- BREATHING SESSION -->
+  <section id="scrSession" class="screen session" hidden>
+    <div class="sess-top"><span id="sessStep" class="sess-step"></span><span id="sessLeft" class="sess-left mono">10:00</span></div>
+    <div class="orb-stage">
+      <div class="orb-halo" id="orbHalo"></div>
+      <div class="orb-ring" id="orbRing"></div>
+      <div class="orb" id="orb"></div>
+      <div class="orb-txt"><div id="orbWord">Breathe in</div><div id="orbCount" class="orb-count"></div></div>
+    </div>
+    <div class="sess-hr" id="sessHrBox" hidden>
+      <div class="sess-hr-top"><span><b id="sessHR">--</b> bpm</span><span id="sessSwing" class="dev-meta"></span></div>
+      <canvas id="hrCanvas" aria-label="Heart rate following your breathing"></canvas>
+    </div>
+    <div class="sess-acts"><button id="btnSessDim" class="btn ghost">Dim</button><button id="btnSessEnd" class="btn">End</button></div>
+  </section>
+
+  <!-- BREATHING DONE -->
+  <section id="scrSessDone" class="screen" hidden>
+    <div id="sessDoneBody"></div>
+    <div class="acts-row" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button></div>
+  </section>
+
+  <!-- TRENDS -->
+  <section id="scrTrends" class="screen tab-screen" hidden>
+    <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
+    <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
+    <div id="trendBody"></div>
+    <h2 class="sec">History</h2>
+    <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="scrSettings" class="screen" hidden>
+    <div class="acts-row"><button id="btnSettingsBack" class="btn">‹ Back</button></div>
+    <div class="card">
+      <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount">No readings yet.</div></div>
+      <p class="dev-meta" style="margin:0">Readings and breathing sessions are stored only in this browser. Export them to keep a backup or move them to another phone.</p>
+      <div class="acts-row">
+        <button id="btnExport" class="btn">Export history</button>
+        <button id="btnImport" class="btn">Import history</button>
+        <button id="btnClear" class="btn ghost">Delete everything</button>
+      </div>
+      <input type="file" id="histIn" accept=".json,.txt,application/json,text/plain,application/octet-stream" hidden>
+    </div>
+    <div class="links">
+      <button id="btnHelp" class="row-btn"><span>User manual<small>Readings, the standing test, breathing and your baseline</small></span><span class="chev">›</span></button>
+    </div>
+    {{ABOUT}}
+  </section>
+
+  <!-- HELP / USER MANUAL (generated from docs/MANUAL.md) -->
+  <section id="scrHelp" class="screen" hidden>
+    <div class="acts-row"><button id="btnHelpBack" class="btn">‹ Back</button></div>
+    <article class="manual">{{MANUAL}}</article>
+    <div class="acts-row"><button id="btnHelpBack2" class="btn">‹ Back</button></div>
+  </section>
+
+  <p class="wellness-line" id="wellLine"><b>For general wellness only. Not a medical device.</b></p>
+</main>
+
+<nav class="tabs" id="tabs" aria-label="Sections">
+  <button data-tab="scrToday" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="13" r="4"/><path d="M12 3v2M4.9 6l1.4 1.4M19.1 6l-1.4 1.4M3 20h18"/></svg>Today</button>
+  <button data-tab="scrBreathe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" opacity=".5"/><circle cx="12" cy="12" r="4.5"/></svg>Breathe</button>
+  <button data-tab="scrTrends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 7-8"/><path d="M3 21h18"/></svg>Trends</button>
+</nav>
+
+<div id="dim" hidden><div>tap to wake</div></div>
+<div id="toast" role="status" hidden></div>

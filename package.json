@@ -1,0 +1,14 @@
+{
+  "name": "still-point",
+  "version": "0.1.0",
+  "description": "A calm morning HRV reading, standing test and paced breathing with a chest-strap heart-rate monitor, entirely in the browser.",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://stillpoint.anonacondacodelab.com",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && node --test tests/*.test.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,13 @@
+# Personal health data: never commit history exports
+*.json
+!package.json
+*.csv
+*.txt
+!src/fonts/*.txt
+StillPoint-*
+
+# Tooling
+node_modules/
+dist/fragment.html
+.DS_Store
+Thumbs.db
