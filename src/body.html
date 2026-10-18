@@ -197,12 +197,13 @@
     <div class="card">
       <div><div class="dev-name">Import from Elite HRV</div><div class="dev-meta">Bring your Elite HRV history across so your baseline is ready straight away.</div></div>
       <p class="dev-meta" style="margin:0">In Elite HRV, request your data export; you get a link by email. Download it, then choose the downloaded .zip file here, or the .txt files inside it (one per reading).</p>
-      <div class="acts-row"><button id="btnElite" class="btn">Choose Elite HRV files</button></div>
+      <div class="acts-row"><button id="btnElite" class="btn">Choose Elite HRV files</button><button id="btnEliteRemove" class="btn ghost" hidden>Remove all Elite HRV imports</button></div>
+      <p class="dev-meta" id="eliteCount" style="margin:0"></p>
       <input type="file" id="eliteIn" accept=".zip,.txt,application/zip,text/plain,application/octet-stream" multiple hidden>
       <div id="elitePanel" class="elite-panel" hidden>
         <p id="eliteFound" style="margin:0"></p>
         <div class="field"><label>These readings were taken</label><div class="chips" id="elitePos" role="radiogroup" aria-label="Position"></div></div>
-        <label class="switch"><input type="checkbox" id="eliteMorning" checked><span class="track"><span class="knob"></span></span><span>Readings before 11:00 count as morning readings <small class="opt">later ones become spot checks</small></span></label>
+        <label class="switch"><input type="checkbox" id="eliteMorning" checked><span class="track"><span class="knob"></span></span><span>Readings before 11:00 count as morning readings <small class="opt">later ones, and any longer than 5½ minutes, become spot checks</small></span></label>
         <div class="acts-row"><button id="btnEliteGo" class="btn primary">Import</button><button id="btnEliteCancel" class="btn ghost">Cancel</button></div>
       </div>
     </div>

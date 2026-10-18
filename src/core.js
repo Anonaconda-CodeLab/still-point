@@ -18,13 +18,14 @@ const fin = v => typeof v === 'number' && isFinite(v);
    20 % away (or outside 300–2000 ms) is treated as an artifact or ectopic beat and left out. Successive
    differences are only taken between two accepted, adjacent beats, so one bad beat never creates a
    large false difference. */
+const NB = 3; /* neighbours on each side: short enough that slow, deep breathing (large, gradual swings) is not mistaken for artifacts */
 function cleanRR(list) {
   const S = { T: [], V: [], OK: [], SEG: [] };
   let seg = 0, cur = [];
   const flush = () => {
     for (let i = 0; i < cur.length; i++) {
-      const nb = []; for (let j = Math.max(0, i - 10); j <= Math.min(cur.length - 1, i + 10); j++) if (j !== i) nb.push(cur[j][1]);
-      const lm = nb.length >= 4 ? median(nb) : cur[i][1], v = cur[i][1];
+      const nb = []; for (let j = Math.max(0, i - NB); j <= Math.min(cur.length - 1, i + NB); j++) if (j !== i) nb.push(cur[j][1]);
+      const lm = nb.length >= 3 ? median(nb) : cur[i][1], v = cur[i][1];
       S.T.push(cur[i][0]); S.V.push(v); S.SEG.push(seg);
       S.OK.push(v >= 300 && v <= 2000 && Math.abs(v - lm) <= 0.2 * lm);
     }
@@ -59,7 +60,7 @@ function hrPoints(S, t0, t1) { return idxRange(S, t0, t1).filter(i => S.OK[i]).m
 /* ---------- breathing rate from the heart rhythm ----------
    Heart rate rises a little on each breath in and falls on each breath out (respiratory sinus arrhythmia), so the beat
    intervals carry the breathing rhythm. The intervals are resampled at 4 Hz, detrended and windowed, and the strongest
-   rhythm between 6 and 30 breaths a minute is taken. Needs at least 30 s of clean beats; returns null when no rhythm stands out. */
+   rhythm between 3 (6 with under a minute of data) and 30 breaths a minute is taken. Needs at least 30 s of clean beats; returns null when no rhythm stands out. */
 function breathRate(S, t0, t1) {
   const pts = idxRange(S, t0, t1).filter(i => S.OK[i]).map(i => [S.T[i], S.V[i]]);
   if (pts.length < 25) return null;
@@ -70,7 +71,8 @@ function breathRate(S, t0, t1) {
   const sl = (N * sxy - sx * sy) / (N * sxx - sx * sx), ic = (sy - sl * sx) / N;
   for (let k = 0; k < N; k++) y[k] = (y[k] - ic - sl * k) * (0.5 - 0.5 * Math.cos(2 * Math.PI * k / (N - 1)));
   let best = 0, bf = 0, tot = 0;
-  for (let f = 0.1; f <= 0.5001; f += 0.0025) {
+  /* down to 3 breaths a minute when there is a minute or more of data (slow breathers, meditation), else from 6 */
+  for (let f = span >= 60 ? 0.05 : 0.1; f <= 0.5001; f += 0.0025) {
     let re = 0, im = 0; const w = 2 * Math.PI * f / fs;
     for (let k = 0; k < N; k++) { re += y[k] * Math.cos(w * k); im -= y[k] * Math.sin(w * k); }
     const p = re * re + im * im; tot += p; if (p > best) { best = p; bf = f; }

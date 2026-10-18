@@ -80,6 +80,8 @@ const lenTxt = sec => sec % 60 ? `${Math.round(sec / 6) / 10} min` : `${sec / 60
 const TAGS = [['slept_badly', 'Slept badly'], ['slept_well', 'Slept well'], ['alcohol', 'Alcohol last night'], ['hard_training', 'Hard training yesterday'], ['rest_day', 'Rest day yesterday'],
   ['sore', 'Sore muscles'], ['ill', 'Feeling ill'], ['stressed', 'Stressed'], ['late_meal', 'Late or heavy meal'], ['caffeine', 'Caffeine before the reading'], ['travel', 'Travel or jet lag'], ['period', 'Period']];
 const TAG_LABEL = Object.fromEntries(TAGS);
+/* readings that feed the baseline: everything, or from the date the person chose to start afresh */
+const baseR = list => { const f = getSettings().baseFrom; return (f ? list.filter(r => r.t >= f) : list).map(forBaseline); };
 const allReadings = () => S.pending && !S.readings.some(x => x.id === S.pending.id) ? S.readings.concat([S.pending]) : S.readings;
 
 /* compute everything for a reading from its beat intervals (also used for imports, so stored numbers always match the data) */
@@ -229,7 +231,7 @@ function renderToday() {
   const todays = S.readings.filter(r => dayKey(r.t) === dayKey(Date.now()));
   const doneMorning = todays.some(r => r.type !== 'spot');
   $('#chMorningBadge').hidden = !doneMorning;
-  const pos = cfgOf('morning').pos, b = baseline(S.readings.map(forBaseline), pos);
+  const pos = cfgOf('morning').pos, b = baseline(baseR(S.readings), pos);
   $('#chMorning').textContent = b.ready ? `${cfgOf('morning').len / 60} minutes on waking. Compared with your usual range.` : b.have ? `${cfgOf('morning').len / 60} minutes on waking. Baseline: ${b.have} of ${b.need} days.` : `${cfgOf('morning').len / 60} minutes on waking. Builds your baseline.`;
   /* Monday recap of last week, once */
   const wk = $('#weekCard'), lastW = weekStart(Date.now()) - 7 * DAY, seen = getSettings().weekSeen;
@@ -331,7 +333,7 @@ async function finishReading() {
 /* ---------- reading result ---------- */
 function spotVerdict(r) {
   const prev = S.readings.filter(x => x.type === 'spot' && x.pos === r.pos && x.id !== r.id && x.m.quality !== 'poor' && x.m.quality !== 'short' && fin(x.m.score)).slice(-30).map(x => x.m.score);
-  const mb = baseline(allReadings().map(forBaseline), r.pos, r.t);
+  const mb = baseline(baseR(allReadings()), r.pos, r.t);
   const parts = ['Spot checks are saved and charted but don’t change your morning baseline, because HRV naturally runs lower later in the day, after food, coffee or activity.'];
   if (prev.length >= 3) parts.push(`Your ${POS[r.pos].toLowerCase()} spot checks usually score about ${Math.round(median(prev))}.`);
   if (mb.ready) parts.push(`For reference, your morning usual range is ${Math.round(mb.lo * 100 / 6.5)}–${Math.round(mb.hi * 100 / 6.5)}.`);
@@ -393,6 +395,16 @@ function explainHtml(r, b) {
   if (r.o) P.push('The standing test: when you stand up, blood pools in your legs and your heart briefly speeds up to keep your blood pressure steady, then settles back down. A rise of roughly 10 to 30 beats a minute that settles within a minute or two is typical. Compared with your own earlier tests, a bigger jump or slower settling can go with fatigue, dehydration, heat or a hard training block.');
   return `<div class="explain"><h3>What this means</h3>${P.map(x => `<p>${esc(x)}</p>`).join('')}<p class="fine">${DISCLAIMER}</p></div>`;
 }
+/* breathing pace moves HRV: flag a reading breathed much faster or slower than usual */
+function breathNoteHtml(r) {
+  if (r.type === 'spot' || !fin(r.m.br)) return '';
+  const prev = allReadings().filter(x => x.id !== r.id && x.type !== 'spot' && x.pos === r.pos && x.t < r.t && fin(x.m.br)).slice(-30).map(x => x.m.br);
+  if (prev.length < 5) return '';
+  const u = median(prev), ratio = r.m.br / u;
+  if (ratio < 1.6 && ratio > 0.625) return '';
+  const faster = ratio >= 1.6;
+  return `<div class="note-soft"><b>Breathing ${faster ? 'faster' : 'slower'} than usual.</b> You breathed about ${Math.round(r.m.br)} times a minute; you usually breathe about ${Math.round(u)}. Slow breathing raises HRV and faster breathing lowers it, so part of today’s ${faster ? 'lower' : 'higher'} number may simply be your breathing. For comparable readings, breathe the way you usually do.</div>`;
+}
 function trainingHtml(r, b) {
   if (r.type === 'spot' || !getSettings().training || !b.ready || !b.today || b.today.id !== r.id) return '';
   const a = trainingAdvice(b); if (!a) return '';
@@ -436,12 +448,13 @@ function leadOneHtml(r) {
     <p class="fine">Occasional early or skipped beats are common and usually harmless. If you have symptoms such as palpitations, dizziness or chest discomfort, see a doctor.</p></div>`;
 }
 function resultHtml(r) {
-  const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
+  const b = baseline(baseR(allReadings()), r.pos, r.t), v = verdictOf(b, r), m = r.m;
   const q = { good: 'good signal', fair: 'fair signal', poor: 'noisy signal', short: 'too short' }[m.quality];
   return `<div class="card result-card">
-    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${lenTxt(r.len)} · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
+    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}${r.src === 'elite' ? ' · from Elite HRV' : ''}<br>${POS[r.pos]} · ${lenTxt(r.len)} · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
+    ${breathNoteHtml(r)}
     ${trainingHtml(r, b)}
     ${orthoHtml(r)}
     ${tagsHtml(r)}
@@ -759,19 +772,36 @@ function effectsHtml(R, pos) {
   }
   return `<div class="card commentary"><div class="dev-name">What affects you</div>${body}<p class="fine">These are patterns in your own readings, not proof of cause: days often differ in more than one way.</p></div>`;
 }
+/* after moving from Elite HRV: compare the first Still Point mornings with the last Elite ones */
+function firstPerDay(list) { const by = new Map(); for (const r of list.slice().sort((a, b) => a.t - b.t)) { const k = dayKey(r.t); if (!by.has(k)) by.set(k, r); } return [...by.values()]; }
+function switchHtml(pos) {
+  const st = getSettings(), ok = r => r.pos === pos && r.type !== 'spot' && r.m.quality !== 'poor' && r.m.quality !== 'short' && fin(r.m.ln);
+  if (st.baseFrom) return `<div class="card"><div class="dev-name">Baseline</div><p class="dev-meta" style="margin:0">Your baseline starts from ${esc(new Date(st.baseFrom).toLocaleDateString())}; earlier readings are kept and charted but not used for it.</p><div class="acts-row"><button class="btn" id="btnBaseAll">Use my full history again</button></div></div>`;
+  const el = firstPerDay(S.readings.filter(r => r.src === 'elite' && ok(r))); if (el.length < 7) return '';
+  const lastT = el[el.length - 1].t, own = firstPerDay(S.readings.filter(r => !r.src && ok(r) && r.t > lastT));
+  if (own.length < 5) return own.length ? `<div class="card"><div class="dev-name">Switching from Elite HRV</div><p class="dev-meta" style="margin:0">After 5 mornings in ${esc('{{APP_NAME}}')} (${own.length} so far), this card compares them with your last Elite HRV mornings, so a change in routine isn’t mistaken for a change in you.</p></div>` : '';
+  const prev = el.slice(-14), d = mean(own.map(r => r.m.ln)) - mean(prev.map(r => r.m.ln)), sd = Math.max(0.08, std(prev.map(r => r.m.ln)));
+  const brE = median(prev.map(r => r.m.br).filter(fin)), brO = median(own.map(r => r.m.br).filter(fin)), pct = Math.round(100 * (Math.exp(d) - 1));
+  if (Math.abs(d) < sd) return `<div class="card"><div class="dev-name">Switching from Elite HRV</div><p class="dev-meta" style="margin:0">Your ${own.length} mornings in {{APP_NAME}} line up with your last Elite HRV mornings (${pct >= 0 ? '+' : '−'}${Math.abs(pct)} %), so your history carries on seamlessly.</p></div>`;
+  const brLine = fin(brE) && fin(brO) && (brO / brE >= 1.4 || brO / brE <= 0.7) ? ` Your breathing has changed too: about ${Math.round(brO)} breaths a minute now against ${Math.round(brE)} before, which on its own moves HRV.` : '';
+  const from = dayStart(own[0].t);
+  return `<div class="card commentary"><div class="dev-name">Switching from Elite HRV</div><ul class="ins"><li class="info"><b>Your readings ${d < 0 ? 'dropped' : 'rose'} when you switched</b><span>Your first ${own.length} mornings here are about ${Math.abs(pct)} % ${d < 0 ? 'lower' : 'higher'} than your last Elite HRV mornings.${brLine} A step like this usually comes from a change in routine (breathing, position, time or reading length) rather than from you. If you think so too, start your baseline from the switch so the old routine doesn’t skew it; the old readings stay in your history.</span></li></ul>
+    <div class="acts-row"><button class="btn primary" id="btnBaseFrom" data-from="${from}">Start my baseline from ${esc(new Date(from).toLocaleDateString())}</button></div></div>`;
+}
 function renderTrends() {
   const s = getSettings(), have = Object.keys(POS).filter(p => S.readings.some(r => r.pos === p && r.type !== 'spot'));
   const mp = cfgOf('morning').pos, pos = S.trendPos && have.includes(S.trendPos) ? S.trendPos : have.includes(mp) ? mp : have[0] || mp;
   S.trendPos = pos;
   const segEl = $('#trendPos'); segEl.innerHTML = (have.length ? have : [pos]).map(p => `<button type="button" role="radio" data-v="${p}">${POS[p]}</button>`).join('');
   seg(segEl, pos, v => { S.trendPos = v; renderTrends(); }); segEl.hidden = have.length < 2;
-  const now = Date.now(), R = S.readings.map(forBaseline), tr = trend(R, pos, now, 60).map(d => Object.assign({}, d, { score: scoreOf(d.ln), s7: fin(d.avg7) ? d.avg7 * 100 / 6.5 : NaN, slo: fin(d.lo) ? d.lo * 100 / 6.5 : NaN, shi: fin(d.hi) ? d.hi * 100 / 6.5 : NaN }));
+  const now = Date.now(), R = baseR(S.readings), tr = trend(R, pos, now, 60).map(d => Object.assign({}, d, { score: scoreOf(d.ln), s7: fin(d.avg7) ? d.avg7 * 100 / 6.5 : NaN, slo: fin(d.lo) ? d.lo * 100 / 6.5 : NaN, shi: fin(d.hi) ? d.hi * 100 / 6.5 : NaN }));
   const b = baseline(R, pos, now);
   let html = '';
   const ins = trendInsights(R, pos, now, S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.o).map(r => ({ t: r.t, rise: r.o.rise })));
   if (tr.length) html += `<div class="card commentary"><div class="dev-name">What your trend shows</div>${ins.ready
     ? `<ul class="ins">${ins.items.map(i => `<li class="${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></li>`).join('')}</ul>`
     : `<p class="dev-meta" style="margin:0">Comments start on your ${ins.need}th morning reading in this position: ${ins.have} of ${ins.need} so far. A few need more: about two weeks of mornings for “drifting”, 5 readings in a week for “up-and-down”, and 6 standing tests for the standing trend.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
+  html += switchHtml(pos);
   html += weekHtml(now, 'This week');
   html += effectsHtml(R, pos);
   if (!tr.length) html = `<div class="card"><p class="dev-meta" style="margin:0">No ${POS[pos].toLowerCase()} readings in the last 60 days yet. Take one each morning and your trend appears here.</p></div>`;
@@ -792,17 +822,19 @@ function renderTrends() {
   const md = S.sessions.filter(x => x.t >= since && x.kind === 'meditation'), mmins = Math.round(md.reduce((t, x) => t + x.dur, 0) / 60);
   if (S.sessions.length) html += `<div class="card"><div><div class="dev-name">Breathing and open sessions, last 30 days</div><div class="dev-meta">Breathing: ${br.length} session${br.length === 1 ? '' : 's'} · ${mins} min${s.resPace ? ` · resonance pace ${paceTxt(s.resPace)}` : ''}<br>Open sessions: ${md.length} · ${mmins} min</div></div></div>`;
   $('#trendBody').innerHTML = html;
+  const bf = $('#btnBaseFrom'); if (bf) bf.onclick = () => { patchSettings({ baseFrom: +bf.dataset.from }); toast('Baseline now starts from the switch.'); renderTrends(); };
+  const ba = $('#btnBaseAll'); if (ba) ba.onclick = () => { patchSettings({ baseFrom: null }); toast('Using your full history again.'); renderTrends(); };
   const items = [...S.readings.map(r => ({ r, t: r.t })), ...S.sessions.map(x => ({ x, t: x.t }))].sort((a, b) => b.t - a.t).slice(0, 80);
   const list = $('#histList');
   list.innerHTML = items.length ? items.map((it, i) => it.r
-    ? `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${typeLabel(it.r)} · ${POS[it.r.pos].toLowerCase()}</b><span>${esc(when(it.t))}${it.r.m.quality === 'poor' ? ' · noisy' : ''}</span></span><span class="val">${it.r.m.score ?? '—'}<small>SCORE</small></span></button></li>`
+    ? `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${typeLabel(it.r)} · ${POS[it.r.pos].toLowerCase()}</b><span>${esc(when(it.t))}${it.r.src === 'elite' ? ' · Elite HRV' : ''}${it.r.m.quality === 'poor' ? ' · noisy' : ''}</span></span><span class="val">${it.r.m.score ?? '—'}<small>SCORE</small></span></button></li>`
     : `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${it.x.kind === 'resonance' ? 'Resonance test' : it.x.kind === 'meditation' ? 'Open session' : it.x.patternName ? esc(it.x.patternName) : `Breathing · ${paceTxt(it.x.pace)}/min`}</b><span>${esc(when(it.t))} · ${Math.round(it.x.dur / 60)} min</span></span><span class="val">${it.x.kind === 'resonance' ? (it.x.best ? paceTxt(it.x.best) : '—') + '<small>PACE</small>' : it.x.kind === 'meditation' ? (it.x.m && fin(it.x.m.rmssd) ? Math.round(it.x.m.rmssd) + '<small>HRV MS</small>' : '') : it.x.m && fin(it.x.m.amp) ? Math.round(it.x.m.amp) + '<small>SWING</small>' : ''}</span></button></li>`).join('')
     : '<li class="empty">No readings yet.</li>';
   for (const b2 of list.querySelectorAll('.li-btn')) b2.onclick = () => { const it = items[+b2.dataset.i]; S.resultBack = 'scrTrends'; if (it.r) openResult(it.r.id); else openSession(it.x); };
 }
 
 /* ---------- settings, export / import ---------- */
-$('#btnSettings').onclick = () => { if (S.act || S.pending || S.pendingSess) { if (!S.act) toast('Save or discard this first.'); return; } S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); $('#optTraining').checked = getSettings().training !== false; $('#installRow').hidden = !S.installEvt; show('scrSettings'); };
+$('#btnSettings').onclick = () => { if (S.act || S.pending || S.pendingSess) { if (!S.act) toast('Save or discard this first.'); return; } S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); $('#optTraining').checked = getSettings().training !== false; $('#installRow').hidden = !S.installEvt; eliteInfo(); show('scrSettings'); };
 $('#btnSettingsBack').onclick = () => show(S.settingsBack || 'scrToday');
 $('#btnHelp').onclick = () => { S.helpBack = 'scrSettings'; show('scrHelp'); };
 const helpBack = () => show(S.helpBack || 'scrToday'); $('#btnHelpBack').onclick = helpBack; $('#btnHelpBack2').onclick = helpBack;
@@ -855,17 +887,24 @@ $('#eliteIn').onchange = async e => {
     $('#elitePanel').hidden = false;
   } catch (err) { toast('Import failed: ' + (err && err.message || err), 7000); }
 };
+$('#btnEliteRemove').onclick = async function () {
+  const ids = S.readings.filter(r => r.src === 'elite').map(r => r.id); if (!ids.length) return;
+  if (!this.dataset.arm) { this.dataset.arm = 1; this.textContent = `Tap again to remove ${ids.length}`; setTimeout(() => { delete this.dataset.arm; this.textContent = 'Remove all Elite HRV imports'; }, 3500); return; }
+  delete this.dataset.arm; this.textContent = 'Remove all Elite HRV imports';
+  await idb('readings', 'readwrite', s => { for (const id of ids) s.delete(id); }); await loadAll(); refreshCount(); eliteInfo(); toast(`Removed ${ids.length} imported readings.`);
+};
+function eliteInfo() { const n = S.readings.filter(r => r.src === 'elite').length; $('#eliteCount').textContent = n ? `${n} readings imported from Elite HRV.` : ''; $('#btnEliteRemove').hidden = !n; }
 $('#btnEliteCancel').onclick = () => { S.elite = null; $('#elitePanel').hidden = true; };
 $('#btnEliteGo').onclick = async () => {
   const found = S.elite || [], pos = S.elitePos || 'lying', morn = $('#eliteMorning').checked, R = [];
   for (const f of found) {
     const rr = rrToList(f.ms), len = Math.round(rr[rr.length - 1][0]);
     if (len < 30) continue;
-    const r = computeReading({ id: 'elite-' + f.t, t: f.t, type: morn && new Date(f.t).getHours() < 11 ? 'morning' : 'spot', pos, len: Math.min(900, len), settle: 0, standAt: null, rr: rr.filter(x => x[0] <= 900) });
+    const r = computeReading({ id: 'elite-' + f.t, t: f.t, type: morn && new Date(f.t).getHours() < 11 && len >= 60 && len <= 330 ? 'morning' : 'spot', pos, len: Math.min(900, len), settle: 0, standAt: null, rr: rr.filter(x => x[0] <= 900) });
     r.src = 'elite'; if (r.m.beats >= 30 && fin(r.m.ln)) R.push(r);
   }
   try { await idb('readings', 'readwrite', s => { for (const r of R) s.put(r); }); } catch (e) { toast('The readings could not be saved on this device.'); return; }
-  S.elite = null; $('#elitePanel').hidden = true; await loadAll(); refreshCount();
+  S.elite = null; $('#elitePanel').hidden = true; await loadAll(); refreshCount(); eliteInfo();
   toast(`Imported ${R.length} reading${R.length === 1 ? '' : 's'} from Elite HRV.`, 5000);
 };
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }

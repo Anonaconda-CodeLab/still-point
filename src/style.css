@@ -293,3 +293,4 @@ body:not(.tabbed) .tabs{display:none}
 .elite-panel{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:12px}
 .kv span small{display:block;color:var(--muted);font-size:12.5px;font-weight:400}
 a.btn:not(.coffee){color:var(--fg)}
+.note-soft{border-left:3px solid var(--lav);background:color-mix(in srgb,var(--lav) 10%,var(--surface));border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5}

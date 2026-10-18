@@ -161,3 +161,13 @@ test('Elite HRV text files: intervals in ms or seconds, time from the file name'
   assert.equal(A.timeFromName('2015-05-12 07-48-32.txt'), new Date(2015, 4, 12, 7, 48, 32).getTime());
   assert.equal(A.timeFromName('notes.txt'), null);
 });
+
+test('slow, deep breathing is not mistaken for artifacts, and 4 breaths a minute is detected', () => {
+  const sim = A.makeSim(5), list = [];
+  while (sim.t < 150) list.push(sim.next({ pace: 4, lung: t => (1 - Math.cos(2 * Math.PI * t * 4 / 60)) / 2 }));
+  // exaggerate the swing as in a slow, deep breather
+  const deep = list.map(([t, rr]) => [t, rr * (1 + 0.18 * Math.sin(2 * Math.PI * t * 4 / 60))]);
+  const C = A.cleanRR(deep), h = A.hrvOf(C, 0, 200);
+  assert.ok(h.beats - h.good <= 2, 'left out ' + (h.beats - h.good));
+  const br = A.breathRate(C, 0, 200); assert.ok(br && Math.abs(br - 4) <= 0.6, 'breathing ' + br);
+});

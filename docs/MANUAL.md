@@ -56,10 +56,16 @@ food or exercise, in the same position. Consistency matters far more than the ex
   not interchangeable between apps.
 - **lnRMSSD** and **RMSSD**: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.
 - **Heart rate**: average over the reading.
-- **Breathing**: about how many breaths a minute you took. It is estimated from your heart rhythm, which rises and falls
+- **Breathing**: about how many breaths a minute you took (3 to 30). It is estimated from your heart rhythm, which rises and falls
   slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.
 - **Signal**: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are
   left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.
+
+### Breathing and HRV
+How you breathe moves HRV: slow, deep breathing raises it and faster breathing lowers it. So breathe the way you
+usually do during readings, whether that's normal or naturally slow. If a morning reading was breathed much faster or
+slower than your usual (by more than about half again), the result says so, so you don't mistake a change in breathing
+for a change in you.
 
 ### What this means
 Under every result, a short **What this means** section explains in everyday words what HRV is, what today's reading
@@ -190,9 +196,20 @@ Nothing is kept until you tap **Save**. Saved readings and sessions are stored i
 ### Moving from Elite HRV
 In Elite HRV, request your data export; you'll get a download link by email. Download the .zip, then in
 **Settings → Import from Elite HRV** choose that .zip (or the .txt files inside it, one per reading). Pick the position
-you took your readings in. Readings before 11:00 become morning readings and later ones spot checks (you can switch this
-off). Everything is recalculated from the beat intervals, so your baseline and trends are ready straight away. Elite's
-tags aren't in the export, so they don't come across.
+you took your readings in.
+- Readings before 11:00 that last up to 5½ minutes become morning readings; later or longer ones (open readings,
+  meditations, guided breathing) become spot checks, so they can't skew your baseline. You can switch this off.
+- Everything is recalculated from the beat intervals with Still Point's own method, so old and new readings are measured
+  the same way and your baseline and trends are ready straight away. On clean readings the score matches Elite's HRV
+  number; on readings with a skipped or extra beat it can differ by a few points, because the two apps handle such
+  beats differently.
+- Imported readings are marked **from Elite HRV**. If a batch went in with the wrong position, **Remove all Elite HRV
+  imports** in the same place takes them out again. Elite's tags and moods aren't in the export, so they don't come across.
+
+**After you switch**, once you have 5 mornings in Still Point, Trends compares them with your last Elite HRV mornings.
+If they line up, it says so. If there's a clear step, usually from a change in routine such as breathing, position, time
+or reading length, it explains this and offers **Start my baseline from** the switch date, so the old routine doesn't
+skew your baseline. Old readings stay in your history and charts, and you can go back to your full history at any time.
 
 ## Install as an app
 In Chrome on Android, the HRV tab offers **Install** (also in **Settings → Options**, or Chrome's menu →
