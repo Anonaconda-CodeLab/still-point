@@ -15,6 +15,13 @@ Everything runs in your browser: no account, no server, no data leaves your devi
   or vibration, and a live heart-rate trace showing your heart rate following your breath.
 - **Resonance test**: 6.5 → 4.5 breaths a minute, two minutes each, picks the pace with the biggest heart-rate swing.
 - **Trends**: HRV score with usual range and 7-day average, resting heart rate, standing-test history, breathing minutes.
+- **Optional tags** (alcohol, sleep, training, illness, stress…) plus sleep score and hours slept, and a *What affects
+  you* card that shows how each relates to your HRV.
+- **Training guidance** from your trend, a **weekly summary**, and plain-language trend commentary.
+- **Breathing patterns**: box breathing, 4-7-8, or your own in / hold / out / hold timings, plus an **open session**
+  with no guide and a quiet heart-rate and HRV summary.
+- **Import from Elite HRV** (the .zip export), recalculated from the beat intervals.
+- **Installable** on Android (home-screen icon, works offline).
 - **Simulated strap** for trying the app without a Polar H10.
 - History export/import.
 

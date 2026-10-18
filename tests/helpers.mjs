@@ -10,7 +10,7 @@ const code = readFileSync(join(root, 'src', 'core.js'), 'utf8').replace(/\{\{APP
 export function load() {
   const ctx = vm.createContext({ console, Date, Math });
   vm.runInContext(code + `
-    ;globalThis.api = { cleanRR, hrvOf, breathRate, orthoOf, rsaOf, resonanceOf, pacer, baseline, trend, trendInsights, dailySeries, makeSim, scoreOf, PACES, RESONANCE_STEPS, DAY, dayStart };`, ctx);
+    ;globalThis.api = { cleanRR, hrvOf, breathRate, orthoOf, rsaOf, resonanceOf, pacer, baseline, trend, trendInsights, dailySeries, tagEffects, trainingAdvice, parseRRText, rrToList, timeFromName, patternPacer, PATTERNS, makeSim, scoreOf, PACES, RESONANCE_STEPS, DAY, dayStart };`, ctx);
   return ctx.api;
 }
 export const distHtml = () => readFileSync(join(root, 'dist', 'index.html'), 'utf8');

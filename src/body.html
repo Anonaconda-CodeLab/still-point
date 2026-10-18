@@ -55,7 +55,9 @@
         <span class="ch-t"><b>Breathe</b><small>Slow, guided breathing from 3 to 7 breaths a minute.</small></span></button>
     </div>
 
+    <div id="weekCard" class="card" hidden></div>
     <div id="todayResult" class="card result-card" hidden></div>
+    <div id="installCard" class="banner-soft" hidden><div><b>Install {{APP_NAME}}</b><span class="dev-meta">Add it to your home screen: its own icon, full screen, and it opens without a connection.</span></div><div class="acts-row"><button class="btn primary" id="btnInstall">Install</button><button class="btn ghost" id="btnInstallLater">Not now</button></div></div>
   </section>
 
   <!-- READING SETUP -->
@@ -104,13 +106,17 @@
   <section id="scrBreathe" class="screen tab-screen" hidden>
     <div class="greet"><h1>Breathe</h1><p class="dev-meta">Slow, easy breathing with a gentle guide.</p></div>
     <div class="card">
-      <div class="field"><label>Pace <small class="opt">breaths per minute</small></label>
-        <div class="chips pace" id="paceChips" role="radiogroup" aria-label="Breathing pace"></div>
-        <small id="paceHint"></small></div>
       <div class="field"><label>Rhythm</label>
-        <div class="seg" id="ratioSeg" role="radiogroup" aria-label="Rhythm">
-          <button type="button" role="radio" data-v="0.4">Longer out</button><button type="button" role="radio" data-v="0.5">Even</button>
-        </div></div>
+        <div class="chips" id="rhythmChips" role="radiogroup" aria-label="Rhythm"></div></div>
+      <div class="field" id="paceField"><label>Pace <small class="opt">breaths per minute</small></label>
+        <div class="chips pace" id="paceChips" role="radiogroup" aria-label="Breathing pace"></div></div>
+      <div class="custom-pat" id="customPat" hidden>
+        <div class="cp"><span>Breathe in</span><div class="stepper"><button type="button" data-k="tin" data-d="-0.5" aria-label="Shorter breath in">−</button><output id="cpTin">4 s</output><button type="button" data-k="tin" data-d="0.5" aria-label="Longer breath in">+</button></div></div>
+        <div class="cp"><span>Hold</span><div class="stepper"><button type="button" data-k="h1" data-d="-0.5" aria-label="Shorter hold">−</button><output id="cpH1">0 s</output><button type="button" data-k="h1" data-d="0.5" aria-label="Longer hold">+</button></div></div>
+        <div class="cp"><span>Breathe out</span><div class="stepper"><button type="button" data-k="tout" data-d="-0.5" aria-label="Shorter breath out">−</button><output id="cpTout">6 s</output><button type="button" data-k="tout" data-d="0.5" aria-label="Longer breath out">+</button></div></div>
+        <div class="cp"><span>Hold</span><div class="stepper"><button type="button" data-k="h2" data-d="-0.5" aria-label="Shorter hold after breathing out">−</button><output id="cpH2">0 s</output><button type="button" data-k="h2" data-d="0.5" aria-label="Longer hold after breathing out">+</button></div></div>
+      </div>
+      <small id="paceHint" class="dev-meta"></small>
       <div class="auto" style="border-top:none;padding-top:0">
         <span class="lbl-strong">Length</span>
         <div class="stepper"><button type="button" id="durMinus" aria-label="Shorter">−</button><output id="durVal">10 min</output><button type="button" id="durPlus" aria-label="Longer">+</button></div>
@@ -122,6 +128,13 @@
     </div>
     <button id="btnBreathe" class="btn-start">Begin</button>
     <p class="hint" id="breatheHint">Works without the strap. Connect it to see your heart rate follow your breath.</p>
+
+    <h2 class="sec">Open session</h2>
+    <div class="card">
+      <p class="dev-meta" style="margin:0">No guide, no counting. Sit or lie comfortably, breathe however feels natural, and let your mind settle. With the strap on, your heart rate and HRV are tracked quietly and summarised at the end.</p>
+      <div class="field"><label>Length</label><div class="chips" id="medLenChips" role="radiogroup" aria-label="Open session length"></div></div>
+      <button id="btnMeditate" class="btn">Start open session</button>
+    </div>
 
     <h2 class="sec">Resonance pace</h2>
     <div class="card">
@@ -180,6 +193,23 @@
         <button id="btnClear" class="btn ghost">Delete everything</button>
       </div>
       <input type="file" id="histIn" accept=".json,.txt,application/json,text/plain,application/octet-stream" hidden>
+    </div>
+    <div class="card">
+      <div><div class="dev-name">Import from Elite HRV</div><div class="dev-meta">Bring your Elite HRV history across so your baseline is ready straight away.</div></div>
+      <p class="dev-meta" style="margin:0">In Elite HRV, request your data export; you get a link by email. Download it, then choose the downloaded .zip file here, or the .txt files inside it (one per reading).</p>
+      <div class="acts-row"><button id="btnElite" class="btn">Choose Elite HRV files</button></div>
+      <input type="file" id="eliteIn" accept=".zip,.txt,application/zip,text/plain,application/octet-stream" multiple hidden>
+      <div id="elitePanel" class="elite-panel" hidden>
+        <p id="eliteFound" style="margin:0"></p>
+        <div class="field"><label>These readings were taken</label><div class="chips" id="elitePos" role="radiogroup" aria-label="Position"></div></div>
+        <label class="switch"><input type="checkbox" id="eliteMorning" checked><span class="track"><span class="knob"></span></span><span>Readings before 11:00 count as morning readings <small class="opt">later ones become spot checks</small></span></label>
+        <div class="acts-row"><button id="btnEliteGo" class="btn primary">Import</button><button id="btnEliteCancel" class="btn ghost">Cancel</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="dev-name">Options</div>
+      <label class="switch"><input type="checkbox" id="optTraining"><span class="track"><span class="knob"></span></span><span>Training guidance <small class="opt">a suggestion for today’s training on morning results</small></span></label>
+      <div id="installRow" hidden><button id="btnInstall2" class="btn">Install app on this phone</button></div>
     </div>
     <div class="links">
       <button id="btnHelp" class="row-btn"><span>User manual<small>Readings, the standing test, breathing and your baseline</small></span><span class="chev">›</span></button>

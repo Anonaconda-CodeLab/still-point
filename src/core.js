@@ -131,6 +131,22 @@ function pacer(pace, inhale = 0.4) {
     }
   };
 }
+/* breathing pattern with optional holds (seconds): in, hold after in, out, hold after out */
+function patternPacer(tin, h1, tout, h2) {
+  tin = Math.max(0.5, tin); tout = Math.max(0.5, tout); h1 = Math.max(0, h1 || 0); h2 = Math.max(0, h2 || 0);
+  const cyc = tin + h1 + tout + h2;
+  return {
+    cycle: cyc, tin, tout, h1, h2,
+    at(t) {
+      const c = Math.floor(t / cyc); let x = t - c * cyc;
+      if (x < tin) return { phase: 'in', lung: (1 - Math.cos(Math.PI * x / tin)) / 2, left: tin - x, cycle: c };
+      x -= tin; if (x < h1) return { phase: 'hold', lung: 1, left: h1 - x, cycle: c };
+      x -= h1; if (x < tout) return { phase: 'out', lung: (1 + Math.cos(Math.PI * x / tout)) / 2, left: tout - x, cycle: c };
+      x -= tout; return { phase: 'hold2', lung: 0, left: h2 - x, cycle: c };
+    }
+  };
+}
+const PATTERNS = { box: { name: 'Box breathing', tin: 4, h1: 4, tout: 4, h2: 4 }, '478': { name: '4-7-8 breathing', tin: 4, h1: 7, tout: 8, h2: 0 } };
 const PACES = [3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7];
 const RESONANCE_STEPS = [6.5, 6, 5.5, 5, 4.5];
 
@@ -147,7 +163,7 @@ function dailySeries(readings, pos) {
     if (pos && r.pos !== pos) continue;
     if (r.type && r.type !== 'morning') continue;
     if (!fin(r.ln) || r.quality === 'poor' || r.quality === 'short') continue;
-    const k = dayKey(r.t); if (!by.has(k)) by.set(k, { day: k, t: r.t, ln: r.ln, hr: r.hr, id: r.id });
+    const k = dayKey(r.t); if (!by.has(k)) by.set(k, { day: k, t: r.t, ln: r.ln, hr: r.hr, id: r.id, tags: r.tags || [], sleepScore: r.sleepScore, sleepHours: r.sleepHours });
   }
   return [...by.values()];
 }
@@ -227,6 +243,60 @@ function trendInsights(readings, pos, at = Date.now(), rises = []) {
     if (std(mins) > 75) items.push({ key: 'times', tone: 'info', title: 'Reading times vary', text: 'Your morning readings have been taken at quite different times of day. HRV changes through the morning, so taking it at about the same time, soon after waking, makes the comparison fairer.' });
   }
   return { ready: true, items, baseline: b };
+}
+
+/* ---------- what affects you: tags and sleep ----------
+   Compares the morning HRV of days with a tag against days without it (first good morning reading of each day).
+   A tag needs at least 3 tagged and 5 untagged mornings; only differences of 5 % or more in RMSSD are reported. */
+const TAG_MIN = 3, TAG_MIN_WITHOUT = 5;
+function tagEffects(readings, pos, labels = {}) {
+  const days = dailySeries(readings, pos), out = [], waiting = [];
+  const keys = [...new Set(days.flatMap(d => d.tags))];
+  for (const k of keys) {
+    const w = days.filter(d => d.tags.includes(k)), wo = days.filter(d => !d.tags.includes(k));
+    if (w.length < TAG_MIN || wo.length < TAG_MIN_WITHOUT) { waiting.push({ key: k, label: labels[k] || k, have: w.length }); continue; }
+    const pct = 100 * (Math.exp(mean(w.map(d => d.ln)) - mean(wo.map(d => d.ln))) - 1);
+    out.push({ key: k, label: labels[k] || k, n: w.length, pct });
+  }
+  for (const [key, label, unit] of [['sleepScore', 'Sleep score', ''], ['sleepHours', 'Hours slept', ' h']]) {
+    const v = days.filter(d => fin(d[key]));
+    if (v.length < 8) { if (v.length) waiting.push({ key, label, have: v.length, need: 8 }); continue; }
+    const cut = median(v.map(d => d[key])), lo = v.filter(d => d[key] < cut), hi = v.filter(d => d[key] >= cut);
+    if (lo.length < 3 || hi.length < 3) continue;
+    const pct = 100 * (Math.exp(mean(lo.map(d => d.ln)) - mean(hi.map(d => d.ln))) - 1);
+    out.push({ key, label, n: v.length, pct, cut: Math.round(cut * 10) / 10, unit });
+  }
+  return { effects: out.filter(e => Math.abs(e.pct) >= 5).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct)), small: out.filter(e => Math.abs(e.pct) < 5), waiting };
+}
+
+/* ---------- training guidance (after Kiviniemi et al. 2007 and Plews et al. 2013) ----------
+   go: 7-day average in or above the usual range and today not unusually low
+   easy: 7-day average below the usual range, or today more than 1 SD below your mean
+   rest: today more than 1.5 SD below your mean together with a low week or a resting heart rate 5+ bpm up */
+function trainingAdvice(b) {
+  if (!b || !b.ready || !b.today) return null;
+  const z = b.todayZ, hrUp = fin(b.hrDelta) && b.hrDelta >= 5;
+  if (z < -1.5 && (b.status === 'low' || hrUp)) return { level: 'rest', title: 'Rest or very light', text: 'Both today and your recent trend point to a body that is still catching up. A rest day, a walk or gentle mobility will likely do more good than a workout.' };
+  if (b.status === 'low' || z < -1) return { level: 'easy', title: 'Keep it easy', text: 'Train if you like, but keep it light: easy aerobic work, technique or mobility, nothing hard or long.' };
+  if (b.status === 'high' && z >= 0) return { level: 'go', title: 'Good day for a harder session', text: 'You look well recovered. If a hard session is on the plan, today suits it.' };
+  return { level: 'go', title: 'Go as planned', text: 'Nothing suggests you need to hold back. Train as planned and listen to your body.' };
+}
+
+/* ---------- importing beat intervals from other apps ----------
+   Elite HRV exports one text file per reading, named by its date and time ("2015-05-12 07-48-32.txt"),
+   with one beat interval per line. Values under 3 are taken as seconds, otherwise milliseconds. */
+function parseRRText(text) {
+  const nums = String(text).split(/[\s,;]+/).map(Number).filter(v => fin(v) && v > 0);
+  if (!nums.length) return [];
+  const sec = median(nums) < 3;
+  return nums.map(v => sec ? v * 1000 : v).filter(v => v >= 200 && v <= 3000);
+}
+function rrToList(ms) { let t = 0; return ms.map(v => { t += v / 1000; return [+t.toFixed(3), +v.toFixed(1)]; }); }
+function timeFromName(name) {
+  const m = String(name).match(/(\d{4})[-_.]?(\d{2})[-_.]?(\d{2})[ T_-]+(\d{2})[-_.:]?(\d{2})[-_.:]?(\d{2})?/);
+  if (!m) return null;
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)).getTime();
+  return fin(d) && d > 946684800000 ? d : null;
 }
 
 /* ---------- simulated strap (demo mode and tests) ---------- */

@@ -4,7 +4,7 @@
 // with a strict Content Security Policy that blocks every network request.
 //   node build.mjs              -> dist/index.html
 //   node build.mjs --fragment   -> dist/fragment.html (page body only, for embedding/preview hosts)
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -71,8 +71,8 @@ const js = `<script>\n${fill(src('core.js'))}\n${fill(src('app.js'))}\n</script>
 const body = fill(src('body.html'));
 const title = `<title>${APP.APP_NAME}</title>`;
 
-const CSP = ["default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'", 'font-src data:', 'img-src data: blob:',
-  "connect-src 'none'", "media-src 'none'", "object-src 'none'", "frame-src 'none'", "worker-src 'none'", "manifest-src 'none'",
+const CSP = ["default-src 'none'", "script-src 'unsafe-inline'", "style-src 'unsafe-inline'", 'font-src data:', "img-src 'self' data: blob:",
+  "connect-src 'none'", "media-src 'none'", "object-src 'none'", "frame-src 'none'", "worker-src 'self'", "manifest-src 'self'",
   "base-uri 'none'", "form-action 'none'"].join('; ');
 
 const page = `<!doctype html>
@@ -84,6 +84,9 @@ const page = `<!doctype html>
 <meta name="theme-color" content="#0e1416" media="(prefers-color-scheme: dark)">
 <meta name="description" content="${APP.APP_NAME}: a calm morning HRV reading, standing test and paced breathing with a chest-strap heart-rate monitor. Runs entirely in your browser.">
 ${title}
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 ${css}
 </head><body>
@@ -97,6 +100,30 @@ const fragment = process.argv.includes('--fragment');
 const out = fragment ? `${title}\n<meta name="claude:viewport-fit-sides" content="cover">\n${css}\n${body}\n${js}\n` : page;
 const file = join(root, 'dist', fragment ? 'fragment.html' : 'index.html');
 writeFileSync(file, out);
+
+/* installable app: manifest, offline service worker and icons, next to index.html */
+if (!fragment) {
+  const icons = ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
+  for (const f of icons) copyFileSync(join(root, 'src', 'icons', f), join(root, 'dist', f));
+  writeFileSync(join(root, 'dist', 'manifest.webmanifest'), JSON.stringify({
+    name: APP.APP_NAME, short_name: APP.APP_NAME, description: 'Morning HRV, standing test and calm breathing with a Polar H10. Everything stays on your device.',
+    start_url: './', scope: './', display: 'standalone', orientation: 'portrait', background_color: '#0e1416', theme_color: '#2b6f68',
+    icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }]
+  }, null, 2));
+  /* network first for the page so updates arrive straight away; the cached copy is used offline */
+  writeFileSync(join(root, 'dist', 'sw.js'), `/* ${APP.APP_NAME} ${APP.VERSION} offline support. GPL-3.0-or-later */
+const CACHE = 'stillpoint-${APP.VERSION}';
+const FILES = ['./', './index.html', './manifest.webmanifest', ${icons.map(f => `'./${f}'`).join(', ')}];
+self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting())); });
+self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE).map(x => caches.delete(x)))).then(() => self.clients.claim())); });
+self.addEventListener('fetch', e => {
+  const r = e.request; if (r.method !== 'GET' || new URL(r.url).origin !== location.origin) return;
+  if (r.mode === 'navigate') { e.respondWith(fetch(r).then(res => { const c = res.clone(); caches.open(CACHE).then(x => x.put('./index.html', c)); return res; }).catch(() => caches.match('./index.html'))); return; }
+  e.respondWith(caches.match(r).then(m => m || fetch(r)));
+});
+`);
+}
 
 // sanity checks: script parses, no remote resources
 new Function(js.slice(8, -9));

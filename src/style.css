@@ -267,3 +267,29 @@ body:not(.tabbed) .tabs{display:none}
 .info-btn[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
 .info-pop{background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 28px -14px rgba(0,0,0,.35)}
 .info-pop p{margin:0;font-size:14px;line-height:1.5}
+
+/* tags, training guidance, Lead One hint, weekly card, install, patterns, Elite import */
+.tagbox{border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.tag-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tag-top .btn{padding:7px 13px;font-size:13.5px;flex:none}
+.tag-edit{display:flex;flex-direction:column;gap:10px}
+.chips button[role="checkbox"][aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.field input{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:380px){.two{grid-template-columns:1fr}}
+.train{border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:3px;border-left:4px solid var(--ok);background:color-mix(in srgb,var(--ok) 9%,var(--surface))}
+.train.easy{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 9%,var(--surface))}
+.train.rest{border-left-color:var(--low);background:color-mix(in srgb,var(--low) 11%,var(--surface))}
+.train .tr-l{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.train b{font-size:17px}
+.train p{margin:0;font-size:14px;line-height:1.5}
+.leadone{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.leadone p{margin:0;font-size:14px;line-height:1.5}
+.week{gap:8px}
+.banner-soft{background:var(--accent-soft);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.banner-soft>div:first-child{display:flex;flex-direction:column;gap:2px}
+.custom-pat{display:flex;flex-direction:column;gap:8px}
+.cp{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:600;font-size:14px}
+.elite-panel{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:12px}
+.kv span small{display:block;color:var(--muted);font-size:12.5px;font-weight:400}
+a.btn:not(.coffee){color:var(--fg)}

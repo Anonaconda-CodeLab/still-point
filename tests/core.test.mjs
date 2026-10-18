@@ -124,3 +124,40 @@ test('breathing rate is recovered from the beat intervals', () => {
   }
   assert.equal(A.breathRate(A.cleanRR([[1, 1000], [2, 1000]]), 0, 10), null);
 });
+
+test('breathing patterns with holds: box and 4-7-8', () => {
+  const box = A.patternPacer(4, 4, 4, 4);
+  assert.equal(box.cycle, 16);
+  assert.equal(box.at(2).phase, 'in'); assert.equal(box.at(5).phase, 'hold'); assert.equal(box.at(5).lung, 1);
+  assert.equal(box.at(9).phase, 'out'); assert.equal(box.at(13).phase, 'hold2'); assert.equal(box.at(13).lung, 0);
+  const p = A.patternPacer(4, 7, 8, 0); assert.equal(p.cycle, 19); assert.equal(p.at(18.9).phase, 'out');
+});
+
+test('tags and sleep: effects appear after 3 tagged and 5 untagged mornings', () => {
+  const now = new Date(2026, 9, 18, 7, 0).getTime(), R = [];
+  for (let d = 30; d >= 0; d--) {
+    const alc = d % 5 === 0, score = 50 + (d * 7) % 45;
+    R.push({ id: 'r' + d, t: now - d * A.DAY, pos: 'lying', ln: 4 - (alc ? 0.2 : 0) + (score - 70) / 150, hr: 55, quality: 'good', tags: alc ? ['alcohol'] : [], sleepScore: score });
+  }
+  const e = A.tagEffects(R, 'lying', { alcohol: 'Alcohol last night' });
+  const alc = e.effects.find(x => x.key === 'alcohol');
+  assert.ok(alc && alc.pct < -12 && alc.pct > -25, JSON.stringify(e));
+  const sl = e.effects.find(x => x.key === 'sleepScore'); assert.ok(sl && sl.pct < 0);
+  assert.equal(A.tagEffects(R.slice(-6), 'lying').effects.length, 0);
+});
+
+test('training guidance follows the baseline', () => {
+  assert.equal(A.trainingAdvice({ ready: false }), null);
+  const base = { ready: true, today: {}, status: 'steady', todayZ: 0.2, hrDelta: 0 };
+  assert.equal(A.trainingAdvice(base).level, 'go');
+  assert.equal(A.trainingAdvice(Object.assign({}, base, { status: 'low' })).level, 'easy');
+  assert.equal(A.trainingAdvice(Object.assign({}, base, { todayZ: -1.8, hrDelta: 6 })).level, 'rest');
+});
+
+test('Elite HRV text files: intervals in ms or seconds, time from the file name', () => {
+  assert.deepEqual([...A.parseRRText('1000\n1020\r\n980\n')], [1000, 1020, 980]);
+  assert.deepEqual([...A.parseRRText('1.000\n1.020\n0.980')], [1000, 1020, 980]);
+  const l = A.rrToList([1000, 1000]); assert.equal(l[1][0], 2);
+  assert.equal(A.timeFromName('2015-05-12 07-48-32.txt'), new Date(2015, 4, 12, 7, 48, 32).getTime());
+  assert.equal(A.timeFromName('notes.txt'), null);
+});

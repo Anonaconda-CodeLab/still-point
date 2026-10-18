@@ -1,6 +1,6 @@
 {
   "name": "still-point",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A calm morning HRV reading, standing test and paced breathing with a chest-strap heart-rate monitor, entirely in the browser.",
   "private": true,
   "type": "module",

@@ -84,6 +84,29 @@ each reading is compared with your own usual range:
 
 Only the first good reading of each day counts, and each position has its own baseline.
 
+### Training guidance
+Once your baseline is ready, morning results include a suggestion for today's training, based on the published
+HRV-guided training approach (Kiviniemi 2007, Plews 2013):
+- **Go as planned**, or **Good day for a harder session** when you are above your usual range and today isn't low.
+- **Keep it easy**: your 7-day average is below your usual range, or today is clearly lower than your usual.
+- **Rest or very light**: today is well below your usual *and* either your week is low or your resting heart rate is
+  5 or more beats up.
+
+It's a suggestion: how you feel counts too. Switch it off in **Settings → Options** if you don't train.
+
+### Tags (optional)
+Under each result, **+ Add tags** lets you note anything that may have affected the reading: slept badly or well,
+alcohol last night, hard training or a rest day yesterday, sore muscles, feeling ill, stressed, a late or heavy meal,
+caffeine before the reading, travel or jet lag, period. You can also enter a **sleep score** (0–100, as shown by a
+Garmin, Oura, Fitbit or similar) and **hours slept**. Tags are entirely optional; you can add or change them later by
+opening the reading.
+
+### Something about skipped beats
+If several of your recent readings (3 of the last 7) had beats left out even though the signal was good, the result
+suggests recording with **Lead One ECG**, our ECG app, which shows the actual heart trace from the same strap so you can
+see whether the odd beats were the strap or real early beats. Occasional early or skipped beats are common and usually
+harmless; if you have symptoms such as palpitations, dizziness or chest discomfort, see a doctor.
+
 ## The standing test
 Choose **Morning reading + standing test** (from lying or sitting). It uses your morning position and length, so the
 reading part joins your baseline as usual. After the reading, a chime asks you to **stand up
@@ -96,8 +119,14 @@ calmly** and stay standing, still, for 2 minutes. You'll see:
 Compare these with your own earlier tests; Trends charts them over time.
 
 ## Breathe
-Choose a **pace** from 3 to 7 breaths a minute in half steps, a **rhythm** (*Longer out*: 40 % in, 60 % out, the more
-relaxing choice; or *Even*), and a length. Follow the circle: it grows as you breathe in and shrinks as you breathe out,
+Choose a **rhythm** and a length:
+- **Longer out** (40 % in, 60 % out, the more relaxing choice) or **Even**, with a **pace** from 3 to 7 breaths a minute
+  in half steps.
+- **Box 4-4-4-4**: in 4 s, hold 4 s, out 4 s, hold 4 s.
+- **4-7-8**: in 4 s, hold 7 s, out 8 s.
+- **Custom**: set your own breath in, hold, breath out and hold, from 1 to 20 seconds (holds from 0) in half-second steps.
+
+ Follow the circle: it grows as you breathe in and shrinks as you breathe out,
 with a soft chime at each change if you like. Breathe gently through your nose into your belly. Don't force the breath;
 if you feel short of air, choose a faster pace.
 
@@ -109,9 +138,26 @@ At one particular pace, usually between 4.5 and 6.5 breaths a minute, the swing 
 6.5, 6, 5.5, 5 and 4.5 breaths a minute for two minutes each and picks the pace with the biggest swing. Tap
 **Use … as my pace** to make it your default; it is marked with a dot among the pace buttons. Retest every month or two.
 
+### Open session
+No guide and no counting: sit or lie comfortably, breathe naturally and let your mind settle. Choose open-ended or a
+length from 5 to 30 minutes (a soft chime marks the end). With the strap on, your heart rate and HRV are shown quietly,
+and the summary compares your first and last two minutes: as you settle, heart rate usually drifts down and HRV up.
+
 ## Trends and history
 **Trends** shows the last 60 days: HRV score with your 7-day average and usual range, resting heart rate, standing-test
-results, spot checks and your breathing minutes. Tap any item in the history to open it.
+results, spot checks and your breathing and open-session minutes. Tap any item in the history to open it.
+
+### This week and your weekly recap
+**This week** on Trends sums up the current week (Monday to Sunday): morning readings, average HRV score and resting
+heart rate compared with the week before, standing tests, breathing and open-session minutes, and your most-used tag.
+At the start of each week, the HRV tab shows **Your week**, the same summary for the week just finished, until you tap
+**Got it**.
+
+### What affects you
+Once you've tagged some mornings, this card shows how each tag relates to your HRV, for example "Alcohol last night:
+HRV about 12 % lower than on other mornings". A tag needs at least **3 mornings with it and 5 without**; sleep score
+and hours slept need **8 mornings** and compare your lower half with your upper half. Only differences of 5 % or more
+are listed. These are patterns in your own readings, not proof of cause.
 
 ### What your trend shows
 Once your baseline is ready, the top of Trends comments on the last few weeks in plain language. A green dot is
@@ -124,8 +170,10 @@ reassuring, an orange dot is worth noticing, and a grey dot is about how the rea
 - **Standing test**: whether your heart-rate jump on standing has been bigger lately than it usually is.
 - **Consistency**: missed mornings, or readings at very different times of day, which make the comparison less reliable.
 
-Comments only appear when there is enough data to support them. They are general wellness information, not medical
-advice.
+**When comments appear:** from your **8th morning reading** in the same position (7 earlier mornings plus today).
+Some need more: "drifting up/down" about two weeks of mornings, "more up-and-down than usual" at least 5 readings in
+the last week, "heart rate up, HRV down" at least 4 readings in the last week, and "bigger jump on standing" at least
+6 standing tests. They are general wellness information, not medical advice.
 
 ## Your data
 Nothing is kept until you tap **Save**. Saved readings and sessions are stored in this browser on this device.
@@ -136,8 +184,21 @@ Nothing is kept until you tap **Save**. Saved readings and sessions are stored i
   date, time, type, position, score, lnRMSSD, RMSSD, SDNN, heart rate, breathing rate, signal quality, standing-test
   results, and pace and swing for breathing. It opens in Excel, Google Sheets or LibreOffice. It is a summary, so it
   can't be imported back; keep the backup file for that.
-- **Settings → Import history** brings a history file or a single reading file back in, for example on a new phone. Clearing the browser's site data deletes them, so export
-from time to time.
+- **Settings → Import history** brings a history file or a single reading file back in, for example on a new phone.
+  Clearing the browser's site data deletes everything, so save a backup from time to time.
+
+### Moving from Elite HRV
+In Elite HRV, request your data export; you'll get a download link by email. Download the .zip, then in
+**Settings → Import from Elite HRV** choose that .zip (or the .txt files inside it, one per reading). Pick the position
+you took your readings in. Readings before 11:00 become morning readings and later ones spot checks (you can switch this
+off). Everything is recalculated from the beat intervals, so your baseline and trends are ready straight away. Elite's
+tags aren't in the export, so they don't come across.
+
+## Install as an app
+In Chrome on Android, the HRV tab offers **Install** (also in **Settings → Options**, or Chrome's menu →
+**Add to Home screen** / **Install app**). It then has its own icon, opens full screen and works without a connection;
+Bluetooth still needs Chrome underneath, which it uses automatically. Your readings stay the same: the installed app
+and the web page share the same storage.
 
 ## Troubleshooting
 - **Connect does nothing or the strap isn't listed:** close Polar Beat, Polar Flow and other apps using the strap, make

@@ -50,7 +50,7 @@ function letSleep() { try { S.wake && S.wake.release(); } catch (e) {} S.wake = 
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.act) keepAwake(); });
 
 /* ---------- settings ---------- */
-const DEFAULTS = { pos: 'lying', len: 120, ortho: false, pace: 6, ratio: 0.4, dur: 10, sound: true, vibe: false, resPace: null };
+const DEFAULTS = { pos: 'lying', len: 120, ortho: false, pace: 6, ratio: 0.4, rhythm: '', custom: { tin: 4, h1: 0, tout: 6, h2: 0 }, dur: 10, medLen: 10, sound: true, vibe: false, resPace: null, training: true };
 function getSettings() { let s = {}; try { s = JSON.parse(localStorage.getItem('stillpoint.settings') || '{}') || {}; } catch (e) {} return Object.assign({}, DEFAULTS, s); }
 function patchSettings(p) { try { localStorage.setItem('stillpoint.settings', JSON.stringify(Object.assign(getSettings(), p))); } catch (e) {} }
 
@@ -74,7 +74,12 @@ async function loadAll() {
   S.sessions = ((await idb('sessions', 'readonly', s => s.getAll())) || []).sort((a, b) => a.t - b.t);
 }
 async function persistStorage() { try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) {} }
-const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, type: r.type || 'morning', ln: r.m.ln, hr: r.m.hr, quality: r.m.quality });
+const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, type: r.type || 'morning', ln: r.m.ln, hr: r.m.hr, quality: r.m.quality, tags: r.tags || [], sleepScore: r.sleepScore, sleepHours: r.sleepHours });
+const lenTxt = sec => sec % 60 ? `${Math.round(sec / 6) / 10} min` : `${sec / 60} min`;
+/* optional morning tags: things that often move HRV */
+const TAGS = [['slept_badly', 'Slept badly'], ['slept_well', 'Slept well'], ['alcohol', 'Alcohol last night'], ['hard_training', 'Hard training yesterday'], ['rest_day', 'Rest day yesterday'],
+  ['sore', 'Sore muscles'], ['ill', 'Feeling ill'], ['stressed', 'Stressed'], ['late_meal', 'Late or heavy meal'], ['caffeine', 'Caffeine before the reading'], ['travel', 'Travel or jet lag'], ['period', 'Period']];
+const TAG_LABEL = Object.fromEntries(TAGS);
 const allReadings = () => S.pending && !S.readings.some(x => x.id === S.pending.id) ? S.readings.concat([S.pending]) : S.readings;
 
 /* compute everything for a reading from its beat intervals (also used for imports, so stored numbers always match the data) */
@@ -226,6 +231,12 @@ function renderToday() {
   $('#chMorningBadge').hidden = !doneMorning;
   const pos = cfgOf('morning').pos, b = baseline(S.readings.map(forBaseline), pos);
   $('#chMorning').textContent = b.ready ? `${cfgOf('morning').len / 60} minutes on waking. Compared with your usual range.` : b.have ? `${cfgOf('morning').len / 60} minutes on waking. Baseline: ${b.have} of ${b.need} days.` : `${cfgOf('morning').len / 60} minutes on waking. Builds your baseline.`;
+  /* Monday recap of last week, once */
+  const wk = $('#weekCard'), lastW = weekStart(Date.now()) - 7 * DAY, seen = getSettings().weekSeen;
+  const recap = seen !== dayKey(lastW) ? weekHtml(lastW, 'Your week') : '';
+  if (recap) { wk.outerHTML = recap.replace('<div class="card week"', '<div id="weekCard" class="card week"'); const w2 = $('#weekCard'); w2.insertAdjacentHTML('beforeend', '<div class="acts-row"><button class="btn" id="btnWeekSeen">Got it</button></div>'); $('#btnWeekSeen').onclick = () => { patchSettings({ weekSeen: dayKey(lastW) }); w2.hidden = true; }; }
+  else wk.hidden = true;
+  $('#installCard').hidden = !S.installEvt || getSettings().installLater > Date.now();
   const card = $('#todayResult');
   if (todays.length) {
     card.innerHTML = `<div class="dev-name">Today</div><ul class="past">${todays.slice().reverse().map(r => `<li><button class="li-btn" data-id="${esc(r.id)}"><span class="meta"><b>${typeLabel(r)}</b><span>${esc(when(r.t).split(' · ')[1])} · ${POS[r.pos]} · ${f0(r.m.hr)} bpm</span></span><span class="val">${r.m.score ?? '—'}<small>SCORE</small></span></button></li>`).join('')}</ul>`;
@@ -382,21 +393,66 @@ function explainHtml(r, b) {
   if (r.o) P.push('The standing test: when you stand up, blood pools in your legs and your heart briefly speeds up to keep your blood pressure steady, then settles back down. A rise of roughly 10 to 30 beats a minute that settles within a minute or two is typical. Compared with your own earlier tests, a bigger jump or slower settling can go with fatigue, dehydration, heat or a hard training block.');
   return `<div class="explain"><h3>What this means</h3>${P.map(x => `<p>${esc(x)}</p>`).join('')}<p class="fine">${DISCLAIMER}</p></div>`;
 }
+function trainingHtml(r, b) {
+  if (r.type === 'spot' || !getSettings().training || !b.ready || !b.today || b.today.id !== r.id) return '';
+  const a = trainingAdvice(b); if (!a) return '';
+  return `<div class="train ${a.level}"><span class="tr-l">Training today</span><b>${esc(a.title)}</b><p>${esc(a.text)}</p></div>`;
+}
+function tagsHtml(r) {
+  const has = (r.tags && r.tags.length) || fin(r.sleepScore) || fin(r.sleepHours);
+  const sum = [...(r.tags || []).map(k => TAG_LABEL[k] || k), fin(r.sleepScore) ? `sleep score ${r.sleepScore}` : '', fin(r.sleepHours) ? `${r.sleepHours} h sleep` : ''].filter(Boolean).join(' · ');
+  return `<div class="tagbox"><div class="tag-top"><span><b>Tags</b> <small class="opt">optional</small>${has ? `<br><span class="dev-meta">${esc(sum)}</span>` : ''}</span><button class="btn" id="btnTags" aria-expanded="false">${has ? 'Edit tags' : '+ Add tags'}</button></div>
+    <div id="tagEdit" class="tag-edit" hidden>
+      <p class="fine">Tag anything that might have affected this reading. After a few weeks, Trends shows what affects your HRV.</p>
+      <div class="chips" id="tagChips"></div>
+      <div class="two"><div class="field"><label for="inSleepScore">Sleep score <small class="opt">0–100, from a watch or ring</small></label><input id="inSleepScore" type="number" inputmode="numeric" min="0" max="100" step="1" placeholder="e.g. 78" value="${fin(r.sleepScore) ? r.sleepScore : ''}"></div>
+      <div class="field"><label for="inSleepHours">Hours slept</label><input id="inSleepHours" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="e.g. 7.5" value="${fin(r.sleepHours) ? r.sleepHours : ''}"></div></div>
+      <div class="acts-row"><button class="btn primary" id="btnTagsDone">Done</button></div>
+    </div></div>`;
+}
+function bindTags(r) {
+  const btn = $('#btnTags'); if (!btn) return;
+  const ed = $('#tagEdit'), sel = new Set(r.tags || []), chips = $('#tagChips');
+  chips.innerHTML = TAGS.map(([k, l]) => `<button type="button" role="checkbox" aria-checked="${sel.has(k)}" data-k="${k}">${esc(l)}</button>`).join('');
+  for (const c of chips.children) c.onclick = () => { const on = c.getAttribute('aria-checked') !== 'true'; c.setAttribute('aria-checked', String(on)); on ? sel.add(c.dataset.k) : sel.delete(c.dataset.k); };
+  btn.onclick = () => { ed.hidden = !ed.hidden; btn.setAttribute('aria-expanded', String(!ed.hidden)); };
+  $('#btnTagsDone').onclick = async () => {
+    const sc = parseFloat($('#inSleepScore').value), hr = parseFloat($('#inSleepHours').value);
+    r.tags = TAGS.map(t => t[0]).filter(k => sel.has(k));
+    r.sleepScore = fin(sc) && sc >= 0 && sc <= 100 ? Math.round(sc) : undefined;
+    r.sleepHours = fin(hr) && hr >= 0 && hr <= 24 ? Math.round(hr * 4) / 4 : undefined;
+    if (S.pending !== r) { try { await idb('readings', 'readwrite', s => s.put(r)); } catch (e) { toast('The tags could not be saved.'); } }
+    openResult(r.id); toast(S.pending === r ? 'Tags added. Save the reading to keep them.' : 'Tags saved.');
+  };
+}
+/* several recent readings with beats left out despite a good signal: point to the ECG app, calmly */
+const skipped = x => x && x.m && x.m.quality !== 'poor' && x.m.quality !== 'short' && x.m.beats > 0 && (x.m.fixed >= 3 || x.m.fixed / x.m.beats >= 0.03);
+function leadOneHtml(r) {
+  if (!skipped(r)) return '';
+  const recent = allReadings().filter(x => x.t <= r.t).sort((a, b) => a.t - b.t).slice(-7);
+  if (recent.filter(skipped).length < 3) return '';
+  return `<div class="leadone"><p>Some beats in your recent readings didn’t fit the usual rhythm. Usually this is the strap: a dry electrode or a little movement. If you’re curious what’s behind it, <b>Lead One ECG</b> can record the actual heart trace from the same strap, so you can see each beat. Disconnect here first; the strap talks to one app at a time.</p>
+    <a class="btn" href="https://leadone.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">Open Lead One ECG</a>
+    <p class="fine">Occasional early or skipped beats are common and usually harmless. If you have symptoms such as palpitations, dizziness or chest discomfort, see a doctor.</p></div>`;
+}
 function resultHtml(r) {
   const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
   const q = { good: 'good signal', fair: 'fair signal', poor: 'noisy signal', short: 'too short' }[m.quality];
   return `<div class="card result-card">
-    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${r.len / 60} min · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
+    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${lenTxt(r.len)} · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
+    ${trainingHtml(r, b)}
     ${orthoHtml(r)}
+    ${tagsHtml(r)}
+    ${leadOneHtml(r)}
     ${explainHtml(r, b)}
     <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps.</p>
   </div>`;
 }
 function openResult(id) {
   const pend = S.pending && S.pending.id === id, r = pend ? S.pending : S.readings.find(x => x.id === id); if (!r) return;
-  $('#resultBody').innerHTML = resultHtml(r); S.openId = id;
+  $('#resultBody').innerHTML = resultHtml(r); S.openId = id; bindTags(r);
   $('#resActsNew').hidden = !pend; $('#resActsSaved').hidden = pend; show('scrResult');
 }
 const resBack = () => show(S.resultBack || 'scrToday');
@@ -445,48 +501,90 @@ function updateBreatheAvail() {
   rb.disabled = !S.connected;
   $('#breatheHint').textContent = S.connected ? 'Your heart rate will be shown following your breath.' : 'Works without the strap. Connect it to see your heart rate follow your breath.';
 }
+const RHYTHMS = [['0.4', 'Longer out'], ['0.5', 'Even'], ['box', 'Box 4-4-4-4'], ['478', '4-7-8'], ['custom', 'Custom']];
+const rhythmOf = s => s.rhythm || String(s.ratio === 0.5 ? '0.5' : '0.4');
+/* the pacer for the chosen rhythm; pace-based rhythms use the pace chips, patterns set their own timing */
+function rhythmPacer(s) {
+  const k = rhythmOf(s);
+  if (k === '0.4' || k === '0.5') return { pc: pacer(s.pace, +k), name: '' };
+  const c = k === 'custom' ? Object.assign({}, DEFAULTS.custom, s.custom) : PATTERNS[k];
+  return { pc: patternPacer(c.tin, c.h1, c.tout, c.h2), name: k === 'custom' ? `Custom ${fmtS(c.tin)}-${fmtS(c.h1)}-${fmtS(c.tout)}-${fmtS(c.h2)}` : PATTERNS[k].name, pattern: c };
+}
+const fmtS = v => (v % 1 ? v.toFixed(1) : String(v));
 function renderBreathe() {
   const s = getSettings();
   buildChips($('#paceChips'), PACES.map(p => [p, paceTxt(p)]), s.pace, v => { patchSettings({ pace: +v }); paceHint(); });
   if (s.resPace) for (const b of $('#paceChips').children) b.classList.toggle('res', +b.dataset.v === s.resPace);
-  seg($('#ratioSeg'), String(s.ratio), v => { patchSettings({ ratio: +v }); paceHint(); });
+  buildChips($('#rhythmChips'), RHYTHMS, rhythmOf(s), v => { patchSettings({ rhythm: v, ratio: v === '0.5' ? 0.5 : 0.4 }); paceHint(); });
+  buildChips($('#medLenChips'), [[0, 'Open-ended'], [5, '5 min'], [10, '10 min'], [15, '15 min'], [20, '20 min'], [30, '30 min']], s.medLen, v => patchSettings({ medLen: +v }));
   $('#durVal').textContent = s.dur + ' min'; $('#soundOn').checked = !!s.sound; $('#vibeOn').checked = !!s.vibe;
   paceHint(); updateBreatheAvail();
   const last = [...S.sessions].reverse().find(x => x.kind === 'resonance' && x.best);
   $('#resInfo').innerHTML = s.resPace ? `Your resonance pace: <b>${paceTxt(s.resPace)} breaths/min</b>${last ? ` (tested ${esc(when(last.t).split(' · ')[0].toLowerCase())})` : ''}. It’s marked with a dot above.` : S.connected ? '' : 'Connect your strap to run the test.';
 }
 function paceHint() {
-  const s = getSettings(), p = pacer(s.pace, s.ratio);
-  $('#paceHint').textContent = `In ${f1(p.tin)} s, out ${f1(p.tout)} s.` + (s.pace <= 4 ? ' Very slow: if you feel short of air, choose a faster pace.' : '');
+  const s = getSettings(), k = rhythmOf(s), R = rhythmPacer(s), p = R.pc, bpm = 60 / p.cycle;
+  $('#paceField').hidden = !(k === '0.4' || k === '0.5'); $('#customPat').hidden = k !== 'custom';
+  if (k === 'custom') { const c = Object.assign({}, DEFAULTS.custom, s.custom); $('#cpTin').textContent = fmtS(c.tin) + ' s'; $('#cpH1').textContent = fmtS(c.h1) + ' s'; $('#cpTout').textContent = fmtS(c.tout) + ' s'; $('#cpH2').textContent = fmtS(c.h2) + ' s'; }
+  const parts = [`In ${f1(p.tin)} s`]; if (p.h1) parts.push(`hold ${f1(p.h1)} s`); parts.push(`out ${f1(p.tout)} s`); if (p.h2) parts.push(`hold ${f1(p.h2)} s`);
+  $('#paceHint').textContent = parts.join(', ') + ` · ${bpm % 1 ? bpm.toFixed(1) : bpm} breaths a minute.` + (bpm <= 4 ? ' Very slow: if you feel short of air, choose a faster pace.' : '') + (p.h1 >= 7 ? ' Long holds: stop if you feel light-headed.' : '');
 }
+for (const b of document.querySelectorAll('#customPat .stepper button')) b.onclick = () => {
+  const s = getSettings(), c = Object.assign({}, DEFAULTS.custom, s.custom), k = b.dataset.k, lo = k === 'tin' || k === 'tout' ? 1 : 0;
+  c[k] = clamp(Math.round((c[k] + +b.dataset.d) * 2) / 2, lo, 20); patchSettings({ custom: c }); paceHint();
+};
 $('#durMinus').onclick = () => { const d = Math.max(2, getSettings().dur - (getSettings().dur > 10 ? 5 : 1)); patchSettings({ dur: d }); $('#durVal').textContent = d + ' min'; };
 $('#durPlus').onclick = () => { const d = Math.min(30, getSettings().dur + (getSettings().dur >= 10 ? 5 : 1)); patchSettings({ dur: d }); $('#durVal').textContent = d + ' min'; };
 $('#soundOn').onchange = e => { patchSettings({ sound: e.target.checked }); if (e.target.checked) { ensureAudio(); chime(396, true); } };
 $('#vibeOn').onchange = e => { patchSettings({ vibe: e.target.checked }); if (e.target.checked) vibrate(60); };
-$('#btnBreathe').onclick = () => { if (!acked()) return show('scrAck'); const s = getSettings(); startSession('breath', [{ pace: s.pace, dur: s.dur * 60 }], s.ratio); };
-$('#btnResonance').onclick = () => { if (!S.connected) return; startSession('resonance', RESONANCE_STEPS.map(p => ({ pace: p, dur: 120 })), getSettings().ratio); };
+$('#btnBreathe').onclick = () => {
+  if (!acked()) return show('scrAck');
+  const s = getSettings(), R = rhythmPacer(s), pace = Math.round(600 / R.pc.cycle) / 10;
+  startSession('breath', [{ pace, dur: s.dur * 60, pc: R.pc }], s.ratio, R.name, R.pattern);
+};
+$('#btnResonance').onclick = () => { if (!S.connected) return; const k = rhythmOf(getSettings()); startSession('resonance', RESONANCE_STEPS.map(p => ({ pace: p, dur: 120 })), k === '0.5' ? 0.5 : 0.4); };
+$('#btnMeditate').onclick = () => { if (!acked()) return show('scrAck'); startMeditation(getSettings().medLen); };
 
-function startSession(kind, steps, ratio) {
-  let t = 0; for (const st of steps) { st.t0 = t; t += st.dur; st.t1 = t; st.pc = pacer(st.pace, ratio); }
-  const a = S.act = { kind, t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps, ratio, total: t, simOff: null, lastPhase: '', lastStep: -1, strap: S.connected };
+function startSession(kind, steps, ratio, patternName, pattern) {
+  let t = 0; for (const st of steps) { st.t0 = t; t += st.dur; st.t1 = t; st.pc = st.pc || pacer(st.pace, ratio); }
+  const a = S.act = { kind, t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps, ratio, total: t, simOff: null, lastPhase: '', lastStep: -1, strap: S.connected, patternName, pattern };
   /* activity clock starts after the lead-in; the simulated strap aligns to it then */
   a.stepAt = tt => steps.find(st => tt < st.t1) || steps[steps.length - 1];
   a.lungAt = tt => { if (tt < 0) return 0; const st = a.stepAt(tt); return st.pc.at(tt - st.t0).lung; };
   a.paceNow = () => a.stepAt(Math.max(0, actClock())).pace;
   ensureAudio(); keepAwake(); show('scrSession');
   $('#sessHrBox').hidden = !S.connected; $('#sessSwing').textContent = '';
-  $('#sessStep').textContent = kind === 'resonance' ? '' : paceTxt(steps[0].pace) + ' breaths/min';
+  $('#sessStep').textContent = kind === 'resonance' ? '' : patternName || paceTxt(steps[0].pace) + ' breaths/min';
+  cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(frame);
+  clearInterval(S.timer); S.timer = setInterval(sessionSlow, 500);
+}
+/* open session: no guide; heart rate and HRV tracked quietly */
+function startMeditation(min) {
+  const total = min ? min * 60 : Infinity;
+  S.act = { kind: 'meditation', t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps: [], total, simOff: null, strap: S.connected, lastMin: 0 };
+  ensureAudio(); keepAwake(); show('scrSession');
+  $('#sessHrBox').hidden = !S.connected; $('#sessSwing').textContent = '';
+  $('#sessStep').textContent = 'Open session';
   cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(frame);
   clearInterval(S.timer); S.timer = setInterval(sessionSlow, 500);
 }
 function frame() {
-  const a = S.act; if (!a || (a.kind !== 'breath' && a.kind !== 'resonance')) return;
+  const a = S.act; if (!a || !['breath', 'resonance', 'meditation'].includes(a.kind)) return;
   const el = actClock();
   if (a.simOff == null && el >= 0 && S.demo) a.simOff = S.sim.t;
   const orb = $('#orb'), halo = $('#orbHalo'), word = $('#orbWord'), cnt = $('#orbCount');
+  if (a.kind === 'meditation' && el >= 0) {
+    if (el >= a.total) { finishSession(true); return; }
+    const sc = 0.86 + 0.04 * Math.sin(2 * Math.PI * el / 16);
+    orb.style.transform = `scale(${sc.toFixed(4)})`; halo.style.transform = `scale(${(sc * 1.7).toFixed(4)})`; halo.style.opacity = (0.4 + 0.08 * Math.sin(2 * Math.PI * el / 16)).toFixed(3);
+    if (word.textContent !== 'Breathe naturally') { word.textContent = 'Breathe naturally'; chime(396, false); }
+    cnt.textContent = mmss(el);
+    $('#sessLeft').textContent = fin(a.total) ? mmss(a.total - el) : mmss(el);
+    S.raf = requestAnimationFrame(frame); return;
+  }
   if (el < 0) {
     const sc = 0.75; orb.style.transform = `scale(${sc})`; halo.style.transform = `scale(${sc * 1.7})`; halo.style.opacity = .4;
-    word.textContent = 'Get comfortable'; cnt.textContent = Math.ceil(-el); $('#sessLeft').textContent = mmss(a.total);
+    word.textContent = 'Get comfortable'; cnt.textContent = Math.ceil(-el); $('#sessLeft').textContent = fin(a.total) ? mmss(a.total) : '0:00';
     S.raf = requestAnimationFrame(frame); return;
   }
   if (el >= a.total) { finishSession(true); return; }
@@ -495,8 +593,8 @@ function frame() {
   orb.style.transform = `scale(${sc.toFixed(4)})`; halo.style.transform = `scale(${(sc * 1.7).toFixed(4)})`; halo.style.opacity = (0.35 + 0.65 * p.lung).toFixed(3);
   const key = si + p.phase + p.cycle;
   if (key !== a.lastPhase) {
-    a.lastPhase = key; word.textContent = p.phase === 'in' ? 'Breathe in' : 'Breathe out';
-    if (p.phase === 'in') { chime(396, false); if (getSettings().vibe) vibrate(50); } else { chime(297, false); if (getSettings().vibe) vibrate([20, 60, 20]); }
+    a.lastPhase = key; word.textContent = p.phase === 'in' ? 'Breathe in' : p.phase === 'out' ? 'Breathe out' : 'Hold';
+    if (p.phase === 'in') { chime(396, false); if (getSettings().vibe) vibrate(50); } else if (p.phase === 'out') { chime(297, false); if (getSettings().vibe) vibrate([20, 60, 20]); } else if (getSettings().vibe) vibrate(15);
   }
   cnt.textContent = Math.ceil(p.left);
   if (si !== a.lastStep) { a.lastStep = si; if (a.kind === 'resonance') { $('#sessStep').textContent = `Pace ${si + 1} of ${a.steps.length} · ${paceTxt(st.pace)} per min`; if (si > 0) toast(`Now ${paceTxt(st.pace)} breaths a minute. Follow the circle.`, 3000); } }
@@ -509,7 +607,11 @@ function sessionSlow() {
   const el = actClock(); if (el < 0) return;
   const fresh = performance.now() - S.lastBeat < 4000; $('#sessHR').textContent = fresh && S.hr ? S.hr : '--';
   drawHr(a, el);
-  const st = a.stepAt(el), cyc = 60 / st.pace;
+  if (a.kind === 'meditation') {
+    if (performance.now() - (a.liveAt || 0) > 2000) { a.liveAt = performance.now(); const h = hrvOf(cleanRR(a.list.filter(x => x[0] >= el - 75)), el - 60, el + 1); $('#sessSwing').textContent = h.diffs >= 15 && fin(h.rmssd) ? `HRV ${Math.round(h.rmssd)} ms` : ''; }
+    return;
+  }
+  const st = a.stepAt(el), cyc = st.pc.cycle;
   if (el - st.t0 > 2 * cyc) { const r = rsaOf(cleanRR(a.list), Math.max(st.t0 + cyc, el - 3 * cyc), el, cyc, 0); $('#sessSwing').textContent = fin(r.amp) ? `swing ${f0(r.amp)} bpm` : ''; }
 }
 function drawHr(a, el) {
@@ -518,9 +620,9 @@ function drawHr(a, el) {
   const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   const span = 60, t0 = el - span, X = t => (t - t0) / span * w;
   const cs = getComputedStyle(document.documentElement), acc = cs.getPropertyValue('--accent').trim(), lav = cs.getPropertyValue('--orb-b').trim();
-  // breathing curve behind
-  g.beginPath(); for (let i = 0; i <= 120; i++) { const t = t0 + i / 120 * span, y = h - 6 - a.lungAt(Math.max(0, t)) * (h - 12); i ? g.lineTo(X(t), y) : g.moveTo(X(t), y); }
-  g.strokeStyle = lav; g.globalAlpha = .45; g.lineWidth = 2; g.stroke(); g.globalAlpha = 1;
+  // breathing curve behind (not in an open session)
+  if (a.lungAt) { g.beginPath(); for (let i = 0; i <= 120; i++) { const t = t0 + i / 120 * span, y = h - 6 - a.lungAt(Math.max(0, t)) * (h - 12); i ? g.lineTo(X(t), y) : g.moveTo(X(t), y); }
+  g.strokeStyle = lav; g.globalAlpha = .45; g.lineWidth = 2; g.stroke(); g.globalAlpha = 1; }
   const C = cleanRR(a.list.filter(x => x[0] >= t0 - 10)), pts = []; for (let i = 0; i < C.T.length; i++) if (C.OK[i] && C.T[i] >= t0) pts.push([C.T[i], 60000 / C.V[i]]);
   if (pts.length < 2) return;
   let lo = Math.min(...pts.map(p => p[1])), hi = Math.max(...pts.map(p => p[1])); const mid = (lo + hi) / 2, half = Math.max(6, (hi - lo) / 2 + 2); lo = mid - half; hi = mid + half;
@@ -537,9 +639,14 @@ async function finishSession(complete) {
   if (complete) { chime(396, true); chime(528, true, .35); }
   const sess = { id: 's' + a.wall, t: a.wall, kind: a.kind, ratio: a.ratio, dur: Math.round(el), complete, strap: a.strap && !!a.list.length };
   const C = cleanRR(a.list);
-  if (a.kind === 'breath') {
-    sess.pace = a.steps[0].pace;
-    if (sess.strap) { const r = rsaOf(C, 0, el, 60 / sess.pace, 1); sess.m = { hr: r.hr, amp: r.amp, rmssd: r.rmssd, ln: r.ln, cycles: r.cycles }; }
+  if (a.kind === 'meditation') {
+    if (sess.strap) {
+      const all = hrvOf(C, 0, el), w = Math.min(120, el / 2), first = hrvOf(C, 0, w), last = hrvOf(C, el - w, el + 1);
+      sess.m = { hr: all.hr, rmssd: all.rmssd, ln: all.ln, br: breathRate(C, Math.max(0, el - 300), el + 1), hr1: first.hr, hr2: last.hr, rmssd1: first.rmssd, rmssd2: last.rmssd };
+    }
+  } else if (a.kind === 'breath') {
+    sess.pace = a.steps[0].pace; if (a.patternName) { sess.patternName = a.patternName; sess.pattern = a.pattern; }
+    if (sess.strap) { const r = rsaOf(C, 0, el, a.steps[0].pc.cycle, 1); sess.m = { hr: r.hr, amp: r.amp, rmssd: r.rmssd, ln: r.ln, cycles: r.cycles }; }
   } else {
     const done = a.steps.filter(st => st.t1 <= el + 1).map(st => ({ pace: st.pace, t0: st.t0, t1: st.t1 }));
     const res = resonanceOf(C, done); sess.rows = res.rows.map(r => ({ pace: r.pace, amp: r.amp, cycles: r.cycles, hr: r.hr, rmssd: r.rmssd, artPct: r.artPct })); sess.best = done.length >= 3 ? res.best : null;
@@ -558,7 +665,14 @@ function sessionHtml(x, unsaved) {
       ${best ? `<button class="btn primary" id="btnUseRes">Use ${paceTxt(best)} as my pace</button>` : ''}</div>`;
   }
   const m = x.m;
-  return `<div class="card result-card"><div class="intro"><h1>${x.complete ? 'Nicely done' : 'Session ended'}</h1><p>${esc(when(x.t))} · ${mins || '<1'} min at ${paceTxt(x.pace)} breaths/min${unsaved ? ' · under a minute, not saved' : ''}</p></div>
+  if (x.kind === 'meditation') {
+    const d = (a, b) => { if (!fin(a) || !fin(b)) return ''; const x = Math.round(b) - Math.round(a); return (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x); };
+    return `<div class="card result-card"><div class="intro"><h1>${x.complete ? 'Nicely done' : 'Session ended'}</h1><p>${esc(when(x.t))} · open session · ${mins || '<1'} min${unsaved ? ' · under a minute, not saved' : ''}</p></div>
+    ${m ? `<div class="kpis"><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>HRV · RMSSD</span></div><div><b>${fin(m.br) ? Math.round(m.br) : '—'}<small>/min</small></b><span>Breathing</span></div></div>
+    <div class="sub-card"><h3>Start → end</h3><div class="kv"><span>Heart rate</span><b>${f0(m.hr1)} → ${f0(m.hr2)} bpm ${d(m.hr1, m.hr2)}</b></div><div class="kv"><span>HRV (RMSSD)</span><b>${f0(m.rmssd1)} → ${f0(m.rmssd2)} ms ${d(m.rmssd1, m.rmssd2)}</b></div></div>
+    <p class="fine">Start and end compare the first and last two minutes. As you settle, heart rate usually drifts down and HRV up; breathing often slows. Don’t chase the numbers: a wandering mind brought back gently is the practice.</p>` : '<p class="fine">Connect your strap next time to see how your heart rate and HRV changed as you settled.</p>'}</div>`;
+  }
+  return `<div class="card result-card"><div class="intro"><h1>${x.complete ? 'Nicely done' : 'Session ended'}</h1><p>${esc(when(x.t))} · ${mins || '<1'} min ${x.patternName ? esc(x.patternName.toLowerCase()) : `at ${paceTxt(x.pace)} breaths/min`}${unsaved ? ' · under a minute, not saved' : ''}</p></div>
     ${m ? `<div class="kpis"><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div><div><b>${f0(m.amp)}<small>bpm</small></b><span>Swing per breath</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div></div>
     <p class="fine">Swing per breath is how far your heart rate rose and fell with each breath. Bigger swings at a calm pace mean breath and heartbeat are moving together. RMSSD rises during slow breathing, so it isn’t comparable with your morning reading.</p>` : '<p class="fine">Connect your strap next time to see how your heart rate followed your breathing.</p>'}</div>`;
 }
@@ -605,6 +719,46 @@ function lineChart(days, opts) {
   if (opts.dots) for (const d of days) if (fin(d[opts.dots])) s += `<circle class="pt${fin(d.lo) && d[opts.dots] < d.lo ? ' low' : ''}" cx="${X(d.t).toFixed(1)}" cy="${Y(d[opts.dots]).toFixed(1)}" r="3"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.label)}">${s}</svg>`;
 }
+/* ---------- weekly summary (Monday to Sunday) ---------- */
+function weekStart(t) { const d = new Date(dayStart(t)), k = (d.getDay() + 6) % 7; d.setDate(d.getDate() - k); return d.getTime(); }
+function weekStats(t0, t1) {
+  const mr = S.readings.filter(r => r.t >= t0 && r.t < t1 && r.type !== 'spot' && r.m.quality !== 'poor' && r.m.quality !== 'short');
+  const by = new Map(); for (const r of mr.sort((a, b) => a.t - b.t)) { const k = dayKey(r.t); if (!by.has(k)) by.set(k, r); }
+  const days = [...by.values()], ss = S.sessions.filter(x => x.t >= t0 && x.t < t1);
+  const tagCount = {}; for (const r of days) for (const k of r.tags || []) tagCount[k] = (tagCount[k] || 0) + 1;
+  const top = Object.entries(tagCount).sort((a, b) => b[1] - a[1])[0];
+  return { n: days.length, score: days.length ? mean(days.map(r => r.m.score)) : NaN, hr: days.length ? mean(days.map(r => r.m.hr)) : NaN,
+    br: Math.round(ss.filter(x => x.kind === 'breath').reduce((t, x) => t + x.dur, 0) / 60), med: Math.round(ss.filter(x => x.kind === 'meditation').reduce((t, x) => t + x.dur, 0) / 60),
+    stands: S.readings.filter(r => r.t >= t0 && r.t < t1 && r.o).length, top: top ? `${TAG_LABEL[top[0]] || top[0]} (${top[1]}×)` : '' };
+}
+function weekHtml(at, title, id = '') {
+  const w0 = weekStart(at), cur = weekStats(w0, w0 + 7 * DAY), prev = weekStats(w0 - 7 * DAY, w0);
+  if (!cur.n && !cur.br && !cur.med) return '';
+  const diff = (a, b, u = '') => { if (!fin(a) || !fin(b)) return ''; const d = Math.round(a) - Math.round(b); return `<small>${d > 0 ? '+' : d < 0 ? '−' : '±'}${Math.abs(d)}${u} vs the week before</small>`; };
+  const range = `${new Date(w0).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} – ${new Date(w0 + 6 * DAY).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`;
+  return `<div class="card week"${id ? ` id="${id}"` : ''}><div><div class="dev-name">${esc(title)}</div><div class="dev-meta">${range}</div></div>
+    <div class="kv"><span>Morning readings</span><b>${cur.n} of 7</b></div>
+    ${fin(cur.score) ? `<div class="kv"><span>Average HRV score${diff(cur.score, prev.score)}</span><b>${Math.round(cur.score)}</b></div>` : ''}
+    ${fin(cur.hr) ? `<div class="kv"><span>Average resting heart rate${diff(cur.hr, prev.hr, ' bpm')}</span><b>${Math.round(cur.hr)} bpm</b></div>` : ''}
+    ${cur.stands ? `<div class="kv"><span>Standing tests</span><b>${cur.stands}</b></div>` : ''}
+    ${cur.br || cur.med ? `<div class="kv"><span>Breathing · open sessions</span><b>${cur.br} min · ${cur.med} min</b></div>` : ''}
+    ${cur.top ? `<div class="kv"><span>Most-used tag</span><b>${esc(cur.top)}</b></div>` : ''}</div>`;
+}
+function effectsHtml(R, pos) {
+  const e = tagEffects(R, pos, TAG_LABEL);
+  const any = R.some(r => r.pos === pos && ((r.tags && r.tags.length) || fin(r.sleepScore) || fin(r.sleepHours)));
+  let body;
+  if (!any) body = `<p class="dev-meta" style="margin:0">Add tags after your morning readings (tap <b>+ Add tags</b> on a result): alcohol, hard training, poor sleep, your sleep score and so on. Once a tag has been used on at least ${TAG_MIN} mornings, with at least ${TAG_MIN_WITHOUT} mornings without it, this card shows how it relates to your HRV. Sleep score and hours slept need 8 mornings.</p>`;
+  else {
+    const line = x => x.unit !== undefined
+      ? `<li class="${x.pct < 0 ? 'watch' : 'ok'}"><b>${esc(x.label)} below ${x.cut}${x.unit}</b><span>HRV about ${Math.abs(Math.round(x.pct))} % ${x.pct < 0 ? 'lower' : 'higher'} than after higher values (${x.n} mornings)</span></li>`
+      : `<li class="${x.pct < 0 ? 'watch' : 'ok'}"><b>${esc(x.label)}</b><span>HRV about ${Math.abs(Math.round(x.pct))} % ${x.pct < 0 ? 'lower' : 'higher'} than on other mornings (${x.n} mornings)</span></li>`;
+    body = (e.effects.length ? `<ul class="ins">${e.effects.map(line).join('')}</ul>` : '<p class="dev-meta" style="margin:0">No clear effects yet.</p>')
+      + (e.small.length ? `<p class="dev-meta" style="margin:0">No clear difference: ${e.small.map(x => esc(x.label)).join(', ')}.</p>` : '')
+      + (e.waiting.length ? `<p class="dev-meta" style="margin:0">Needs more mornings: ${e.waiting.map(x => `${esc(x.label)} (${x.have} of ${x.need || TAG_MIN})`).join(', ')}.</p>` : '');
+  }
+  return `<div class="card commentary"><div class="dev-name">What affects you</div>${body}<p class="fine">These are patterns in your own readings, not proof of cause: days often differ in more than one way.</p></div>`;
+}
 function renderTrends() {
   const s = getSettings(), have = Object.keys(POS).filter(p => S.readings.some(r => r.pos === p && r.type !== 'spot'));
   const mp = cfgOf('morning').pos, pos = S.trendPos && have.includes(S.trendPos) ? S.trendPos : have.includes(mp) ? mp : have[0] || mp;
@@ -617,7 +771,9 @@ function renderTrends() {
   const ins = trendInsights(R, pos, now, S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.o).map(r => ({ t: r.t, rise: r.o.rise })));
   if (tr.length) html += `<div class="card commentary"><div class="dev-name">What your trend shows</div>${ins.ready
     ? `<ul class="ins">${ins.items.map(i => `<li class="${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></li>`).join('')}</ul>`
-    : `<p class="dev-meta" style="margin:0">Comments appear once your baseline is ready: ${ins.have} of ${ins.need} mornings so far.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
+    : `<p class="dev-meta" style="margin:0">Comments start on your ${ins.need}th morning reading in this position: ${ins.have} of ${ins.need} so far. A few need more: about two weeks of mornings for “drifting”, 5 readings in a week for “up-and-down”, and 6 standing tests for the standing trend.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
+  html += weekHtml(now, 'This week');
+  html += effectsHtml(R, pos);
   if (!tr.length) html = `<div class="card"><p class="dev-meta" style="margin:0">No ${POS[pos].toLowerCase()} readings in the last 60 days yet. Take one each morning and your trend appears here.</p></div>`;
   else {
     html += `<div class="card"><div><div class="dev-name">HRV score</div><div class="dev-meta">${b.ready ? `Usual range ${Math.round(b.lo * 100 / 6.5)}–${Math.round(b.hi * 100 / 6.5)} · day-to-day variation ${f1(b.cv)} %` : `Building baseline: ${b.have} of ${b.need} days`}</div></div>
@@ -633,27 +789,89 @@ function renderTrends() {
   if (sp.length) html += `<div class="card"><div><div class="dev-name">Spot checks</div><div class="dev-meta">${sp.length} in the last 60 days · not part of your baseline</div></div>
       ${lineChart(sp.map(r => ({ t: r.t, v: r.m.score })), { at: now, span: 60, keys: ['v'], dots: 'v', label: 'Spot-check scores' })}</div>`;
   const since = now - 30 * DAY, br = S.sessions.filter(x => x.t >= since && x.kind === 'breath'), mins = Math.round(br.reduce((t, x) => t + x.dur, 0) / 60);
-  if (S.sessions.length) html += `<div class="card"><div><div class="dev-name">Breathing, last 30 days</div><div class="dev-meta">${br.length} session${br.length === 1 ? '' : 's'} · ${mins} min${s.resPace ? ` · resonance pace ${paceTxt(s.resPace)}` : ''}</div></div></div>`;
+  const md = S.sessions.filter(x => x.t >= since && x.kind === 'meditation'), mmins = Math.round(md.reduce((t, x) => t + x.dur, 0) / 60);
+  if (S.sessions.length) html += `<div class="card"><div><div class="dev-name">Breathing and open sessions, last 30 days</div><div class="dev-meta">Breathing: ${br.length} session${br.length === 1 ? '' : 's'} · ${mins} min${s.resPace ? ` · resonance pace ${paceTxt(s.resPace)}` : ''}<br>Open sessions: ${md.length} · ${mmins} min</div></div></div>`;
   $('#trendBody').innerHTML = html;
   const items = [...S.readings.map(r => ({ r, t: r.t })), ...S.sessions.map(x => ({ x, t: x.t }))].sort((a, b) => b.t - a.t).slice(0, 80);
   const list = $('#histList');
   list.innerHTML = items.length ? items.map((it, i) => it.r
     ? `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${typeLabel(it.r)} · ${POS[it.r.pos].toLowerCase()}</b><span>${esc(when(it.t))}${it.r.m.quality === 'poor' ? ' · noisy' : ''}</span></span><span class="val">${it.r.m.score ?? '—'}<small>SCORE</small></span></button></li>`
-    : `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${it.x.kind === 'resonance' ? 'Resonance test' : `Breathing · ${paceTxt(it.x.pace)}/min`}</b><span>${esc(when(it.t))} · ${Math.round(it.x.dur / 60)} min</span></span><span class="val">${it.x.kind === 'resonance' ? (it.x.best ? paceTxt(it.x.best) : '—') + '<small>PACE</small>' : it.x.m && fin(it.x.m.amp) ? Math.round(it.x.m.amp) + '<small>SWING</small>' : ''}</span></button></li>`).join('')
+    : `<li><button class="li-btn" data-i="${i}"><span class="meta"><b>${it.x.kind === 'resonance' ? 'Resonance test' : it.x.kind === 'meditation' ? 'Open session' : it.x.patternName ? esc(it.x.patternName) : `Breathing · ${paceTxt(it.x.pace)}/min`}</b><span>${esc(when(it.t))} · ${Math.round(it.x.dur / 60)} min</span></span><span class="val">${it.x.kind === 'resonance' ? (it.x.best ? paceTxt(it.x.best) : '—') + '<small>PACE</small>' : it.x.kind === 'meditation' ? (it.x.m && fin(it.x.m.rmssd) ? Math.round(it.x.m.rmssd) + '<small>HRV MS</small>' : '') : it.x.m && fin(it.x.m.amp) ? Math.round(it.x.m.amp) + '<small>SWING</small>' : ''}</span></button></li>`).join('')
     : '<li class="empty">No readings yet.</li>';
   for (const b2 of list.querySelectorAll('.li-btn')) b2.onclick = () => { const it = items[+b2.dataset.i]; S.resultBack = 'scrTrends'; if (it.r) openResult(it.r.id); else openSession(it.x); };
 }
 
 /* ---------- settings, export / import ---------- */
-$('#btnSettings').onclick = () => { if (S.act || S.pending || S.pendingSess) { if (!S.act) toast('Save or discard this first.'); return; } S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); show('scrSettings'); };
+$('#btnSettings').onclick = () => { if (S.act || S.pending || S.pendingSess) { if (!S.act) toast('Save or discard this first.'); return; } S.settingsBack = TABS.includes(document.body.dataset.screen) ? document.body.dataset.screen : 'scrToday'; refreshCount(); $('#optTraining').checked = getSettings().training !== false; $('#installRow').hidden = !S.installEvt; show('scrSettings'); };
 $('#btnSettingsBack').onclick = () => show(S.settingsBack || 'scrToday');
 $('#btnHelp').onclick = () => { S.helpBack = 'scrSettings'; show('scrHelp'); };
 const helpBack = () => show(S.helpBack || 'scrToday'); $('#btnHelpBack').onclick = helpBack; $('#btnHelpBack2').onclick = helpBack;
 const helpBtn2 = $('#btnHelp2'); if (helpBtn2) helpBtn2.onclick = () => { S.helpBack = 'scrSettings'; show('scrHelp'); };
+$('#optTraining').onchange = e => patchSettings({ training: e.target.checked });
+/* installable app */
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); S.installEvt = e; $('#installRow').hidden = false; if (document.body.dataset.screen === 'scrToday') renderToday(); });
+window.addEventListener('appinstalled', () => { S.installEvt = null; $('#installCard').hidden = true; $('#installRow').hidden = true; toast('Installed. Open it from your home screen.'); });
+async function doInstall() { const e = S.installEvt; if (!e) return; e.prompt(); try { await e.userChoice; } catch (x) {} S.installEvt = null; $('#installCard').hidden = true; $('#installRow').hidden = true; }
+$('#btnInstall').onclick = doInstall; $('#btnInstall2').onclick = doInstall;
+$('#btnInstallLater').onclick = () => { patchSettings({ installLater: Date.now() + 14 * DAY }); $('#installCard').hidden = true; };
+
+/* Elite HRV import: a .zip export, or the .txt files inside it (one per reading) */
+async function unzipTexts(buf) {
+  const v = new DataView(buf), u8 = new Uint8Array(buf), out = [], dec = new TextDecoder();
+  let e = -1; for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (v.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error('this doesn’t look like a zip file');
+  const n = v.getUint16(e + 10, true); let p = v.getUint32(e + 16, true);
+  for (let k = 0; k < n && p + 46 <= u8.length; k++) {
+    if (v.getUint32(p, true) !== 0x02014b50) break;
+    const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nl)); p += 46 + nl + xl + cl;
+    if (!/\.txt$/i.test(name) || /(^|\/)__MACOSX\//.test(name)) continue;
+    const start = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true), data = u8.subarray(start, start + csize);
+    let bytes; if (method === 0) bytes = data;
+    else if (method === 8 && typeof DecompressionStream !== 'undefined') bytes = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+    else continue;
+    out.push({ name: name.split('/').pop(), text: dec.decode(bytes) });
+  }
+  return out;
+}
+$('#btnElite').onclick = () => $('#eliteIn').click();
+$('#eliteIn').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
+  try {
+    let texts = [];
+    for (const f of files) {
+      if (f.size > 200e6) throw new Error('a file is too large');
+      if (/\.zip$/i.test(f.name) || f.type.includes('zip')) texts = texts.concat(await unzipTexts(await f.arrayBuffer()));
+      else texts.push({ name: f.name, text: await f.text() });
+    }
+    const found = [];
+    for (const x of texts) { const t = timeFromName(x.name), ms = parseRRText(x.text); if (t && ms.length >= 40) found.push({ t, ms }); }
+    if (!found.length) throw new Error('no Elite HRV readings were found. Choose the .zip from the export link, or the .txt files inside it');
+    found.sort((a, b) => a.t - b.t);
+    const dup = found.filter(f => S.readings.some(r => r.id === 'elite-' + f.t)).length;
+    S.elite = found;
+    $('#eliteFound').innerHTML = `Found <b>${found.length}</b> reading${found.length === 1 ? '' : 's'} from ${esc(new Date(found[0].t).toLocaleDateString())} to ${esc(new Date(found[found.length - 1].t).toLocaleDateString())}.${dup ? ` ${dup} already imported will be updated.` : ''}`;
+    buildChips($('#elitePos'), Object.entries(POS), S.elitePos || 'lying', v => { S.elitePos = v; });
+    $('#elitePanel').hidden = false;
+  } catch (err) { toast('Import failed: ' + (err && err.message || err), 7000); }
+};
+$('#btnEliteCancel').onclick = () => { S.elite = null; $('#elitePanel').hidden = true; };
+$('#btnEliteGo').onclick = async () => {
+  const found = S.elite || [], pos = S.elitePos || 'lying', morn = $('#eliteMorning').checked, R = [];
+  for (const f of found) {
+    const rr = rrToList(f.ms), len = Math.round(rr[rr.length - 1][0]);
+    if (len < 30) continue;
+    const r = computeReading({ id: 'elite-' + f.t, t: f.t, type: morn && new Date(f.t).getHours() < 11 ? 'morning' : 'spot', pos, len: Math.min(900, len), settle: 0, standAt: null, rr: rr.filter(x => x[0] <= 900) });
+    r.src = 'elite'; if (r.m.beats >= 30 && fin(r.m.ln)) R.push(r);
+  }
+  try { await idb('readings', 'readwrite', s => { for (const r of R) s.put(r); }); } catch (e) { toast('The readings could not be saved on this device.'); return; }
+  S.elite = null; $('#elitePanel').hidden = true; await loadAll(); refreshCount();
+  toast(`Imported ${R.length} reading${R.length === 1 ? '' : 's'} from Elite HRV.`, 5000);
+};
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
   const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: '{{APP_NAME}} {{VERSION}}', exported: new Date().toISOString(), settings: s,
-    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
+    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, src: r.src })), sessions: S.sessions };
   const d = new Date(); downloadFile(`{{FILE_PREFIX}}-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
 $('#btnSaveInfo').onclick = e => { e.stopPropagation(); const p = $('#saveInfo'), open = p.hidden; p.hidden = !open; $('#btnSaveInfo').setAttribute('aria-expanded', String(open)); };
@@ -662,19 +880,19 @@ $('#btnExport2').onclick = () => $('#btnExport').click();
 /* one row per reading and per breathing session, for spreadsheets */
 function csvText() {
   const cols = ['kind', 'date', 'time', 'type', 'position', 'minutes', 'score', 'lnRMSSD', 'RMSSD_ms', 'SDNN_ms', 'heart_rate_bpm', 'breaths_per_min', 'signal', 'beats_left_out',
-    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'swing_bpm', 'resonance_pace'];
+    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'pattern', 'swing_bpm', 'resonance_pace', 'tags', 'sleep_score', 'hours_slept'];
   const n = (v, d = 1) => fin(v) ? v.toFixed(d) : '', q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   const dt = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, `${pad2(d.getHours())}:${pad2(d.getMinutes())}`]; };
   const rows = [cols.join(',')], items = [...S.readings.map(r => ({ t: r.t, r })), ...S.sessions.map(x => ({ t: x.t, x }))].sort((a, b) => a.t - b.t);
   for (const it of items) {
     const o = {}; [o.date, o.time] = dt(it.t);
     if (it.r) {
-      const r = it.r, m = r.m; Object.assign(o, { kind: 'reading', type: typeLabel(r), position: POS[r.pos], minutes: n(r.len / 60, 0), score: m.score ?? '', lnRMSSD: n(m.ln, 2), RMSSD_ms: n(m.rmssd), SDNN_ms: n(m.sdnn),
-        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '' });
+      const r = it.r, m = r.m; Object.assign(o, { kind: 'reading', type: typeLabel(r), position: POS[r.pos], minutes: n(r.len / 60), score: m.score ?? '', lnRMSSD: n(m.ln, 2), RMSSD_ms: n(m.rmssd), SDNN_ms: n(m.sdnn),
+        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '', tags: (r.tags || []).map(k => TAG_LABEL[k] || k).join('; '), sleep_score: r.sleepScore ?? '', hours_slept: r.sleepHours ?? '' });
       if (r.o) Object.assign(o, { stand_peak_bpm: n(r.o.peakHr), stand_rise_bpm: n(r.o.rise), stand_settle_bpm: n(r.o.settle), ratio_30_15: n(r.o.ratio3015, 2) });
     } else {
-      const x = it.x; Object.assign(o, { kind: x.kind === 'resonance' ? 'resonance test' : 'breathing', minutes: n(x.dur / 60), pace_per_min: x.pace ?? '', resonance_pace: x.best ?? '' });
-      if (x.m) Object.assign(o, { heart_rate_bpm: n(x.m.hr), RMSSD_ms: n(x.m.rmssd), swing_bpm: n(x.m.amp) });
+      const x = it.x; Object.assign(o, { kind: x.kind === 'resonance' ? 'resonance test' : x.kind === 'meditation' ? 'open session' : 'breathing', minutes: n(x.dur / 60), pace_per_min: x.pace ?? '', pattern: x.patternName || '', resonance_pace: x.best ?? '' });
+      if (x.m) Object.assign(o, { heart_rate_bpm: n(x.m.hr), RMSSD_ms: n(x.m.rmssd), swing_bpm: n(x.m.amp), breaths_per_min: n(x.m.br) });
     }
     rows.push(cols.map(c => q(String(o[c] ?? ''))).join(','));
   }
@@ -687,14 +905,20 @@ $('#btnCsv').onclick = $('#btnCsv2').onclick = () => {
 $('#btnImport').onclick = () => $('#histIn').click();
 const num = v => fin(v) ? v : null, str = (v, n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, '').slice(0, n) : '';
 function cleanReadingIn(r) {
-  if (!r || typeof r !== 'object' || !Array.isArray(r.rr) || !POS[r.pos] || !num(r.t) || !LENS.includes(r.len)) return null;
+  if (!r || typeof r !== 'object' || !Array.isArray(r.rr) || !POS[r.pos] || !num(r.t) || !(r.len >= 30 && r.len <= 900)) return null;
   const rr = r.rr.slice(0, 4000).filter(p => Array.isArray(p) && fin(p[0]) && fin(p[1]) && Math.abs(p[0]) < 1e4 && p[1] < 3000).map(p => [+p[0], +p[1]]);
-  return computeReading({ id: str(r.id, 40) || 'r' + r.t, t: r.t, type: r.type === 'spot' ? 'spot' : 'morning', pos: r.pos, len: r.len, settle: num(r.settle) ?? SETTLE, standAt: num(r.standAt), rr });
+  const o = computeReading({ id: str(r.id, 40) || 'r' + r.t, t: r.t, type: r.type === 'spot' ? 'spot' : 'morning', pos: r.pos, len: r.len, settle: num(r.settle) ?? SETTLE, standAt: num(r.standAt), rr });
+  if (Array.isArray(r.tags)) o.tags = r.tags.filter(k => TAG_LABEL[k]);
+  if (fin(r.sleepScore) && r.sleepScore >= 0 && r.sleepScore <= 100) o.sleepScore = Math.round(r.sleepScore);
+  if (fin(r.sleepHours) && r.sleepHours >= 0 && r.sleepHours <= 24) o.sleepHours = r.sleepHours;
+  if (r.src === 'elite') o.src = 'elite';
+  return o;
 }
 function cleanSessionIn(x) {
-  if (!x || typeof x !== 'object' || !num(x.t) || !['breath', 'resonance'].includes(x.kind)) return null;
+  if (!x || typeof x !== 'object' || !num(x.t) || !['breath', 'resonance', 'meditation'].includes(x.kind)) return null;
   const o = { id: str(x.id, 40) || 's' + x.t, t: x.t, kind: x.kind, ratio: num(x.ratio) ?? 0.4, dur: num(x.dur) ?? 0, complete: !!x.complete, strap: !!x.strap };
-  if (x.kind === 'breath') { o.pace = PACES.includes(x.pace) ? x.pace : 6; if (x.m && typeof x.m === 'object') o.m = { hr: num(x.m.hr), amp: num(x.m.amp), rmssd: num(x.m.rmssd), ln: num(x.m.ln), cycles: num(x.m.cycles) }; }
+  if (x.kind === 'meditation') { if (x.m && typeof x.m === 'object') { o.m = {}; for (const k of ['hr', 'rmssd', 'ln', 'br', 'hr1', 'hr2', 'rmssd1', 'rmssd2']) o.m[k] = num(x.m[k]); } }
+  else if (x.kind === 'breath') { o.pace = num(x.pace) && x.pace >= 1 && x.pace <= 20 ? x.pace : 6; if (x.patternName) o.patternName = str(x.patternName, 60); if (x.m && typeof x.m === 'object') o.m = { hr: num(x.m.hr), amp: num(x.m.amp), rmssd: num(x.m.rmssd), ln: num(x.m.ln), cycles: num(x.m.cycles) }; }
   else { o.best = PACES.includes(x.best) ? x.best : null; o.rows = (Array.isArray(x.rows) ? x.rows : []).slice(0, 12).filter(r => r && PACES.includes(r.pace)).map(r => ({ pace: r.pace, amp: num(r.amp), cycles: num(r.cycles), hr: num(r.hr), rmssd: num(r.rmssd), artPct: num(r.artPct) })); }
   return o;
 }
@@ -721,6 +945,7 @@ $('#btnClear').onclick = async function () {
 /* ---------- tabs and start-up ---------- */
 for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { if (!S.act && !S.pending && !S.pendingSess) { S.resultBack = null; show(b.dataset.tab); } };
 (async function init() {
+  try { if ('serviceWorker' in navigator && !FRAMED && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
   await loadAll();
   envCheck();
   setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.');
