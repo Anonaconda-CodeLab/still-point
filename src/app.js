@@ -110,7 +110,6 @@ function setDev(state, name, meta) {
   if (name) $('#devName').textContent = name; if (meta !== undefined) $('#devMeta').textContent = meta;
   $('#btnConnect').textContent = state === 'on' ? 'Disconnect' : 'Connect H10';
   $('#btnConnect').disabled = state === 'busy';
-  $('#btnDemo').hidden = state === 'on';
   const on = state === 'on';
   $('#strapPill').hidden = !on; $('#strapPillTxt').textContent = S.demo ? 'Simulated' : 'H10' + (S.battery != null ? ' · ' + S.battery + '%' : '');
   updateBreatheAvail(); if (document.body.dataset.screen === 'scrSetup') setupHint();
@@ -259,7 +258,6 @@ $('#btnSetupBack').onclick = () => show('scrToday');
 $('#btnSetupConnect').onclick = connectFlow;
 $('#btnSetupDemo').onclick = startDemo;
 $('#btnConnect').onclick = connectFlow;
-$('#btnDemo').onclick = startDemo;
 
 function scoreRing(score, size = 104) {
   const r = 44, c = 2 * Math.PI * r, p = fin(score) ? clamp(score, 0, 100) / 100 : 0;

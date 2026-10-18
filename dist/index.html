@@ -323,7 +323,7 @@ body:not(.tabbed) .tabs{display:none}
         <div><div id="devName" class="dev-name">Polar H10 not connected</div>
         <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
       </div>
-      <div class="acts-row"><button id="btnConnect" class="btn primary">Connect H10</button><button id="btnDemo" class="btn ghost">Try a simulated strap</button></div>
+      <div class="acts-row"><button id="btnConnect" class="btn primary">Connect H10</button></div>
       <p class="dev-meta browser-req" style="margin:0"><b>On a phone, use Google Chrome on Android.</b> On a computer, use Chrome or Edge. iPhone, iPad, Safari and Firefox can’t connect to the strap.</p>
     </div>
     <div id="envNote" class="note" hidden></div>
@@ -486,7 +486,7 @@ body:not(.tabbed) .tabs{display:none}
 <p>Slow breathing can make some people light-headed. If that happens, stop and breathe normally. If you are pregnant or have a heart, lung or blood-pressure condition, check with your doctor before slow-breathing practice. Do the standing test only where you can sit down straight away.</p>
 <h2>What you need</h2>
 <ul><li>A <b>Polar H10</b> chest strap (a Polar H9 also works).</li><li><b>Google Chrome on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
-<p>No strap to hand? <b>Try a simulated strap</b> on the HRV tab produces made-up heart beats so you can explore the app. At the end of a reading, tap <b>Discard</b> so made-up readings stay out of your history.</p>
+<p>No strap to hand? Choose any reading and, where it asks you to connect your strap, tap <b>try a simulated strap</b>. It produces made-up heart beats so you can explore the app. At the end of a reading, tap <b>Discard</b> so made-up readings stay out of your history.</p>
 <h2>Choosing what to do</h2>
 <p>The <b>HRV</b> tab (the first tab) asks what you'd like to do:</p>
 <ul><li><b>Morning reading</b>: the daily check-in that builds your baseline.</li><li><b>Morning reading + standing test</b>: the same reading, then you stand up for 2 minutes (see below).</li><li><b>Spot check</b>: a reading at any other time. It is saved and charted but never changes your baseline, because HRV naturally runs lower later in the day.</li><li><b>Breathe</b>: the breathing guide.</li></ul>
@@ -909,7 +909,6 @@ function setDev(state, name, meta) {
   if (name) $('#devName').textContent = name; if (meta !== undefined) $('#devMeta').textContent = meta;
   $('#btnConnect').textContent = state === 'on' ? 'Disconnect' : 'Connect H10';
   $('#btnConnect').disabled = state === 'busy';
-  $('#btnDemo').hidden = state === 'on';
   const on = state === 'on';
   $('#strapPill').hidden = !on; $('#strapPillTxt').textContent = S.demo ? 'Simulated' : 'H10' + (S.battery != null ? ' · ' + S.battery + '%' : '');
   updateBreatheAvail(); if (document.body.dataset.screen === 'scrSetup') setupHint();
@@ -1058,7 +1057,6 @@ $('#btnSetupBack').onclick = () => show('scrToday');
 $('#btnSetupConnect').onclick = connectFlow;
 $('#btnSetupDemo').onclick = startDemo;
 $('#btnConnect').onclick = connectFlow;
-$('#btnDemo').onclick = startDemo;
 
 function scoreRing(score, size = 104) {
   const r = 44, c = 2 * Math.PI * r, p = fin(score) ? clamp(score, 0, 100) / 100 : 0;
