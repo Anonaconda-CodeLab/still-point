@@ -262,3 +262,8 @@ body:not(.tabbed) .tabs{display:none}
 .sec-row h2.sec{margin-bottom:2px}
 .mini-acts{display:flex;gap:6px;flex-wrap:wrap}
 .mini-acts .btn{padding:6px 12px;font-size:13px}
+.mini-acts{align-items:center}
+.info-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--muted);background:none;color:var(--muted);font:600 14px/1 var(--f-mono);font-style:italic;display:grid;place-items:center;padding:0;flex:none}
+.info-btn[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.info-pop{background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 28px -14px rgba(0,0,0,.35)}
+.info-pop p{margin:0;font-size:14px;line-height:1.5}

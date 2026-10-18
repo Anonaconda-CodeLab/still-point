@@ -159,7 +159,11 @@
     <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
     <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
     <div id="trendBody"></div>
-    <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
+    <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="info-btn" id="btnSaveInfo" aria-label="What do Save all and Spreadsheet do?" aria-expanded="false" aria-controls="saveInfo">i</button><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
+    <div class="info-pop" id="saveInfo" role="note" hidden>
+      <p><b>Save all</b> saves every reading and breathing session, including every beat interval, in one backup file. Keep it somewhere safe, or use <i>Import history</i> in Settings to bring everything onto another phone.</p>
+      <p><b>Spreadsheet</b> saves a summary with one row per reading or session (date, score, HRV, heart rate, breathing and more) as a CSV file for Excel or Google Sheets. It can’t be imported back, so keep the backup file too.</p>
+    </div>
     <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
   </section>
 

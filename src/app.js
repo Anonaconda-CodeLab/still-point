@@ -658,6 +658,8 @@ $('#btnExport').onclick = () => {
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
   const d = new Date(); downloadFile(`{{FILE_PREFIX}}-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
+$('#btnSaveInfo').onclick = e => { e.stopPropagation(); const p = $('#saveInfo'), open = p.hidden; p.hidden = !open; $('#btnSaveInfo').setAttribute('aria-expanded', String(open)); };
+document.addEventListener('click', e => { const p = $('#saveInfo'); if (!p.hidden && !p.contains(e.target)) { p.hidden = true; $('#btnSaveInfo').setAttribute('aria-expanded', 'false'); } });
 $('#btnExport2').onclick = () => $('#btnExport').click();
 /* one row per reading and per breathing session, for spreadsheets */
 function csvText() {

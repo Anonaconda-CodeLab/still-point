@@ -275,6 +275,11 @@ body:not(.tabbed) .tabs{display:none}
 .sec-row h2.sec{margin-bottom:2px}
 .mini-acts{display:flex;gap:6px;flex-wrap:wrap}
 .mini-acts .btn{padding:6px 12px;font-size:13px}
+.mini-acts{align-items:center}
+.info-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--muted);background:none;color:var(--muted);font:600 14px/1 var(--f-mono);font-style:italic;display:grid;place-items:center;padding:0;flex:none}
+.info-btn[aria-expanded="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.info-pop{background:var(--surface);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 28px -14px rgba(0,0,0,.35)}
+.info-pop p{margin:0;font-size:14px;line-height:1.5}
 </style>
 </head><body>
 <main id="app">
@@ -438,7 +443,11 @@ body:not(.tabbed) .tabs{display:none}
     <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
     <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
     <div id="trendBody"></div>
-    <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
+    <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="info-btn" id="btnSaveInfo" aria-label="What do Save all and Spreadsheet do?" aria-expanded="false" aria-controls="saveInfo">i</button><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
+    <div class="info-pop" id="saveInfo" role="note" hidden>
+      <p><b>Save all</b> saves every reading and breathing session, including every beat interval, in one backup file. Keep it somewhere safe, or use <i>Import history</i> in Settings to bring everything onto another phone.</p>
+      <p><b>Spreadsheet</b> saves a summary with one row per reading or session (date, score, HRV, heart rate, breathing and more) as a CSV file for Excel or Google Sheets. It can’t be imported back, so keep the backup file too.</p>
+    </div>
     <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
   </section>
 
@@ -1448,6 +1457,8 @@ $('#btnExport').onclick = () => {
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
   const d = new Date(); downloadFile(`StillPoint-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
+$('#btnSaveInfo').onclick = e => { e.stopPropagation(); const p = $('#saveInfo'), open = p.hidden; p.hidden = !open; $('#btnSaveInfo').setAttribute('aria-expanded', String(open)); };
+document.addEventListener('click', e => { const p = $('#saveInfo'); if (!p.hidden && !p.contains(e.target)) { p.hidden = true; $('#btnSaveInfo').setAttribute('aria-expanded', 'false'); } });
 $('#btnExport2').onclick = () => $('#btnExport').click();
 /* one row per reading and per breathing session, for spreadsheets */
 function csvText() {
