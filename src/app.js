@@ -349,7 +349,28 @@ function orthoHtml(r) {
     <div class="kv"><span>Standing, last minute</span><b>${f0(o.standingHr)} bpm (${sgn(o.settle)})</b></div>
     <div class="kv"><span>30:15 ratio</span><b>${f2(o.ratio3015)}</b></div>
     <div class="kv"><span>Standing lnRMSSD</span><b>${f1(o.standLn)}</b></div>
-    <p class="fine">${fin(usual) ? `Your usual rise is ${Math.round(usual)} bpm. ` : ''}A bigger rise or slower settling than your usual can go with fatigue or dehydration.${o.settle >= 30 ? ' If you often feel dizzy or faint when you stand, talk to a doctor.' : ''}</p></div>`;
+    <p class="fine">${fin(usual) ? `Your usual rise is ${Math.round(usual)} bpm. ` : ''}Compare with your own earlier tests.${o.settle >= 30 ? ' If you often feel dizzy or faint when you stand, talk to a doctor.' : ''}</p></div>`;
+}
+/* plain-language "What this means" card */
+const DISCLAIMER = 'General wellness information, not medical advice. It can’t diagnose or rule out any condition. If you feel unwell or are worried about your heart, see a doctor.';
+function explainHtml(r, b) {
+  const m = r.m, P = [];
+  if (m.quality === 'poor' || m.quality === 'short') {
+    P.push('The strap had trouble picking up a clean signal this time, so the numbers may not reflect how you really are. Moisten the electrodes, fit the strap snugly just below the chest muscles, keep still and quiet, and take another reading.');
+  } else if (r.type === 'spot') {
+    P.push('HRV is how much the time between your heartbeats varies. A relaxed, rested body varies the gap more; stress, effort, food, coffee and even talking make the beats more even, so HRV drops.');
+    P.push('During the day it changes from minute to minute, so a single spot check is best used to see how something affects you: before and after a breathing session, after a stressful meeting, or in the evening compared with other evenings. It doesn’t say much about your day as a whole; your morning reading does that.');
+  } else {
+    P.push('HRV is how much the time between your heartbeats varies. When your body is rested and relaxed, the gap shifts more from beat to beat. When it is dealing with hard training, short sleep, illness, alcohol or stress, the beats become more even and HRV drops. Your number on its own matters less than how it compares with your own usual.');
+    if (!b.ready) P.push(`For now the most useful thing is to take the reading the same way each morning. After ${b.need} mornings the app can tell you whether a reading is normal for you.`);
+    else if (b.status === 'low') P.push('Today suggests your body is working harder than usual to recover. That doesn’t mean something is wrong. Take it as a nudge to go a bit easier today, sleep well, eat and drink properly, and see how the next few mornings look.');
+    else if (b.status === 'high') P.push('Your body looks well recovered. A good day for whatever you have planned, as long as you feel good too.');
+    else P.push('Today looks like a normal day for you: your body seems to be coping with whatever you are doing. Carry on as planned.');
+    if (fin(m.hr)) P.push(`Your heart rate during the reading was ${f0(m.hr)} beats a minute.${b.ready && fin(b.hrDelta) && Math.abs(b.hrDelta) >= 3 ? ` That is ${Math.abs(Math.round(b.hrDelta))} ${b.hrDelta > 0 ? 'above' : 'below'} your usual. A resting heart rate a few beats higher than normal often goes with a lower HRV, for the same reasons.` : ' A resting heart rate a few beats above your usual often goes with a lower HRV, for the same reasons.'}`);
+    if (b.ready) { const ms = Math.exp(b.mean); P.push(`For context: your usual RMSSD is about ${Math.round(ms)} ms. Published averages for healthy adults lying down range roughly from 20 to 75 ms and fall with age. Where you sit in that range mostly reflects age and genes, not how fit or healthy you are, which is why the app compares you with yourself.`); }
+  }
+  if (r.o) P.push('The standing test: when you stand up, blood pools in your legs and your heart briefly speeds up to keep your blood pressure steady, then settles back down. A rise of roughly 10 to 30 beats a minute that settles within a minute or two is typical. Compared with your own earlier tests, a bigger jump or slower settling can go with fatigue, dehydration, heat or a hard training block.');
+  return `<div class="explain"><h3>What this means</h3>${P.map(x => `<p>${esc(x)}</p>`).join('')}<p class="fine">${DISCLAIMER}</p></div>`;
 }
 function resultHtml(r) {
   const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
@@ -359,7 +380,8 @@ function resultHtml(r) {
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${orthoHtml(r)}
-    <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps. For general wellness only; not a medical assessment.</p>
+    ${explainHtml(r, b)}
+    <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps.</p>
   </div>`;
 }
 function openResult(id) {
@@ -582,6 +604,10 @@ function renderTrends() {
   const now = Date.now(), R = S.readings.map(forBaseline), tr = trend(R, pos, now, 60).map(d => Object.assign({}, d, { score: scoreOf(d.ln), s7: fin(d.avg7) ? d.avg7 * 100 / 6.5 : NaN, slo: fin(d.lo) ? d.lo * 100 / 6.5 : NaN, shi: fin(d.hi) ? d.hi * 100 / 6.5 : NaN }));
   const b = baseline(R, pos, now);
   let html = '';
+  const ins = trendInsights(R, pos, now, S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.o).map(r => ({ t: r.t, rise: r.o.rise })));
+  if (tr.length) html += `<div class="card commentary"><div class="dev-name">What your trend shows</div>${ins.ready
+    ? `<ul class="ins">${ins.items.map(i => `<li class="${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></li>`).join('')}</ul>`
+    : `<p class="dev-meta" style="margin:0">Comments appear once your baseline is ready: ${ins.have} of ${ins.need} mornings so far.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
   if (!tr.length) html = `<div class="card"><p class="dev-meta" style="margin:0">No ${POS[pos].toLowerCase()} readings in the last 60 days yet. Take one each morning and your trend appears here.</p></div>`;
   else {
     html += `<div class="card"><div><div class="dev-name">HRV score</div><div class="dev-meta">${b.ready ? `Usual range ${Math.round(b.lo * 100 / 6.5)}–${Math.round(b.hi * 100 / 6.5)} · day-to-day variation ${f1(b.cv)} %` : `Building baseline: ${b.have} of ${b.need} days`}</div></div>

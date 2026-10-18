@@ -152,6 +152,61 @@ function trend(readings, pos, at = Date.now(), span = 60) {
   return days.map(d => { const b = baselineAt(all, d.t); return { day: d.day, t: d.t, ln: d.ln, hr: d.hr, avg7: b.ready ? b.avg7 : NaN, lo: b.ready ? b.lo : NaN, hi: b.ready ? b.hi : NaN }; });
 }
 
+/* ---------- trends commentary ----------
+   Plain-language observations about the last few weeks of morning readings. Each needs enough data to say anything;
+   tone: 'ok' (reassuring), 'watch' (worth noticing), 'info' (about how the readings are taken). */
+function trendInsights(readings, pos, at = Date.now(), rises = []) {
+  const all = dailySeries(readings, pos), now0 = dayStart(at);
+  const b = baselineAt(all, at), items = [];
+  if (!b.ready) return { ready: false, have: b.have, need: b.need, items };
+  const recent = all.filter(d => d.t >= now0 - 13 * DAY && d.t < now0 + DAY);
+  const week = all.filter(d => d.t >= now0 - 6 * DAY && d.t < now0 + DAY);
+  const st = all.filter(d => d.t < now0 + DAY).map(d => Object.assign({}, d, { b: baselineAt(all, d.t) })).filter(d => d.b.ready);
+  const last = st[st.length - 1];
+  // 1. direction: a run outside the usual range, or a drift of the 7-day average over two weeks
+  let run = 0, runFrom = null;
+  if (last && last.t >= now0 - 2 * DAY && last.b.status !== 'steady') {
+    const k = last.b.status; for (let i = st.length - 1; i >= 0 && st[i].b.status === k; i--) runFrom = st[i];
+    run = Math.round((last.t - runFrom.t) / DAY) + 1;
+    if (k === 'low') items.push({ key: 'low-run', tone: 'watch', title: run >= 3 ? `Lower than usual for ${run} days` : 'Dipped below your usual range',
+      text: `Your 7-day average is below your usual range${run >= 3 ? ` and has been for ${run} days` : ''}. Runs like this often follow a block of hard training, short or broken sleep, illness, alcohol, travel or a stressful stretch. Easing off and prioritising sleep usually brings it back within a week or two.` });
+    else if (k === 'high') items.push({ key: 'high-run', tone: 'ok', title: run >= 3 ? `Higher than usual for ${run} days` : 'Above your usual range',
+      text: 'Your 7-day average is above your usual range. This usually reflects good recovery, for example after a lighter week, a holiday or better sleep. Only if it comes with unusual tiredness during a period of very heavy training is it worth easing off.' });
+  }
+  if (!items.length) {
+    const old = st.filter(d => d.t <= at - 10 * DAY && d.t >= at - 18 * DAY).pop();
+    const drift = old && last ? (last.b.avg7 - old.b.avg7) / b.sd : NaN;
+    if (drift <= -0.5) items.push({ key: 'drift-down', tone: 'watch', title: 'Drifting down', text: 'Over the last two weeks your 7-day average has slowly slipped, though it is still within your usual range. Nothing to act on yet; just worth keeping an eye on alongside how you feel and sleep.' });
+    else if (drift >= 0.5) items.push({ key: 'drift-up', tone: 'ok', title: 'Drifting up', text: 'Over the last two weeks your 7-day average has slowly risen while staying within your usual range: a sign your body is coping well with what you are doing.' });
+    else items.push({ key: 'steady', tone: 'ok', title: 'Steady', text: 'Your 7-day average has stayed within your usual range over the last two weeks. Your body seems to be handling your current routine well.' });
+  }
+  // 2. day-to-day variation compared with your usual (a rising variation is often an early sign of strain)
+  if (week.length >= 5) {
+    const ratio = std(week.map(d => d.ln)) / b.sd;
+    if (ratio >= 1.6) items.push({ key: 'bouncy', tone: 'watch', title: 'More up-and-down than usual', text: 'Your readings this week have jumped around more than they normally do. Unsettled days often show up this way before the average itself drops, for example with irregular sleep, late meals, alcohol or a change in training.' });
+  }
+  // 3. heart rate and HRV together
+  const hrW = week.map(d => d.hr).filter(fin);
+  if (hrW.length >= 4 && fin(b.hrMean)) {
+    const dHr = mean(hrW) - b.hrMean, dLn = mean(week.map(d => d.ln)) - b.mean;
+    if (dHr >= 3 && dLn < 0) items.push({ key: 'hr-up', tone: 'watch', title: 'Heart rate up, HRV down', text: `This week your resting heart rate has averaged about ${Math.round(dHr)} beats a minute above your usual while HRV is lower. When both move this way together it is a clearer sign of strain than either alone; illness coming on, heat, dehydration and heavy training are common causes.` });
+    else if (dHr <= -3 && dLn > 0) items.push({ key: 'hr-down', tone: 'ok', title: 'Heart rate down, HRV up', text: `Your resting heart rate is about ${Math.round(-dHr)} beats a minute below your usual and HRV is higher: both point the same way, towards good recovery.` });
+  }
+  // 4. standing test: a rise creeping up compared with your earlier tests
+  const rs = rises.filter(x => fin(x.rise) && x.t < at + DAY).sort((p, q) => p.t - q.t);
+  if (rs.length >= 6) {
+    const last3 = mean(rs.slice(-3).map(x => x.rise)), before = median(rs.slice(0, -3).slice(-20).map(x => x.rise));
+    if (last3 - before >= 5) items.push({ key: 'stand-up', tone: 'watch', title: 'Bigger jump on standing', text: `In your last three standing tests your heart rate rose about ${Math.round(last3 - before)} beats a minute more than it usually does. Fatigue, dehydration, heat and hard training can all do this. If you also feel dizzy or faint when you stand, talk to a doctor.` });
+  }
+  // 5. how the readings are taken
+  if (recent.length < 7) items.push({ key: 'sparse', tone: 'info', title: 'A few mornings missed', text: `There are ${recent.length} morning readings in the last two weeks. The comparison gets more reliable the more mornings you record; even four or five a week is plenty.` });
+  if (recent.length >= 5) {
+    const mins = recent.map(d => { const x = new Date(d.t); return x.getHours() * 60 + x.getMinutes(); });
+    if (std(mins) > 75) items.push({ key: 'times', tone: 'info', title: 'Reading times vary', text: 'Your morning readings have been taken at quite different times of day. HRV changes through the morning, so taking it at about the same time, soon after waking, makes the comparison fairer.' });
+  }
+  return { ready: true, items, baseline: b };
+}
+
 /* ---------- simulated strap (demo mode and tests) ---------- */
 function makeSim(seed = 7) {
   let s = seed >>> 0;

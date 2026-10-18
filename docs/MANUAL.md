@@ -54,6 +54,16 @@ food or exercise, in the same position. Consistency matters far more than the ex
 - **Signal**: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are
   left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.
 
+### What this means
+Under every result, a short **What this means** section explains in everyday words what HRV is, what today's reading
+suggests and what, if anything, to do about it. Once your baseline is ready it also gives some context: where your usual
+value sits compared with published averages for healthy adults (roughly 20 to 75 ms RMSSD lying down, falling with age).
+
+The app deliberately doesn't grade HRV as *favourable*, *normal*, *borderline* or *outside normal range* the way Lead One
+ECG grades ECG measurements. Healthy people of the same age can differ two- or threefold in HRV, mostly because of
+genetics, so a population grade would worry people with naturally low HRV for nothing and reassure people with high HRV
+even when their own trend is sliding. Comparing you with your own usual range is what the research supports.
+
 ### Your baseline
 HRV varies a lot between people, so a single number means little. After **7 earlier mornings** in the same position,
 each reading is compared with your own usual range:
@@ -94,7 +104,21 @@ At one particular pace, usually between 4.5 and 6.5 breaths a minute, the swing 
 
 ## Trends and history
 **Trends** shows the last 60 days: HRV score with your 7-day average and usual range, resting heart rate, standing-test
-results and your breathing minutes. Tap any item in the history to open it.
+results, spot checks and your breathing minutes. Tap any item in the history to open it.
+
+### What your trend shows
+Once your baseline is ready, the top of Trends comments on the last few weeks in plain language. A green dot is
+reassuring, an orange dot is worth noticing, and a grey dot is about how the readings are taken. It looks at:
+- **Direction**: whether your 7-day average is below or above your usual range, and for how many days, or slowly
+  drifting over two weeks.
+- **Day-to-day variation**: readings that jump around more than usual are often an early sign of strain, before the
+  average itself drops.
+- **Heart rate and HRV together**: resting heart rate up while HRV is down is a clearer sign of strain than either alone.
+- **Standing test**: whether your heart-rate jump on standing has been bigger lately than it usually is.
+- **Consistency**: missed mornings, or readings at very different times of day, which make the comparison less reliable.
+
+Comments only appear when there is enough data to support them. They are general wellness information, not medical
+advice.
 
 ## Your data
 Nothing is kept until you tap **Save**. Saved readings and sessions are stored in this browser on this device.

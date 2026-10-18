@@ -89,3 +89,28 @@ test('baseline needs 7 earlier days, then compares the 7-day average with the no
   assert.equal(tr.length, 30);
   assert.ok(Number.isNaN(tr[0].avg7) && Number.isFinite(tr[tr.length - 1].lo));
 });
+
+test('trends commentary: steady, a low run with heart rate up, bouncy weeks, standing rise and sparse readings', () => {
+  const now = new Date(2026, 9, 18, 7, 0).getTime(), mk = (d, ln, hr, min = 0) => ({ id: 'r' + d, t: now - d * A.DAY + min * 60e3, pos: 'lying', ln, hr, quality: 'good' });
+  const steady = []; for (let d = 40; d >= 0; d--) steady.push(mk(d, 4 + 0.1 * Math.sin(d * 1.7), 55));
+  const s1 = A.trendInsights(steady, 'lying', now);
+  assert.ok(s1.ready); assert.equal(s1.items.map(i => i.key).join(), 'steady');
+
+  const low = steady.map(r => (now - r.t) < 6.5 * A.DAY ? Object.assign({}, r, { ln: 3.6, hr: 61 }) : r);
+  const keys = A.trendInsights(low, 'lying', now).items.map(i => i.key);
+  assert.ok(keys.includes('low-run') && keys.includes('hr-up'), keys.join());
+
+  const bouncy = steady.map(r => (now - r.t) < 6.5 * A.DAY ? Object.assign({}, r, { ln: 4 + ((now - r.t) / A.DAY % 2 < 1 ? 0.35 : -0.35) }) : r);
+  assert.ok(A.trendInsights(bouncy, 'lying', now).items.some(i => i.key === 'bouncy'));
+
+  const rises = []; for (let d = 30; d >= 0; d -= 3) rises.push({ t: now - d * A.DAY, rise: d < 7 ? 32 : 22 });
+  assert.ok(A.trendInsights(steady, 'lying', now, rises).items.some(i => i.key === 'stand-up'));
+
+  const sparse = steady.filter(r => (now - r.t) > 14 * A.DAY || (now - r.t) / A.DAY % 3 < 1);
+  assert.ok(A.trendInsights(sparse, 'lying', now).items.some(i => i.key === 'sparse'));
+
+  const times = steady.map((r, i) => Object.assign({}, r, { t: r.t + (i % 2 ? 150 : 0) * 60e3 }));
+  assert.ok(A.trendInsights(times, 'lying', now).items.some(i => i.key === 'times'));
+
+  assert.equal(A.trendInsights(steady.slice(-4), 'lying', now).ready, false);
+});

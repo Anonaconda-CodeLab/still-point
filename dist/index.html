@@ -257,6 +257,18 @@ body:not(.tabbed) .tabs{display:none}
 .ch-t b{font-size:16.5px;font-weight:600}
 .ch-t small{color:var(--muted);font-size:13.5px;line-height:1.35}
 .ch-badge{flex:none;font-size:12px;font-weight:600;color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:999px;padding:4px 10px}
+
+/* plain-language explainer and trend commentary */
+.explain{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.explain h3,.commentary .dev-name{margin:0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.explain p{margin:0;font-size:14.5px;line-height:1.55;max-width:38em}
+.explain p.fine{font-size:12.5px;margin-top:2px}
+.ins{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.ins li{display:flex;flex-direction:column;gap:3px;padding-left:16px;position:relative}
+.ins li::before{content:"";position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.ins li.watch::before{background:var(--low)} .ins li.info::before{background:var(--muted)}
+.ins b{font-weight:600;font-size:15px}
+.ins span{font-size:14px;line-height:1.5;color:var(--fg)}
 </style>
 </head><body>
 <main id="app">
@@ -439,7 +451,7 @@ body:not(.tabbed) .tabs{display:none}
       <button id="btnHelp" class="row-btn"><span>User manual<small>Readings, the standing test, breathing and your baseline</small></span><span class="chev">›</span></button>
     </div>
     <div class="card" id="aboutCard">
-      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 0.2.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
+      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 0.3.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
       <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro. Not a medical device.</p>
       <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
     </div>
@@ -465,6 +477,9 @@ body:not(.tabbed) .tabs{display:none}
 <p><b>Get the most from it:</b> read at the same time each morning, soon after waking, after the bathroom and before coffee, food or exercise, in the same position. Consistency matters far more than the exact routine you choose.</p>
 <h3>Your result</h3>
 <ul><li><b>HRV score</b>: lnRMSSD on a 0–100 scale (lnRMSSD × 100 / 6.5). Several apps use a similar scale, but the numbers are not interchangeable between apps.</li><li><b>lnRMSSD</b> and <b>RMSSD</b>: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.</li><li><b>Heart rate</b>: average over the reading.</li><li><b>Signal</b>: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.</li></ul>
+<h3>What this means</h3>
+<p>Under every result, a short <b>What this means</b> section explains in everyday words what HRV is, what today's reading suggests and what, if anything, to do about it. Once your baseline is ready it also gives some context: where your usual value sits compared with published averages for healthy adults (roughly 20 to 75 ms RMSSD lying down, falling with age).</p>
+<p>The app deliberately doesn't grade HRV as <i>favourable</i>, <i>normal</i>, <i>borderline</i> or <i>outside normal range</i> the way Lead One ECG grades ECG measurements. Healthy people of the same age can differ two- or threefold in HRV, mostly because of genetics, so a population grade would worry people with naturally low HRV for nothing and reassure people with high HRV even when their own trend is sliding. Comparing you with your own usual range is what the research supports.</p>
 <h3>Your baseline</h3>
 <p>HRV varies a lot between people, so a single number means little. After <b>7 earlier mornings</b> in the same position, each reading is compared with your own usual range:</p>
 <ul><li><b>Usual range</b> is your 60-day average ± half a standard deviation of your daily values.</li><li>Your <b>7-day average</b> is compared with it, because day-to-day values bounce around.</li><li><b>In your usual range</b>: nothing stands out.</li><li><b>Lower than usual</b>: often follows hard training, short or poor sleep, alcohol, illness, travel or stress. An easier day and an early night are sensible.</li><li><b>Higher than usual</b>: usually good recovery; occasionally, with unusual tiredness after very heavy training, a sign of being run down.</li></ul>
@@ -479,7 +494,11 @@ body:not(.tabbed) .tabs{display:none}
 <h3>Find your resonance pace</h3>
 <p>At one particular pace, usually between 4.5 and 6.5 breaths a minute, the swing is largest. The test guides you through 6.5, 6, 5.5, 5 and 4.5 breaths a minute for two minutes each and picks the pace with the biggest swing. Tap <b>Use … as my pace</b> to make it your default; it is marked with a dot among the pace buttons. Retest every month or two.</p>
 <h2>Trends and history</h2>
-<p><b>Trends</b> shows the last 60 days: HRV score with your 7-day average and usual range, resting heart rate, standing-test results and your breathing minutes. Tap any item in the history to open it.</p>
+<p><b>Trends</b> shows the last 60 days: HRV score with your 7-day average and usual range, resting heart rate, standing-test results, spot checks and your breathing minutes. Tap any item in the history to open it.</p>
+<h3>What your trend shows</h3>
+<p>Once your baseline is ready, the top of Trends comments on the last few weeks in plain language. A green dot is reassuring, an orange dot is worth noticing, and a grey dot is about how the readings are taken. It looks at:</p>
+<ul><li><b>Direction</b>: whether your 7-day average is below or above your usual range, and for how many days, or slowly drifting over two weeks.</li><li><b>Day-to-day variation</b>: readings that jump around more than usual are often an early sign of strain, before the average itself drops.</li><li><b>Heart rate and HRV together</b>: resting heart rate up while HRV is down is a clearer sign of strain than either alone.</li><li><b>Standing test</b>: whether your heart-rate jump on standing has been bigger lately than it usually is.</li><li><b>Consistency</b>: missed mornings, or readings at very different times of day, which make the comparison less reliable.</li></ul>
+<p>Comments only appear when there is enough data to support them. They are general wellness information, not medical advice.</p>
 <h2>Your data</h2>
 <p>Nothing is kept until you tap <b>Save</b>. Saved readings and sessions are stored in this browser on this device.</p>
 <ul><li><b>Save to file</b> (open any saved reading) saves that one reading, with all its beat-to-beat intervals, as a file.</li><li><b>Settings → Export history</b> saves everything as one backup file.</li><li><b>Settings → Import history</b> brings a history file or a single reading file back in, for example on a new phone. Clearing the browser's site data deletes them, so export</li></ul>
@@ -654,6 +673,61 @@ function baseline(readings, pos, at = Date.now()) { return baselineAt(dailySerie
 function trend(readings, pos, at = Date.now(), span = 60) {
   const days = dailySeries(readings, pos).filter(d => d.t >= dayStart(at) - (span - 1) * DAY && d.t < dayStart(at) + DAY), all = dailySeries(readings, pos);
   return days.map(d => { const b = baselineAt(all, d.t); return { day: d.day, t: d.t, ln: d.ln, hr: d.hr, avg7: b.ready ? b.avg7 : NaN, lo: b.ready ? b.lo : NaN, hi: b.ready ? b.hi : NaN }; });
+}
+
+/* ---------- trends commentary ----------
+   Plain-language observations about the last few weeks of morning readings. Each needs enough data to say anything;
+   tone: 'ok' (reassuring), 'watch' (worth noticing), 'info' (about how the readings are taken). */
+function trendInsights(readings, pos, at = Date.now(), rises = []) {
+  const all = dailySeries(readings, pos), now0 = dayStart(at);
+  const b = baselineAt(all, at), items = [];
+  if (!b.ready) return { ready: false, have: b.have, need: b.need, items };
+  const recent = all.filter(d => d.t >= now0 - 13 * DAY && d.t < now0 + DAY);
+  const week = all.filter(d => d.t >= now0 - 6 * DAY && d.t < now0 + DAY);
+  const st = all.filter(d => d.t < now0 + DAY).map(d => Object.assign({}, d, { b: baselineAt(all, d.t) })).filter(d => d.b.ready);
+  const last = st[st.length - 1];
+  // 1. direction: a run outside the usual range, or a drift of the 7-day average over two weeks
+  let run = 0, runFrom = null;
+  if (last && last.t >= now0 - 2 * DAY && last.b.status !== 'steady') {
+    const k = last.b.status; for (let i = st.length - 1; i >= 0 && st[i].b.status === k; i--) runFrom = st[i];
+    run = Math.round((last.t - runFrom.t) / DAY) + 1;
+    if (k === 'low') items.push({ key: 'low-run', tone: 'watch', title: run >= 3 ? `Lower than usual for ${run} days` : 'Dipped below your usual range',
+      text: `Your 7-day average is below your usual range${run >= 3 ? ` and has been for ${run} days` : ''}. Runs like this often follow a block of hard training, short or broken sleep, illness, alcohol, travel or a stressful stretch. Easing off and prioritising sleep usually brings it back within a week or two.` });
+    else if (k === 'high') items.push({ key: 'high-run', tone: 'ok', title: run >= 3 ? `Higher than usual for ${run} days` : 'Above your usual range',
+      text: 'Your 7-day average is above your usual range. This usually reflects good recovery, for example after a lighter week, a holiday or better sleep. Only if it comes with unusual tiredness during a period of very heavy training is it worth easing off.' });
+  }
+  if (!items.length) {
+    const old = st.filter(d => d.t <= at - 10 * DAY && d.t >= at - 18 * DAY).pop();
+    const drift = old && last ? (last.b.avg7 - old.b.avg7) / b.sd : NaN;
+    if (drift <= -0.5) items.push({ key: 'drift-down', tone: 'watch', title: 'Drifting down', text: 'Over the last two weeks your 7-day average has slowly slipped, though it is still within your usual range. Nothing to act on yet; just worth keeping an eye on alongside how you feel and sleep.' });
+    else if (drift >= 0.5) items.push({ key: 'drift-up', tone: 'ok', title: 'Drifting up', text: 'Over the last two weeks your 7-day average has slowly risen while staying within your usual range: a sign your body is coping well with what you are doing.' });
+    else items.push({ key: 'steady', tone: 'ok', title: 'Steady', text: 'Your 7-day average has stayed within your usual range over the last two weeks. Your body seems to be handling your current routine well.' });
+  }
+  // 2. day-to-day variation compared with your usual (a rising variation is often an early sign of strain)
+  if (week.length >= 5) {
+    const ratio = std(week.map(d => d.ln)) / b.sd;
+    if (ratio >= 1.6) items.push({ key: 'bouncy', tone: 'watch', title: 'More up-and-down than usual', text: 'Your readings this week have jumped around more than they normally do. Unsettled days often show up this way before the average itself drops, for example with irregular sleep, late meals, alcohol or a change in training.' });
+  }
+  // 3. heart rate and HRV together
+  const hrW = week.map(d => d.hr).filter(fin);
+  if (hrW.length >= 4 && fin(b.hrMean)) {
+    const dHr = mean(hrW) - b.hrMean, dLn = mean(week.map(d => d.ln)) - b.mean;
+    if (dHr >= 3 && dLn < 0) items.push({ key: 'hr-up', tone: 'watch', title: 'Heart rate up, HRV down', text: `This week your resting heart rate has averaged about ${Math.round(dHr)} beats a minute above your usual while HRV is lower. When both move this way together it is a clearer sign of strain than either alone; illness coming on, heat, dehydration and heavy training are common causes.` });
+    else if (dHr <= -3 && dLn > 0) items.push({ key: 'hr-down', tone: 'ok', title: 'Heart rate down, HRV up', text: `Your resting heart rate is about ${Math.round(-dHr)} beats a minute below your usual and HRV is higher: both point the same way, towards good recovery.` });
+  }
+  // 4. standing test: a rise creeping up compared with your earlier tests
+  const rs = rises.filter(x => fin(x.rise) && x.t < at + DAY).sort((p, q) => p.t - q.t);
+  if (rs.length >= 6) {
+    const last3 = mean(rs.slice(-3).map(x => x.rise)), before = median(rs.slice(0, -3).slice(-20).map(x => x.rise));
+    if (last3 - before >= 5) items.push({ key: 'stand-up', tone: 'watch', title: 'Bigger jump on standing', text: `In your last three standing tests your heart rate rose about ${Math.round(last3 - before)} beats a minute more than it usually does. Fatigue, dehydration, heat and hard training can all do this. If you also feel dizzy or faint when you stand, talk to a doctor.` });
+  }
+  // 5. how the readings are taken
+  if (recent.length < 7) items.push({ key: 'sparse', tone: 'info', title: 'A few mornings missed', text: `There are ${recent.length} morning readings in the last two weeks. The comparison gets more reliable the more mornings you record; even four or five a week is plenty.` });
+  if (recent.length >= 5) {
+    const mins = recent.map(d => { const x = new Date(d.t); return x.getHours() * 60 + x.getMinutes(); });
+    if (std(mins) > 75) items.push({ key: 'times', tone: 'info', title: 'Reading times vary', text: 'Your morning readings have been taken at quite different times of day. HRV changes through the morning, so taking it at about the same time, soon after waking, makes the comparison fairer.' });
+  }
+  return { ready: true, items, baseline: b };
 }
 
 /* ---------- simulated strap (demo mode and tests) ---------- */
@@ -1032,7 +1106,28 @@ function orthoHtml(r) {
     <div class="kv"><span>Standing, last minute</span><b>${f0(o.standingHr)} bpm (${sgn(o.settle)})</b></div>
     <div class="kv"><span>30:15 ratio</span><b>${f2(o.ratio3015)}</b></div>
     <div class="kv"><span>Standing lnRMSSD</span><b>${f1(o.standLn)}</b></div>
-    <p class="fine">${fin(usual) ? `Your usual rise is ${Math.round(usual)} bpm. ` : ''}A bigger rise or slower settling than your usual can go with fatigue or dehydration.${o.settle >= 30 ? ' If you often feel dizzy or faint when you stand, talk to a doctor.' : ''}</p></div>`;
+    <p class="fine">${fin(usual) ? `Your usual rise is ${Math.round(usual)} bpm. ` : ''}Compare with your own earlier tests.${o.settle >= 30 ? ' If you often feel dizzy or faint when you stand, talk to a doctor.' : ''}</p></div>`;
+}
+/* plain-language "What this means" card */
+const DISCLAIMER = 'General wellness information, not medical advice. It can’t diagnose or rule out any condition. If you feel unwell or are worried about your heart, see a doctor.';
+function explainHtml(r, b) {
+  const m = r.m, P = [];
+  if (m.quality === 'poor' || m.quality === 'short') {
+    P.push('The strap had trouble picking up a clean signal this time, so the numbers may not reflect how you really are. Moisten the electrodes, fit the strap snugly just below the chest muscles, keep still and quiet, and take another reading.');
+  } else if (r.type === 'spot') {
+    P.push('HRV is how much the time between your heartbeats varies. A relaxed, rested body varies the gap more; stress, effort, food, coffee and even talking make the beats more even, so HRV drops.');
+    P.push('During the day it changes from minute to minute, so a single spot check is best used to see how something affects you: before and after a breathing session, after a stressful meeting, or in the evening compared with other evenings. It doesn’t say much about your day as a whole; your morning reading does that.');
+  } else {
+    P.push('HRV is how much the time between your heartbeats varies. When your body is rested and relaxed, the gap shifts more from beat to beat. When it is dealing with hard training, short sleep, illness, alcohol or stress, the beats become more even and HRV drops. Your number on its own matters less than how it compares with your own usual.');
+    if (!b.ready) P.push(`For now the most useful thing is to take the reading the same way each morning. After ${b.need} mornings the app can tell you whether a reading is normal for you.`);
+    else if (b.status === 'low') P.push('Today suggests your body is working harder than usual to recover. That doesn’t mean something is wrong. Take it as a nudge to go a bit easier today, sleep well, eat and drink properly, and see how the next few mornings look.');
+    else if (b.status === 'high') P.push('Your body looks well recovered. A good day for whatever you have planned, as long as you feel good too.');
+    else P.push('Today looks like a normal day for you: your body seems to be coping with whatever you are doing. Carry on as planned.');
+    if (fin(m.hr)) P.push(`Your heart rate during the reading was ${f0(m.hr)} beats a minute.${b.ready && fin(b.hrDelta) && Math.abs(b.hrDelta) >= 3 ? ` That is ${Math.abs(Math.round(b.hrDelta))} ${b.hrDelta > 0 ? 'above' : 'below'} your usual. A resting heart rate a few beats higher than normal often goes with a lower HRV, for the same reasons.` : ' A resting heart rate a few beats above your usual often goes with a lower HRV, for the same reasons.'}`);
+    if (b.ready) { const ms = Math.exp(b.mean); P.push(`For context: your usual RMSSD is about ${Math.round(ms)} ms. Published averages for healthy adults lying down range roughly from 20 to 75 ms and fall with age. Where you sit in that range mostly reflects age and genes, not how fit or healthy you are, which is why the app compares you with yourself.`); }
+  }
+  if (r.o) P.push('The standing test: when you stand up, blood pools in your legs and your heart briefly speeds up to keep your blood pressure steady, then settles back down. A rise of roughly 10 to 30 beats a minute that settles within a minute or two is typical. Compared with your own earlier tests, a bigger jump or slower settling can go with fatigue, dehydration, heat or a hard training block.');
+  return `<div class="explain"><h3>What this means</h3>${P.map(x => `<p>${esc(x)}</p>`).join('')}<p class="fine">${DISCLAIMER}</p></div>`;
 }
 function resultHtml(r) {
   const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
@@ -1042,7 +1137,8 @@ function resultHtml(r) {
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${orthoHtml(r)}
-    <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps. For general wellness only; not a medical assessment.</p>
+    ${explainHtml(r, b)}
+    <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps.</p>
   </div>`;
 }
 function openResult(id) {
@@ -1064,7 +1160,7 @@ $('#btnResultDone').onclick = resBack;
 $('#btnResultFile').onclick = () => {
   const r = S.readings.find(x => x.id === S.openId); if (!r) return;
   const d = new Date(r.t), stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
-  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 0.2.0', exported: new Date().toISOString(),
+  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 0.3.0', exported: new Date().toISOString(),
     reading: { id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr }, summary: { score: r.m.score, lnRMSSD: r.m.ln, rmssd: r.m.rmssd, hr: r.m.hr, quality: r.m.quality, standing: r.o } }));
 };
 $('#btnResultDelete').onclick = async function () {
@@ -1265,6 +1361,10 @@ function renderTrends() {
   const now = Date.now(), R = S.readings.map(forBaseline), tr = trend(R, pos, now, 60).map(d => Object.assign({}, d, { score: scoreOf(d.ln), s7: fin(d.avg7) ? d.avg7 * 100 / 6.5 : NaN, slo: fin(d.lo) ? d.lo * 100 / 6.5 : NaN, shi: fin(d.hi) ? d.hi * 100 / 6.5 : NaN }));
   const b = baseline(R, pos, now);
   let html = '';
+  const ins = trendInsights(R, pos, now, S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.o).map(r => ({ t: r.t, rise: r.o.rise })));
+  if (tr.length) html += `<div class="card commentary"><div class="dev-name">What your trend shows</div>${ins.ready
+    ? `<ul class="ins">${ins.items.map(i => `<li class="${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></li>`).join('')}</ul>`
+    : `<p class="dev-meta" style="margin:0">Comments appear once your baseline is ready: ${ins.have} of ${ins.need} mornings so far.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
   if (!tr.length) html = `<div class="card"><p class="dev-meta" style="margin:0">No ${POS[pos].toLowerCase()} readings in the last 60 days yet. Take one each morning and your trend appears here.</p></div>`;
   else {
     html += `<div class="card"><div><div class="dev-name">HRV score</div><div class="dev-meta">${b.ready ? `Usual range ${Math.round(b.lo * 100 / 6.5)}–${Math.round(b.hi * 100 / 6.5)} · day-to-day variation ${f1(b.cv)} %` : `Building baseline: ${b.have} of ${b.need} days`}</div></div>
@@ -1299,7 +1399,7 @@ const helpBack = () => show(S.helpBack || 'scrToday'); $('#btnHelpBack').onclick
 const helpBtn2 = $('#btnHelp2'); if (helpBtn2) helpBtn2.onclick = () => { S.helpBack = 'scrSettings'; show('scrHelp'); };
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
-  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 0.2.0', exported: new Date().toISOString(), settings: s,
+  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 0.3.0', exported: new Date().toISOString(), settings: s,
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
   const d = new Date(); downloadFile(`StillPoint-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
