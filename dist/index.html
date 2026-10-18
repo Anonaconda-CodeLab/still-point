@@ -354,7 +354,7 @@ a.btn:not(.coffee){color:var(--fg)}
         <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
       </div>
       <div class="acts-row"><button id="btnConnect" class="btn primary">Connect H10</button></div>
-      <p class="dev-meta browser-req" style="margin:0"><b>On a phone, use Google Chrome on Android.</b> On a computer, use Chrome or Edge. iPhone, iPad, Safari and Firefox can’t connect to the strap.</p>
+      <p class="dev-meta browser-req" style="margin:0"><b>On a phone, use Google Chrome or Chromium on Android.</b> On a computer, use Chrome or Edge. iPhone, iPad, Safari and Firefox can’t connect to the strap.</p>
     </div>
     <div id="envNote" class="note" hidden></div>
 
@@ -546,7 +546,7 @@ a.btn:not(.coffee){color:var(--fg)}
 <p>Still Point is for <b>general wellness, training and relaxation</b>. It has not been tested, cleared or approved by any medical regulator. Do not use it to diagnose, rule out or monitor any illness, or to make decisions about medicines or treatment. Words such as &quot;usual range&quot; describe how a reading compares with <b>your own</b> earlier readings. They are not medical findings.</p>
 <p>Slow breathing can make some people light-headed. If that happens, stop and breathe normally. If you are pregnant or have a heart, lung or blood-pressure condition, check with your doctor before slow-breathing practice. Do the standing test only where you can sit down straight away.</p>
 <h2>What you need</h2>
-<ul><li>A <b>Polar H10</b> chest strap (a Polar H9 also works).</li><li><b>Google Chrome on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
+<ul><li>A <b>Polar H10</b> chest strap (a Polar H9 also works).</li><li><b>Google Chrome or Chromium on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
 <p>No strap to hand? Choose any reading and, where it asks you to connect your strap, tap <b>try a simulated strap</b>. It produces made-up heart beats so you can explore the app. At the end of a reading, tap <b>Discard</b> so made-up readings stay out of your history.</p>
 <h2>Choosing what to do</h2>
 <p>The <b>HRV</b> tab (the first tab) asks what you'd like to do:</p>
@@ -1063,7 +1063,7 @@ function btProblem() {
   if ('bluetooth' in navigator) return '';
   if (brave) return `<b>Brave has Bluetooth for websites switched off.</b> Open ${flag('brave-web-bluetooth-api')}, set it to Enabled, then relaunch Brave.`;
   if (linux) return `<b>Chromium on Linux keeps Bluetooth for websites behind a setting.</b> Open ${flag('enable-experimental-web-platform-features')}, set it to Enabled, then relaunch.`;
-  if (/Firefox|SamsungBrowser/.test(ua) || /iPhone|iPad|Macintosh/.test(ua) && !/Chrome/.test(ua)) return '<b>This browser can’t use Bluetooth from websites.</b> On a phone, use Google Chrome on Android; on a computer, use Chrome or Edge.';
+  if (/Firefox|SamsungBrowser/.test(ua) || /iPhone|iPad|Macintosh/.test(ua) && !/Chrome/.test(ua)) return '<b>This browser can’t use Bluetooth from websites.</b> On a phone, use Google Chrome or Chromium on Android; on a computer, use Chrome or Edge.';
   return `<b>Bluetooth for websites is switched off in this browser.</b> Try enabling ${flag('enable-experimental-web-platform-features')}, then relaunch.`;
 }
 function envCheck() { const n = $('#envNote'), msg = btProblem(); n.innerHTML = msg; n.hidden = !msg; return !msg; }

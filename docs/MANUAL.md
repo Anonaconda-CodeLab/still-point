@@ -20,7 +20,7 @@ where you can sit down straight away.
 
 ## What you need
 - A **Polar H10** chest strap (a Polar H9 also works).
-- **Google Chrome on Android.** On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.
+- **Google Chrome or Chromium on Android.** On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.
 - The app opened from its https address: https://stillpoint.anonacondacodelab.com
 
 No strap to hand? Choose any reading and, where it asks you to connect your strap, tap **try a simulated strap**. It produces made-up heart beats so you can explore the app.

@@ -108,7 +108,7 @@ function btProblem() {
   if ('bluetooth' in navigator) return '';
   if (brave) return `<b>Brave has Bluetooth for websites switched off.</b> Open ${flag('brave-web-bluetooth-api')}, set it to Enabled, then relaunch Brave.`;
   if (linux) return `<b>Chromium on Linux keeps Bluetooth for websites behind a setting.</b> Open ${flag('enable-experimental-web-platform-features')}, set it to Enabled, then relaunch.`;
-  if (/Firefox|SamsungBrowser/.test(ua) || /iPhone|iPad|Macintosh/.test(ua) && !/Chrome/.test(ua)) return '<b>This browser can’t use Bluetooth from websites.</b> On a phone, use Google Chrome on Android; on a computer, use Chrome or Edge.';
+  if (/Firefox|SamsungBrowser/.test(ua) || /iPhone|iPad|Macintosh/.test(ua) && !/Chrome/.test(ua)) return '<b>This browser can’t use Bluetooth from websites.</b> On a phone, use Google Chrome or Chromium on Android; on a computer, use Chrome or Edge.';
   return `<b>Bluetooth for websites is switched off in this browser.</b> Try enabling ${flag('enable-experimental-web-platform-features')}, then relaunch.`;
 }
 function envCheck() { const n = $('#envNote'), msg = btProblem(); n.innerHTML = msg; n.hidden = !msg; return !msg; }
