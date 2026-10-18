@@ -56,6 +56,28 @@ function hrvOf(S, t0, t1) {
 /* instantaneous heart rate of accepted beats: [[t, bpm], …] */
 function hrPoints(S, t0, t1) { return idxRange(S, t0, t1).filter(i => S.OK[i]).map(i => [S.T[i], 60000 / S.V[i]]); }
 
+/* ---------- breathing rate from the heart rhythm ----------
+   Heart rate rises a little on each breath in and falls on each breath out (respiratory sinus arrhythmia), so the beat
+   intervals carry the breathing rhythm. The intervals are resampled at 4 Hz, detrended and windowed, and the strongest
+   rhythm between 6 and 30 breaths a minute is taken. Needs at least 30 s of clean beats; returns null when no rhythm stands out. */
+function breathRate(S, t0, t1) {
+  const pts = idxRange(S, t0, t1).filter(i => S.OK[i]).map(i => [S.T[i], S.V[i]]);
+  if (pts.length < 25) return null;
+  const a = pts[0][0], span = pts[pts.length - 1][0] - a; if (span < 30) return null;
+  const fs = 4, N = Math.floor(span * fs), y = new Float64Array(N);
+  for (let k = 0, j = 0; k < N; k++) { const t = a + k / fs; while (j < pts.length - 2 && pts[j + 1][0] < t) j++; const [ta, va] = pts[j], [tb, vb] = pts[j + 1]; y[k] = va + (vb - va) * clamp((t - ta) / (tb - ta || 1), 0, 1); }
+  let sx = 0, sy = 0, sxx = 0, sxy = 0; for (let k = 0; k < N; k++) { sx += k; sy += y[k]; sxx += k * k; sxy += k * y[k]; }
+  const sl = (N * sxy - sx * sy) / (N * sxx - sx * sx), ic = (sy - sl * sx) / N;
+  for (let k = 0; k < N; k++) y[k] = (y[k] - ic - sl * k) * (0.5 - 0.5 * Math.cos(2 * Math.PI * k / (N - 1)));
+  let best = 0, bf = 0, tot = 0;
+  for (let f = 0.1; f <= 0.5001; f += 0.0025) {
+    let re = 0, im = 0; const w = 2 * Math.PI * f / fs;
+    for (let k = 0; k < N; k++) { re += y[k] * Math.cos(w * k); im -= y[k] * Math.sin(w * k); }
+    const p = re * re + im * im; tot += p; if (p > best) { best = p; bf = f; }
+  }
+  return tot > 0 && best / tot > 0.03 ? Math.round(bf * 600) / 10 : null;
+}
+
 /* ---------- standing (orthostatic) test ----------
    standAt: seconds into the reading when the person was asked to stand; end: seconds at the end.
    lying HR  = mean of the last 60 s lying down

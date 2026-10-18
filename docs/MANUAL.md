@@ -23,11 +23,11 @@ where you can sit down straight away.
 - **Google Chrome on Android.** On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.
 - The app opened from its https address: https://stillpoint.anonacondacodelab.com
 
-No strap to hand? **Try a simulated strap** on the Home screen produces made-up heart beats so you can explore the app.
+No strap to hand? **Try a simulated strap** on the HRV tab produces made-up heart beats so you can explore the app.
 At the end of a reading, tap **Discard** so made-up readings stay out of your history.
 
 ## Choosing what to do
-The **Home** screen asks what you'd like to do:
+The **HRV** tab (the first tab) asks what you'd like to do:
 - **Morning reading**: the daily check-in that builds your baseline.
 - **Morning reading + standing test**: the same reading, then you stand up for 2 minutes (see below).
 - **Spot check**: a reading at any other time. It is saved and charted but never changes your baseline, because HRV
@@ -36,10 +36,15 @@ The **Home** screen asks what you'd like to do:
 
 ## The morning reading
 1. Moisten the electrodes, put the strap on and close other apps connected to it.
-2. On **Home**, tap **Connect H10** and choose your strap.
+2. On the **HRV** tab, tap **Connect H10** and choose your strap.
 3. Choose **Morning reading**, then your **position** and **reading length**. Two minutes is plenty; use the same
    choices every day. The app remembers them.
-4. Tap **Begin**. The first 15 seconds let you settle; then the reading runs. Stay still and breathe normally.
+4. Tap **Begin**. The first 15 seconds let you settle; if you're already still and ready, tap **Skip settling**. Then
+   the reading runs. Stay still and breathe normally.
+
+While it runs you see your heart rate, your **HRV** (RMSSD over the last minute), your **breathing rate** and the
+signal quality. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to
+steer them: just breathe normally.
 5. When it finishes, look over the result and tap **Save reading**, or **Discard** if something went wrong (you moved,
    talked, or it wasn't your usual routine).
 
@@ -51,6 +56,8 @@ food or exercise, in the same position. Consistency matters far more than the ex
   not interchangeable between apps.
 - **lnRMSSD** and **RMSSD**: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.
 - **Heart rate**: average over the reading.
+- **Breathing**: about how many breaths a minute you took. It is estimated from your heart rhythm, which rises and falls
+  slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.
 - **Signal**: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are
   left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.
 
@@ -123,7 +130,12 @@ advice.
 ## Your data
 Nothing is kept until you tap **Save**. Saved readings and sessions are stored in this browser on this device.
 - **Save to file** (open any saved reading) saves that one reading, with all its beat-to-beat intervals, as a file.
-- **Settings → Export history** saves everything as one backup file.
+- **Save all to file** (Settings, or the **Save all** button above the history list on Trends) saves every reading and
+  breathing session, with all their beat intervals, in one backup file.
+- **Save as spreadsheet** (Settings, or **Spreadsheet** on Trends) saves a CSV file with one row per reading and session:
+  date, time, type, position, score, lnRMSSD, RMSSD, SDNN, heart rate, breathing rate, signal quality, standing-test
+  results, and pace and swing for breathing. It opens in Excel, Google Sheets or LibreOffice. It is a summary, so it
+  can't be imported back; keep the backup file for that.
 - **Settings → Import history** brings a history file or a single reading file back in, for example on a new phone. Clearing the browser's site data deletes them, so export
 from time to time.
 

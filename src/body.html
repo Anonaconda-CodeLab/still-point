@@ -83,9 +83,11 @@
       <div class="ring-c"><div id="rdLeft" class="ring-num">0:15</div><div id="rdSub" class="ring-sub">settling</div></div>
     </div>
     <p id="rdMsg" class="rd-msg">Lie still and breathe normally.</p>
-    <div class="vitals v3">
+    <button id="btnSkipSettle" class="btn" style="align-self:center">Skip settling</button>
+    <div class="vitals v4">
       <div><span id="rdHR">--</span><label>Heart rate</label></div>
-      <div><span id="rdBeats">0</span><label>Beats</label></div>
+      <div><span id="rdHRV">--</span><label>HRV · RMSSD ms</label></div>
+      <div><span id="rdBr">--</span><label>Breaths / min</label></div>
       <div><span id="rdQual">—</span><label>Signal</label></div>
     </div>
     <button id="btnCancelReading" class="btn ghost" style="align-self:center">Cancel reading</button>
@@ -157,7 +159,7 @@
     <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
     <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
     <div id="trendBody"></div>
-    <h2 class="sec">History</h2>
+    <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
     <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
   </section>
 
@@ -166,9 +168,10 @@
     <div class="acts-row"><button id="btnSettingsBack" class="btn">‹ Back</button></div>
     <div class="card">
       <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount">No readings yet.</div></div>
-      <p class="dev-meta" style="margin:0">Readings and breathing sessions are stored only in this browser. Export them to keep a backup or move them to another phone.</p>
+      <p class="dev-meta" style="margin:0">Saved readings and breathing sessions are stored only in this browser. <b>Save all to file</b> puts everything, with every beat interval, in one backup file you can import on another phone. <b>Save as spreadsheet</b> gives one row per reading and session (CSV) for Excel, Google Sheets or other HRV tools.</p>
       <div class="acts-row">
-        <button id="btnExport" class="btn">Export history</button>
+        <button id="btnExport" class="btn">Save all to file</button>
+        <button id="btnCsv" class="btn">Save as spreadsheet</button>
         <button id="btnImport" class="btn">Import history</button>
         <button id="btnClear" class="btn ghost">Delete everything</button>
       </div>
@@ -191,7 +194,7 @@
 </main>
 
 <nav class="tabs" id="tabs" aria-label="Sections">
-  <button data-tab="scrToday" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5V20H4z"/><path d="M10 20v-5h4v5"/></svg>Home</button>
+  <button data-tab="scrToday" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2.5-7 1.5 2h5"/></svg>HRV</button>
   <button data-tab="scrBreathe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5" opacity=".5"/><circle cx="12" cy="12" r="4.5"/></svg>Breathe</button>
   <button data-tab="scrTrends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 3 7-8"/><path d="M3 21h18"/></svg>Trends</button>
 </nav>

@@ -114,3 +114,13 @@ test('trends commentary: steady, a low run with heart rate up, bouncy weeks, sta
 
   assert.equal(A.trendInsights(steady.slice(-4), 'lying', now).ready, false);
 });
+
+test('breathing rate is recovered from the beat intervals', () => {
+  for (const [pace, ctxPace] of [[14, null], [6, 6], [10, 10]]) {
+    const sim = A.makeSim(21), list = [];
+    while (sim.t < 120) list.push(sim.next(ctxPace ? { pace: ctxPace, lung: t => (1 - Math.cos(2 * Math.PI * t * ctxPace / 60)) / 2 } : {}));
+    const br = A.breathRate(A.cleanRR(list), 30, 120);
+    assert.ok(br && Math.abs(br - pace) <= 1, `expected ~${pace}, got ${br}`);
+  }
+  assert.equal(A.breathRate(A.cleanRR([[1, 1000], [2, 1000]]), 0, 10), null);
+});

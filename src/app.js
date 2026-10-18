@@ -40,9 +40,9 @@ function show(id) {
   window.scrollTo(0, 0);
   if (id === 'scrToday') renderToday(); if (id === 'scrTrends') renderTrends(); if (id === 'scrBreathe') renderBreathe();
 }
-function downloadFile(name, text) {
+function downloadFile(name, text, type = 'application/json') {
   if (FRAMED) { toast('Saving files works when the app is opened from its own web address in Chrome.', 6000); return; }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'application/json' })); a.download = name;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
 async function keepAwake() { try { if (navigator.wakeLock) S.wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
@@ -80,7 +80,7 @@ const allReadings = () => S.pending && !S.readings.some(x => x.id === S.pending.
 /* compute everything for a reading from its beat intervals (also used for imports, so stored numbers always match the data) */
 function computeReading(r) {
   const C = cleanRR(r.rr), m = hrvOf(C, r.settle, r.settle + r.len);
-  r.m = { ln: m.ln, rmssd: m.rmssd, hr: m.hr, sdnn: m.sdnn, artPct: m.artPct, quality: m.quality, score: m.score, beats: m.beats, fixed: m.beats - m.good };
+  r.m = { br: breathRate(C, r.settle, r.settle + r.len), ln: m.ln, rmssd: m.rmssd, hr: m.hr, sdnn: m.sdnn, artPct: m.artPct, quality: m.quality, score: m.score, beats: m.beats, fixed: m.beats - m.good };
   r.o = r.standAt != null ? orthoOf(C, r.standAt, r.standAt + STAND) : null;
   return r;
 }
@@ -294,10 +294,22 @@ function tickReading() {
   $('#rdRing').style.strokeDashoffset = String(1000 - 1000 * clamp(frac, 0, 1));
   const fresh = performance.now() - S.lastBeat < 4000;
   $('#rdHR').textContent = fresh && S.hr ? S.hr : '--';
-  const n = a.list.filter(x => x[0] >= SETTLE && x[1] > 0).length; $('#rdBeats').textContent = n;
+  $('#btnSkipSettle').hidden = phase !== 'Settling';
+  /* live HRV and breathing over the last minute, refreshed every 2 s */
+  if (!a.liveAt || performance.now() - a.liveAt > 2000) {
+    a.liveAt = performance.now();
+    const C = cleanRR(a.list.filter(x => x[0] >= el - 75)), h = hrvOf(C, el - 60, el + 1), br = breathRate(C, el - 60, el + 1);
+    $('#rdHRV').textContent = h.diffs >= 15 && fin(h.rmssd) ? Math.round(h.rmssd) : '--';
+    $('#rdBr').textContent = br ? (br < 10 ? br.toFixed(1) : Math.round(br)) : el > 35 ? '…' : '--';
+  }
   const recent = a.list.slice(-40);
   if (recent.length >= 15) { const C = cleanRR(recent), bad = C.OK.filter(x => !x).length / C.OK.length; const q = $('#rdQual'); q.textContent = bad <= 0.05 ? 'Good' : bad <= 0.15 ? 'Fair' : 'Poor'; q.className = bad <= 0.05 ? 'q-good' : 'q-weak'; }
 }
+$('#btnSkipSettle').onclick = () => {
+  const a = S.act; if (!a || a.kind !== 'reading') return;
+  const left = SETTLE - actClock(); if (left <= 0) return;
+  a.t0 -= left * 1000; if (a.simOff != null) a.simOff -= left; a.beatClock = null; tickReading();
+};
 $('#btnCancelReading').onclick = () => { endActivity(); show('scrSetup'); toast('Reading cancelled.'); };
 function endActivity() { clearInterval(S.timer); cancelAnimationFrame(S.raf); S.act = null; letSleep(); $('#dim').hidden = true; }
 async function finishReading() {
@@ -376,7 +388,7 @@ function resultHtml(r) {
   const b = baseline(allReadings().map(forBaseline), r.pos, r.t), v = verdictOf(b, r), m = r.m;
   const q = { good: 'good signal', fair: 'fair signal', poor: 'noisy signal', short: 'too short' }[m.quality];
   return `<div class="card result-card">
-    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${r.len / 60} min · ${q}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
+    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}<br>${POS[r.pos]} · ${r.len / 60} min · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${orthoHtml(r)}
@@ -645,6 +657,32 @@ $('#btnExport').onclick = () => {
   const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: '{{APP_NAME}} {{VERSION}}', exported: new Date().toISOString(), settings: s,
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr })), sessions: S.sessions };
   const d = new Date(); downloadFile(`{{FILE_PREFIX}}-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
+};
+$('#btnExport2').onclick = () => $('#btnExport').click();
+/* one row per reading and per breathing session, for spreadsheets */
+function csvText() {
+  const cols = ['kind', 'date', 'time', 'type', 'position', 'minutes', 'score', 'lnRMSSD', 'RMSSD_ms', 'SDNN_ms', 'heart_rate_bpm', 'breaths_per_min', 'signal', 'beats_left_out',
+    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'swing_bpm', 'resonance_pace'];
+  const n = (v, d = 1) => fin(v) ? v.toFixed(d) : '', q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const dt = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, `${pad2(d.getHours())}:${pad2(d.getMinutes())}`]; };
+  const rows = [cols.join(',')], items = [...S.readings.map(r => ({ t: r.t, r })), ...S.sessions.map(x => ({ t: x.t, x }))].sort((a, b) => a.t - b.t);
+  for (const it of items) {
+    const o = {}; [o.date, o.time] = dt(it.t);
+    if (it.r) {
+      const r = it.r, m = r.m; Object.assign(o, { kind: 'reading', type: typeLabel(r), position: POS[r.pos], minutes: n(r.len / 60, 0), score: m.score ?? '', lnRMSSD: n(m.ln, 2), RMSSD_ms: n(m.rmssd), SDNN_ms: n(m.sdnn),
+        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '' });
+      if (r.o) Object.assign(o, { stand_peak_bpm: n(r.o.peakHr), stand_rise_bpm: n(r.o.rise), stand_settle_bpm: n(r.o.settle), ratio_30_15: n(r.o.ratio3015, 2) });
+    } else {
+      const x = it.x; Object.assign(o, { kind: x.kind === 'resonance' ? 'resonance test' : 'breathing', minutes: n(x.dur / 60), pace_per_min: x.pace ?? '', resonance_pace: x.best ?? '' });
+      if (x.m) Object.assign(o, { heart_rate_bpm: n(x.m.hr), RMSSD_ms: n(x.m.rmssd), swing_bpm: n(x.m.amp) });
+    }
+    rows.push(cols.map(c => q(String(o[c] ?? ''))).join(','));
+  }
+  return rows.join('\n') + '\n';
+}
+$('#btnCsv').onclick = $('#btnCsv2').onclick = () => {
+  if (!S.readings.length && !S.sessions.length) { toast('Nothing saved yet.'); return; }
+  const d = new Date(); downloadFile(`{{FILE_PREFIX}}-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.csv`, csvText(), 'text/csv');
 };
 $('#btnImport').onclick = () => $('#histIn').click();
 const num = v => fin(v) ? v : null, str = (v, n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, '').slice(0, n) : '';
