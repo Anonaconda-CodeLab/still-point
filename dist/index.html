@@ -1234,7 +1234,9 @@ for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { i
   await loadAll();
   envCheck();
   setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.');
-  show(acked() ? 'scrToday' : 'scrAck');
+  const start = acked() ? 'scrToday' : 'scrAck';
+  if (location.hash === '#manual') { S.helpBack = start; show('scrHelp'); } else show(start);
+  window.addEventListener('hashchange', () => { if (location.hash === '#manual' && !S.act) { S.helpBack = document.body.dataset.screen || start; show('scrHelp'); } });
 })();
 
 </script>
