@@ -75,7 +75,7 @@
   </section>
 
   <!-- READING IN PROGRESS -->
-  <section id="scrReading" class="screen" hidden>
+  <section id="scrReading" class="screen reading" hidden>
     <div class="rec-top"><span class="live-chip" id="rdChip"><i></i><span id="rdPhase">Settling</span></span><span id="rdConn" class="conn">Connected</span></div>
     <div class="ring-wrap">
       <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
@@ -86,6 +86,7 @@
     </div>
     <p id="rdMsg" class="rd-msg">Lie still and breathe normally.</p>
     <button id="btnSkipSettle" class="btn" style="align-self:center">Skip settling</button>
+    <div class="wave-card"><div class="wave-top"><span>Heart rate, last minute</span><span class="wave-key"><span><i class="k-up"></i>speeding up</span><span><i class="k-down"></i>slowing down</span></span></div><canvas id="rdWave" aria-label="Live heart rate, beat by beat"></canvas></div>
     <div class="vitals v4">
       <div><span id="rdHR">--</span><label>Heart rate</label></div>
       <div><span id="rdHRV">--</span><label>HRV · RMSSD ms</label></div>

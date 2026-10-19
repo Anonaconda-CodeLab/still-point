@@ -310,6 +310,31 @@ body:not(.tabbed) .tabs{display:none}
 .kv span small{display:block;color:var(--muted);font-size:12.5px;font-weight:400}
 a.btn:not(.coffee){color:var(--fg)}
 .note-soft{border-left:3px solid var(--lav);background:color-mix(in srgb,var(--lav) 10%,var(--surface));border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5}
+
+/* breath wave and beat-pattern chart */
+.reading .ring-wrap{width:min(58vw,230px)}
+.reading .ring-num{font-size:clamp(40px,12vw,54px)}
+.wave-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px 6px;display:flex;flex-direction:column;gap:4px}
+.wave-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.wave-top>span:first-child{text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+#rdWave{width:100%;height:118px;display:block}
+#resWave,.res-wave2{width:100%;height:150px;display:block}
+.wave-res h3+canvas{margin-top:2px}
+.wave-key{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.wave-key>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.wave-key i{display:inline-block;width:12px;height:8px;border-radius:3px}
+.wave-key .k-up{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.wave-key .k-down{background:color-mix(in srgb,var(--lav) 45%,transparent)}
+.wave-key .k-bad{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--muted);background:none}
+.pc-row{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;margin-top:4px}
+.pc-row .fine b{color:var(--fg);font-weight:600}
+.poincare{width:132px;height:132px;display:block}
+.poincare .pc-bg{fill:var(--bg);stroke:var(--line)}
+.poincare .pc-id{stroke:var(--line);stroke-dasharray:3 4}
+.poincare .pc{fill:var(--accent);opacity:.75}
+.poincare .pc-bad{fill:none;stroke:var(--muted);stroke-width:1.4}
+.poincare text{font-family:var(--f-mono);font-size:8.5px;fill:var(--muted)}
+@media (max-width:360px){.pc-row{grid-template-columns:1fr}.poincare{margin:0 auto}}
 </style>
 </head><body>
 <main id="app">
@@ -389,7 +414,7 @@ a.btn:not(.coffee){color:var(--fg)}
   </section>
 
   <!-- READING IN PROGRESS -->
-  <section id="scrReading" class="screen" hidden>
+  <section id="scrReading" class="screen reading" hidden>
     <div class="rec-top"><span class="live-chip" id="rdChip"><i></i><span id="rdPhase">Settling</span></span><span id="rdConn" class="conn">Connected</span></div>
     <div class="ring-wrap">
       <svg class="ring" viewBox="0 0 200 200" aria-hidden="true">
@@ -400,6 +425,7 @@ a.btn:not(.coffee){color:var(--fg)}
     </div>
     <p id="rdMsg" class="rd-msg">Lie still and breathe normally.</p>
     <button id="btnSkipSettle" class="btn" style="align-self:center">Skip settling</button>
+    <div class="wave-card"><div class="wave-top"><span>Heart rate, last minute</span><span class="wave-key"><span><i class="k-up"></i>speeding up</span><span><i class="k-down"></i>slowing down</span></span></div><canvas id="rdWave" aria-label="Live heart rate, beat by beat"></canvas></div>
     <div class="vitals v4">
       <div><span id="rdHR">--</span><label>Heart rate</label></div>
       <div><span id="rdHRV">--</span><label>HRV · RMSSD ms</label></div>
@@ -530,7 +556,7 @@ a.btn:not(.coffee){color:var(--fg)}
       <button id="btnHelp" class="row-btn"><span>User manual<small>Readings, the standing test, breathing and your baseline</small></span><span class="chev">›</span></button>
     </div>
     <div class="card" id="aboutCard">
-      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 0.5.1 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
+      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 0.6.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
       <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro. Not a medical device.</p>
       <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
     </div>
@@ -553,11 +579,14 @@ a.btn:not(.coffee){color:var(--fg)}
 <ul><li><b>Morning reading</b>: the daily check-in that builds your baseline.</li><li><b>Morning reading + standing test</b>: the same reading, then you stand up for 2 minutes (see below).</li><li><b>Spot check</b>: a reading at any other time. It is saved and charted but never changes your baseline, because HRV naturally runs lower later in the day.</li><li><b>Breathe</b>: the breathing guide.</li></ul>
 <h2>The morning reading</h2>
 <ol><li>Moisten the electrodes, put the strap on and close other apps connected to it.</li><li>On the <b>HRV</b> tab, tap <b>Connect H10</b> and choose your strap.</li><li>Choose <b>Morning reading</b>, then your <b>position</b> and <b>reading length</b>. Two minutes is plenty; use the same choices every day. The app remembers them.</li><li>Tap <b>Begin</b>. The first 15 seconds let you settle; if you're already still and ready, tap <b>Skip settling</b>. Then the reading runs. Stay still and breathe normally.</li></ol>
-<p>While it runs you see your heart rate, your <b>HRV</b> (RMSSD over the last minute), your <b>breathing rate</b> and the signal quality. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to steer them: just breathe normally.</p>
+<p>While it runs you see a live <b>heart-rate trace</b> of the last minute, beat by beat, and your heart rate, your <b>HRV</b> (RMSSD over the last minute), your <b>breathing rate</b> and the signal quality. In the trace, the area above your average is shaded teal where your heart speeds up (usually as you breathe in) and lavender where it slows (as you breathe out), so each breath shows as a gentle wave: taller waves mean higher HRV. Beats left out as glitches appear as small grey rings off the line. In the standing test, a dashed line marks the moment you stood up. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to steer them: just breathe normally.</p>
 <ol><li>When it finishes, look over the result and tap <b>Save reading</b>, or <b>Discard</b> if something went wrong (you moved, talked, or it wasn't your usual routine).</li></ol>
 <p><b>Get the most from it:</b> read at the same time each morning, soon after waking, after the bathroom and before coffee, food or exercise, in the same position. Consistency matters far more than the exact routine you choose.</p>
 <h3>Your result</h3>
 <ul><li><b>HRV score</b>: lnRMSSD on a 0–100 scale (lnRMSSD × 100 / 6.5). Several apps use a similar scale, but the numbers are not interchangeable between apps.</li><li><b>lnRMSSD</b> and <b>RMSSD</b>: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.</li><li><b>Heart rate</b>: average over the reading.</li><li><b>Breathing</b>: about how many breaths a minute you took (3 to 30). It is estimated from your heart rhythm, which rises and falls slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.</li><li><b>Signal</b>: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.</li></ul>
+<h3>Your reading, beat by beat</h3>
+<p>Every result shows the whole reading as a heart-rate trace with the same teal and lavender shading (the faded strip at the start is the settle period). A standing test gets its own trace with the moment you stood up and your peak heart rate marked.</p>
+<p>Next to it, the <b>beat-to-beat pattern</b> plots each beat against the next (a Poincaré plot). A wide, round cloud means a lot of variation from beat to beat (higher HRV); a narrow cloud along the diagonal means less. Grey rings are beats that were left out.</p>
 <h3>Breathing and HRV</h3>
 <p>How you breathe moves HRV: slow, deep breathing raises it and faster breathing lowers it. So breathe the way you usually do during readings, whether that's normal or naturally slow. If a morning reading was breathed much faster or slower than your usual (by more than about half again), the result says so, so you don't mistake a change in breathing for a change in you.</p>
 <h3>What this means</h3>
@@ -1268,6 +1297,7 @@ function tickReading() {
     $('#rdHRV').textContent = h.diffs >= 15 && fin(h.rmssd) ? Math.round(h.rmssd) : '--';
     $('#rdBr').textContent = br ? (br < 10 ? br.toFixed(1) : Math.round(br)) : el > 35 ? '…' : '--';
   }
+  drawWave($('#rdWave'), a.list.filter(x => x[0] >= el - 75), { t0: Math.max(0, el - 60), t1: Math.max(60, el), settle: SETTLE, standAt: a.standAt, live: true });
   const recent = a.list.slice(-40);
   if (recent.length >= 15) { const C = cleanRR(recent), bad = C.OK.filter(x => !x).length / C.OK.length; const q = $('#rdQual'); q.textContent = bad <= 0.05 ? 'Good' : bad <= 0.15 ? 'Fair' : 'Poor'; q.className = bad <= 0.05 ? 'q-good' : 'q-weak'; }
 }
@@ -1316,6 +1346,85 @@ function bandHtml(b, r) {
     ${fin(b.avg7) ? `<div class="mk avg" style="left:${x(b.avg7)}"></div>` : ''}<div class="mk" style="left:${x(r.m.ln)}"></div></div>
     <div class="band-l"><span>lower</span><span>higher</span></div>
     <div class="legend"><span><i style="background:var(--fg);width:4px"></i>this reading</span><span><i style="background:var(--accent);width:9px;height:9px;border-radius:50%"></i>7-day average</span><span><i style="background:color-mix(in srgb,var(--ok) 35%,transparent)"></i>usual range</span></div>`;
+}
+/* ---------- breath wave: beat-by-beat heart rate, shaded around its local average ----------
+   teal where the heart speeds up (usually breathing in), lavender where it slows (breathing out);
+   beats left out are hollow grey rings, off the line, exactly as the calculation skips them */
+function waveData(list, t0, t1) {
+  const C = cleanRR(list), pts = [], bad = [];
+  for (let i = 0; i < C.T.length; i++) { const t = C.T[i]; if (t < t0 - 10 || t > t1 + 10) continue; (C.OK[i] ? pts : bad).push({ t, hr: 60000 / C.V[i], seg: C.SEG[i] }); }
+  /* local average: mean of accepted beats within ±6 s, so the shading follows each breath, not slow drifts or standing up */
+  for (const p of pts) { let s = 0, n = 0; for (const q of pts) if (q.seg === p.seg && Math.abs(q.t - p.t) <= 6) { s += q.hr; n++; } p.avg = s / n; }
+  return { pts, bad };
+}
+function drawWave(cv, list, o) {
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement), col = k => cs.getPropertyValue(k).trim();
+  const up = col('--accent'), down = col('--lav'), ink = col('--fg'), muted = col('--muted'), line = col('--line'), warn = col('--warn');
+  const { pts, bad } = waveData(list, o.t0, o.t1);
+  const L = 30, R = 6, T = 8, B = o.live ? 8 : 20, X = t => L + (t - o.t0) / (o.t1 - o.t0) * (w - L - R);
+  const vis = pts.filter(p => p.t >= o.t0 && p.t <= o.t1);
+  g.font = `10px ${col('--f-mono') || 'monospace'}`; g.fillStyle = muted;
+  if (vis.length < 3) { g.textAlign = 'center'; g.fillText(o.live ? 'waiting for beats…' : 'not enough beats to draw', w / 2, h / 2); return; }
+  let lo = Math.min(...vis.map(p => p.hr)), hi = Math.max(...vis.map(p => p.hr));
+  const mid = (lo + hi) / 2, half = Math.max(5, (hi - lo) / 2 * 1.12); lo = mid - half; hi = mid + half;
+  const Y = v => T + (hi - clamp(v, lo, hi)) / (hi - lo) * (h - T - B);
+  // grid and axis labels
+  g.strokeStyle = line; g.lineWidth = 1; g.textAlign = 'right';
+  for (const v of [Math.ceil(lo), Math.round(mid), Math.floor(hi)]) { const y = Y(v); g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke(); g.fillText(String(v), L - 5, y + 3); }
+  // settle (faded) and standing marker
+  if (o.settle > o.t0) { g.fillStyle = muted; g.globalAlpha = .08; g.fillRect(L, T, X(Math.min(o.settle, o.t1)) - L, h - T - B); g.globalAlpha = 1; if (!o.live && X(o.settle) - L > 34) { g.fillStyle = muted; g.textAlign = 'left'; g.fillText('settle', L + 4, T + 10); } }
+  // shaded breath wave per continuous segment
+  const segs = []; for (const p of pts) { if (!segs.length || segs[segs.length - 1][0].seg !== p.seg) segs.push([]); segs[segs.length - 1].push(p); }
+  for (const sg of segs) {
+    if (sg.length < 2) continue;
+    const area = () => { g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.hr)) : g.moveTo(X(p.t), Y(p.hr))); for (let i = sg.length - 1; i >= 0; i--) g.lineTo(X(sg[i].t), Y(sg[i].avg)); g.closePath(); };
+    const clipSide = above => { g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.avg)) : g.moveTo(X(p.t), Y(p.avg))); g.lineTo(X(sg[sg.length - 1].t), above ? 0 : h); g.lineTo(X(sg[0].t), above ? 0 : h); g.closePath(); g.clip(); };
+    for (const [above, c] of [[true, up], [false, down]]) { g.save(); g.beginPath(); g.rect(L, 0, w - L - R, h); g.clip(); clipSide(above); area(); g.fillStyle = c; g.globalAlpha = .42; g.fill(); g.restore(); }
+    g.save(); g.beginPath(); g.rect(L, 0, w - L - R, h); g.clip();
+    g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.avg)) : g.moveTo(X(p.t), Y(p.avg))); g.setLineDash([3, 4]); g.strokeStyle = muted; g.globalAlpha = .55; g.lineWidth = 1; g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.hr)) : g.moveTo(X(p.t), Y(p.hr))); g.strokeStyle = ink; g.lineWidth = 1.8; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke();
+    g.restore();
+  }
+  // beats left out
+  g.strokeStyle = muted; g.lineWidth = 1.4;
+  for (const b of bad) { if (b.t < o.t0 || b.t > o.t1) continue; g.beginPath(); g.arc(X(b.t), Y(b.hr), 3.2, 0, 2 * Math.PI); g.stroke(); }
+  // standing up
+  if (o.standAt != null && o.standAt >= o.t0 && o.standAt <= o.t1) {
+    const x = X(o.standAt); g.strokeStyle = warn; g.lineWidth = 1.5; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, T); g.lineTo(x, h - B); g.stroke(); g.setLineDash([]);
+    g.fillStyle = warn; g.textAlign = x > w - 70 ? 'right' : 'left'; g.fillText('stood up', x + (x > w - 70 ? -4 : 4), o.live ? T + 10 : h - B - 6);
+    if (!o.live) { // peak: highest 3-beat average in the first 30 s
+      const sp = pts.filter(p => p.t >= o.standAt && p.t <= o.standAt + 30); let best = null;
+      for (let i = 2; i < sp.length; i++) { const m = (sp[i].hr + sp[i - 1].hr + sp[i - 2].hr) / 3; if (!best || m > best.m) best = { m, t: sp[i - 1].t }; }
+      if (best) { g.fillStyle = warn; g.beginPath(); g.arc(X(best.t), Y(best.m), 4, 0, 2 * Math.PI); g.fill(); g.textAlign = 'left'; g.fillText(`peak ${Math.round(best.m)} bpm`, Math.min(X(best.t) + 8, w - 70), Y(best.m) + 4); }
+    }
+  }
+  // time axis on results
+  if (!o.live) { g.fillStyle = muted; g.textAlign = 'left'; g.fillText(mmss(o.t0), L, h - 5); g.textAlign = 'right'; g.fillText(mmss(o.t1), w - R, h - 5); g.textAlign = 'center'; g.fillText('bpm · minutes', (L + w - R) / 2, h - 5); }
+}
+/* beat-pattern chart (Poincaré plot): each beat against the next */
+function poincareSvg(rr, t0 = -Infinity, t1 = Infinity) {
+  const C = cleanRR(rr), P = [], Q = [];
+  for (let i = 1; i < C.V.length; i++) { if (C.SEG[i] !== C.SEG[i - 1] || C.T[i] < t0 || C.T[i] > t1) continue; (C.OK[i] && C.OK[i - 1] ? P : Q).push([C.V[i - 1], C.V[i]]); }
+  if (P.length < 10) return '';
+  const all = P.flat(), lo0 = quant(all, 0.01), hi0 = quant(all, 0.99), pad = Math.max(40, (hi0 - lo0) * 0.25), lo = lo0 - pad, hi = hi0 + pad;
+  const S = 150, M = 6, sc = v => M + (clamp(v, lo, hi) - lo) / (hi - lo) * (S - 2 * M), y = v => S - sc(v);
+  const dots = P.map(([a, b]) => `<circle class="pc" cx="${sc(a).toFixed(1)}" cy="${y(b).toFixed(1)}" r="2.3"/>`).join('');
+  const odd = Q.map(([a, b]) => `<circle class="pc-bad" cx="${sc(a).toFixed(1)}" cy="${y(b).toFixed(1)}" r="3"/>`).join('');
+  return `<svg class="poincare" viewBox="0 0 ${S} ${S}" role="img" aria-label="Beat-to-beat pattern"><rect class="pc-bg" x="0.5" y="0.5" width="${S - 1}" height="${S - 1}" rx="10"/><line class="pc-id" x1="${M}" y1="${S - M}" x2="${S - M}" y2="${M}"/>${dots}${odd}</svg>`;
+}
+function quant(a, q) { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.round((s.length - 1) * q)))]; }
+const KEY = `<div class="wave-key"><span><i class="k-up"></i>speeding up (breathing in)</span><span><i class="k-down"></i>slowing down (breathing out)</span><span><i class="k-bad"></i>left out</span></div>`;
+function waveHtml(r) {
+  const st = r.standAt != null, pc = poincareSvg(r.rr, r.settle || 0, (r.settle || 0) + r.len);
+  return `<div class="sub-card wave-res"><h3>Your reading, beat by beat</h3>
+    <canvas id="resWave" aria-label="Heart rate during the reading"></canvas>
+    ${st ? '<h3 style="margin-top:6px">Standing up</h3><canvas id="resWave2" class="res-wave2" aria-label="Heart rate when standing up"></canvas>' : ''}
+    ${KEY}
+    ${pc ? `<div class="pc-row">${pc}<p class="fine"><b>Beat-to-beat pattern.</b> Each dot is one beat against the next. A wider, rounder cloud means more variation from beat to beat (higher HRV); a narrow one means less. Grey rings are beats left out.</p></div>` : ''}</div>`;
 }
 function orthoHtml(r) {
   const o = r.o; if (!o) return '';
@@ -1411,6 +1520,7 @@ function resultHtml(r) {
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${breathNoteHtml(r)}
     ${trainingHtml(r, b)}
+    ${Array.isArray(r.rr) && r.rr.length > 20 ? waveHtml(r) : ''}
     ${orthoHtml(r)}
     ${tagsHtml(r)}
     ${leadOneHtml(r)}
@@ -1418,9 +1528,18 @@ function resultHtml(r) {
     <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps.</p>
   </div>`;
 }
+function drawResWave() {
+  const r = S.resWave, cv = $('#resWave'); if (!r || !cv) return;
+  const end = r.rr.length ? r.rr[r.rr.length - 1][0] : 0, readEnd = Math.min(end, (r.settle || 0) + r.len);
+  /* the reading and the standing part get their own scales, so the small breath waves aren't flattened by the jump on standing */
+  drawWave(cv, r.rr, { t0: 0, t1: Math.max(30, readEnd), settle: r.settle || 0, standAt: null, live: false });
+  if (r.standAt != null) drawWave($('#resWave2'), r.rr, { t0: Math.max(0, r.standAt - 20), t1: Math.max(r.standAt + 30, Math.min(end, r.standAt + STAND)), settle: 0, standAt: r.standAt, live: false });
+}
+window.addEventListener('resize', () => { if (document.body.dataset.screen === 'scrResult') drawResWave(); });
 function openResult(id) {
   const pend = S.pending && S.pending.id === id, r = pend ? S.pending : S.readings.find(x => x.id === id); if (!r) return;
   $('#resultBody').innerHTML = resultHtml(r); S.openId = id; bindTags(r);
+  S.resWave = r; requestAnimationFrame(() => drawResWave());
   $('#resActsNew').hidden = !pend; $('#resActsSaved').hidden = pend; show('scrResult');
 }
 const resBack = () => show(S.resultBack || 'scrToday');
@@ -1437,7 +1556,7 @@ $('#btnResultDone').onclick = resBack;
 $('#btnResultFile').onclick = () => {
   const r = S.readings.find(x => x.id === S.openId); if (!r) return;
   const d = new Date(r.t), stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
-  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 0.5.1', exported: new Date().toISOString(),
+  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 0.6.0', exported: new Date().toISOString(),
     reading: { id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr }, summary: { score: r.m.score, lnRMSSD: r.m.ln, rmssd: r.m.rmssd, hr: r.m.hr, quality: r.m.quality, standing: r.o } }));
 };
 $('#btnResultDelete').onclick = async function () {
@@ -1864,7 +1983,7 @@ $('#btnEliteGo').onclick = async () => {
 };
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
-  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 0.5.1', exported: new Date().toISOString(), settings: s,
+  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 0.6.0', exported: new Date().toISOString(), settings: s,
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, src: r.src })), sessions: S.sessions };
   const d = new Date(); downloadFile(`StillPoint-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };

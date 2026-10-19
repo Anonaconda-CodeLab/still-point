@@ -313,6 +313,7 @@ function tickReading() {
     $('#rdHRV').textContent = h.diffs >= 15 && fin(h.rmssd) ? Math.round(h.rmssd) : '--';
     $('#rdBr').textContent = br ? (br < 10 ? br.toFixed(1) : Math.round(br)) : el > 35 ? '…' : '--';
   }
+  drawWave($('#rdWave'), a.list.filter(x => x[0] >= el - 75), { t0: Math.max(0, el - 60), t1: Math.max(60, el), settle: SETTLE, standAt: a.standAt, live: true });
   const recent = a.list.slice(-40);
   if (recent.length >= 15) { const C = cleanRR(recent), bad = C.OK.filter(x => !x).length / C.OK.length; const q = $('#rdQual'); q.textContent = bad <= 0.05 ? 'Good' : bad <= 0.15 ? 'Fair' : 'Poor'; q.className = bad <= 0.05 ? 'q-good' : 'q-weak'; }
 }
@@ -361,6 +362,85 @@ function bandHtml(b, r) {
     ${fin(b.avg7) ? `<div class="mk avg" style="left:${x(b.avg7)}"></div>` : ''}<div class="mk" style="left:${x(r.m.ln)}"></div></div>
     <div class="band-l"><span>lower</span><span>higher</span></div>
     <div class="legend"><span><i style="background:var(--fg);width:4px"></i>this reading</span><span><i style="background:var(--accent);width:9px;height:9px;border-radius:50%"></i>7-day average</span><span><i style="background:color-mix(in srgb,var(--ok) 35%,transparent)"></i>usual range</span></div>`;
+}
+/* ---------- breath wave: beat-by-beat heart rate, shaded around its local average ----------
+   teal where the heart speeds up (usually breathing in), lavender where it slows (breathing out);
+   beats left out are hollow grey rings, off the line, exactly as the calculation skips them */
+function waveData(list, t0, t1) {
+  const C = cleanRR(list), pts = [], bad = [];
+  for (let i = 0; i < C.T.length; i++) { const t = C.T[i]; if (t < t0 - 10 || t > t1 + 10) continue; (C.OK[i] ? pts : bad).push({ t, hr: 60000 / C.V[i], seg: C.SEG[i] }); }
+  /* local average: mean of accepted beats within ±6 s, so the shading follows each breath, not slow drifts or standing up */
+  for (const p of pts) { let s = 0, n = 0; for (const q of pts) if (q.seg === p.seg && Math.abs(q.t - p.t) <= 6) { s += q.hr; n++; } p.avg = s / n; }
+  return { pts, bad };
+}
+function drawWave(cv, list, o) {
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const cs = getComputedStyle(document.documentElement), col = k => cs.getPropertyValue(k).trim();
+  const up = col('--accent'), down = col('--lav'), ink = col('--fg'), muted = col('--muted'), line = col('--line'), warn = col('--warn');
+  const { pts, bad } = waveData(list, o.t0, o.t1);
+  const L = 30, R = 6, T = 8, B = o.live ? 8 : 20, X = t => L + (t - o.t0) / (o.t1 - o.t0) * (w - L - R);
+  const vis = pts.filter(p => p.t >= o.t0 && p.t <= o.t1);
+  g.font = `10px ${col('--f-mono') || 'monospace'}`; g.fillStyle = muted;
+  if (vis.length < 3) { g.textAlign = 'center'; g.fillText(o.live ? 'waiting for beats…' : 'not enough beats to draw', w / 2, h / 2); return; }
+  let lo = Math.min(...vis.map(p => p.hr)), hi = Math.max(...vis.map(p => p.hr));
+  const mid = (lo + hi) / 2, half = Math.max(5, (hi - lo) / 2 * 1.12); lo = mid - half; hi = mid + half;
+  const Y = v => T + (hi - clamp(v, lo, hi)) / (hi - lo) * (h - T - B);
+  // grid and axis labels
+  g.strokeStyle = line; g.lineWidth = 1; g.textAlign = 'right';
+  for (const v of [Math.ceil(lo), Math.round(mid), Math.floor(hi)]) { const y = Y(v); g.beginPath(); g.moveTo(L, y); g.lineTo(w - R, y); g.stroke(); g.fillText(String(v), L - 5, y + 3); }
+  // settle (faded) and standing marker
+  if (o.settle > o.t0) { g.fillStyle = muted; g.globalAlpha = .08; g.fillRect(L, T, X(Math.min(o.settle, o.t1)) - L, h - T - B); g.globalAlpha = 1; if (!o.live && X(o.settle) - L > 34) { g.fillStyle = muted; g.textAlign = 'left'; g.fillText('settle', L + 4, T + 10); } }
+  // shaded breath wave per continuous segment
+  const segs = []; for (const p of pts) { if (!segs.length || segs[segs.length - 1][0].seg !== p.seg) segs.push([]); segs[segs.length - 1].push(p); }
+  for (const sg of segs) {
+    if (sg.length < 2) continue;
+    const area = () => { g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.hr)) : g.moveTo(X(p.t), Y(p.hr))); for (let i = sg.length - 1; i >= 0; i--) g.lineTo(X(sg[i].t), Y(sg[i].avg)); g.closePath(); };
+    const clipSide = above => { g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.avg)) : g.moveTo(X(p.t), Y(p.avg))); g.lineTo(X(sg[sg.length - 1].t), above ? 0 : h); g.lineTo(X(sg[0].t), above ? 0 : h); g.closePath(); g.clip(); };
+    for (const [above, c] of [[true, up], [false, down]]) { g.save(); g.beginPath(); g.rect(L, 0, w - L - R, h); g.clip(); clipSide(above); area(); g.fillStyle = c; g.globalAlpha = .42; g.fill(); g.restore(); }
+    g.save(); g.beginPath(); g.rect(L, 0, w - L - R, h); g.clip();
+    g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.avg)) : g.moveTo(X(p.t), Y(p.avg))); g.setLineDash([3, 4]); g.strokeStyle = muted; g.globalAlpha = .55; g.lineWidth = 1; g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+    g.beginPath(); sg.forEach((p, i) => i ? g.lineTo(X(p.t), Y(p.hr)) : g.moveTo(X(p.t), Y(p.hr))); g.strokeStyle = ink; g.lineWidth = 1.8; g.lineJoin = 'round'; g.lineCap = 'round'; g.stroke();
+    g.restore();
+  }
+  // beats left out
+  g.strokeStyle = muted; g.lineWidth = 1.4;
+  for (const b of bad) { if (b.t < o.t0 || b.t > o.t1) continue; g.beginPath(); g.arc(X(b.t), Y(b.hr), 3.2, 0, 2 * Math.PI); g.stroke(); }
+  // standing up
+  if (o.standAt != null && o.standAt >= o.t0 && o.standAt <= o.t1) {
+    const x = X(o.standAt); g.strokeStyle = warn; g.lineWidth = 1.5; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, T); g.lineTo(x, h - B); g.stroke(); g.setLineDash([]);
+    g.fillStyle = warn; g.textAlign = x > w - 70 ? 'right' : 'left'; g.fillText('stood up', x + (x > w - 70 ? -4 : 4), o.live ? T + 10 : h - B - 6);
+    if (!o.live) { // peak: highest 3-beat average in the first 30 s
+      const sp = pts.filter(p => p.t >= o.standAt && p.t <= o.standAt + 30); let best = null;
+      for (let i = 2; i < sp.length; i++) { const m = (sp[i].hr + sp[i - 1].hr + sp[i - 2].hr) / 3; if (!best || m > best.m) best = { m, t: sp[i - 1].t }; }
+      if (best) { g.fillStyle = warn; g.beginPath(); g.arc(X(best.t), Y(best.m), 4, 0, 2 * Math.PI); g.fill(); g.textAlign = 'left'; g.fillText(`peak ${Math.round(best.m)} bpm`, Math.min(X(best.t) + 8, w - 70), Y(best.m) + 4); }
+    }
+  }
+  // time axis on results
+  if (!o.live) { g.fillStyle = muted; g.textAlign = 'left'; g.fillText(mmss(o.t0), L, h - 5); g.textAlign = 'right'; g.fillText(mmss(o.t1), w - R, h - 5); g.textAlign = 'center'; g.fillText('bpm · minutes', (L + w - R) / 2, h - 5); }
+}
+/* beat-pattern chart (Poincaré plot): each beat against the next */
+function poincareSvg(rr, t0 = -Infinity, t1 = Infinity) {
+  const C = cleanRR(rr), P = [], Q = [];
+  for (let i = 1; i < C.V.length; i++) { if (C.SEG[i] !== C.SEG[i - 1] || C.T[i] < t0 || C.T[i] > t1) continue; (C.OK[i] && C.OK[i - 1] ? P : Q).push([C.V[i - 1], C.V[i]]); }
+  if (P.length < 10) return '';
+  const all = P.flat(), lo0 = quant(all, 0.01), hi0 = quant(all, 0.99), pad = Math.max(40, (hi0 - lo0) * 0.25), lo = lo0 - pad, hi = hi0 + pad;
+  const S = 150, M = 6, sc = v => M + (clamp(v, lo, hi) - lo) / (hi - lo) * (S - 2 * M), y = v => S - sc(v);
+  const dots = P.map(([a, b]) => `<circle class="pc" cx="${sc(a).toFixed(1)}" cy="${y(b).toFixed(1)}" r="2.3"/>`).join('');
+  const odd = Q.map(([a, b]) => `<circle class="pc-bad" cx="${sc(a).toFixed(1)}" cy="${y(b).toFixed(1)}" r="3"/>`).join('');
+  return `<svg class="poincare" viewBox="0 0 ${S} ${S}" role="img" aria-label="Beat-to-beat pattern"><rect class="pc-bg" x="0.5" y="0.5" width="${S - 1}" height="${S - 1}" rx="10"/><line class="pc-id" x1="${M}" y1="${S - M}" x2="${S - M}" y2="${M}"/>${dots}${odd}</svg>`;
+}
+function quant(a, q) { const s = [...a].sort((x, y) => x - y); return s[Math.min(s.length - 1, Math.max(0, Math.round((s.length - 1) * q)))]; }
+const KEY = `<div class="wave-key"><span><i class="k-up"></i>speeding up (breathing in)</span><span><i class="k-down"></i>slowing down (breathing out)</span><span><i class="k-bad"></i>left out</span></div>`;
+function waveHtml(r) {
+  const st = r.standAt != null, pc = poincareSvg(r.rr, r.settle || 0, (r.settle || 0) + r.len);
+  return `<div class="sub-card wave-res"><h3>Your reading, beat by beat</h3>
+    <canvas id="resWave" aria-label="Heart rate during the reading"></canvas>
+    ${st ? '<h3 style="margin-top:6px">Standing up</h3><canvas id="resWave2" class="res-wave2" aria-label="Heart rate when standing up"></canvas>' : ''}
+    ${KEY}
+    ${pc ? `<div class="pc-row">${pc}<p class="fine"><b>Beat-to-beat pattern.</b> Each dot is one beat against the next. A wider, rounder cloud means more variation from beat to beat (higher HRV); a narrow one means less. Grey rings are beats left out.</p></div>` : ''}</div>`;
 }
 function orthoHtml(r) {
   const o = r.o; if (!o) return '';
@@ -456,6 +536,7 @@ function resultHtml(r) {
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${breathNoteHtml(r)}
     ${trainingHtml(r, b)}
+    ${Array.isArray(r.rr) && r.rr.length > 20 ? waveHtml(r) : ''}
     ${orthoHtml(r)}
     ${tagsHtml(r)}
     ${leadOneHtml(r)}
@@ -463,9 +544,18 @@ function resultHtml(r) {
     <p class="fine">Score = lnRMSSD × 100 / 6.5. Compare readings with each other, not with other people or other apps.</p>
   </div>`;
 }
+function drawResWave() {
+  const r = S.resWave, cv = $('#resWave'); if (!r || !cv) return;
+  const end = r.rr.length ? r.rr[r.rr.length - 1][0] : 0, readEnd = Math.min(end, (r.settle || 0) + r.len);
+  /* the reading and the standing part get their own scales, so the small breath waves aren't flattened by the jump on standing */
+  drawWave(cv, r.rr, { t0: 0, t1: Math.max(30, readEnd), settle: r.settle || 0, standAt: null, live: false });
+  if (r.standAt != null) drawWave($('#resWave2'), r.rr, { t0: Math.max(0, r.standAt - 20), t1: Math.max(r.standAt + 30, Math.min(end, r.standAt + STAND)), settle: 0, standAt: r.standAt, live: false });
+}
+window.addEventListener('resize', () => { if (document.body.dataset.screen === 'scrResult') drawResWave(); });
 function openResult(id) {
   const pend = S.pending && S.pending.id === id, r = pend ? S.pending : S.readings.find(x => x.id === id); if (!r) return;
   $('#resultBody').innerHTML = resultHtml(r); S.openId = id; bindTags(r);
+  S.resWave = r; requestAnimationFrame(() => drawResWave());
   $('#resActsNew').hidden = !pend; $('#resActsSaved').hidden = pend; show('scrResult');
 }
 const resBack = () => show(S.resultBack || 'scrToday');

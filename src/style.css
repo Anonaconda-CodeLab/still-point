@@ -294,3 +294,28 @@ body:not(.tabbed) .tabs{display:none}
 .kv span small{display:block;color:var(--muted);font-size:12.5px;font-weight:400}
 a.btn:not(.coffee){color:var(--fg)}
 .note-soft{border-left:3px solid var(--lav);background:color-mix(in srgb,var(--lav) 10%,var(--surface));border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.5}
+
+/* breath wave and beat-pattern chart */
+.reading .ring-wrap{width:min(58vw,230px)}
+.reading .ring-num{font-size:clamp(40px,12vw,54px)}
+.wave-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px 6px;display:flex;flex-direction:column;gap:4px}
+.wave-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.wave-top>span:first-child{text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+#rdWave{width:100%;height:118px;display:block}
+#resWave,.res-wave2{width:100%;height:150px;display:block}
+.wave-res h3+canvas{margin-top:2px}
+.wave-key{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.wave-key>span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.wave-key i{display:inline-block;width:12px;height:8px;border-radius:3px}
+.wave-key .k-up{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.wave-key .k-down{background:color-mix(in srgb,var(--lav) 45%,transparent)}
+.wave-key .k-bad{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--muted);background:none}
+.pc-row{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;margin-top:4px}
+.pc-row .fine b{color:var(--fg);font-weight:600}
+.poincare{width:132px;height:132px;display:block}
+.poincare .pc-bg{fill:var(--bg);stroke:var(--line)}
+.poincare .pc-id{stroke:var(--line);stroke-dasharray:3 4}
+.poincare .pc{fill:var(--accent);opacity:.75}
+.poincare .pc-bad{fill:none;stroke:var(--muted);stroke-width:1.4}
+.poincare text{font-family:var(--f-mono);font-size:8.5px;fill:var(--muted)}
+@media (max-width:360px){.pc-row{grid-template-columns:1fr}.poincare{margin:0 auto}}

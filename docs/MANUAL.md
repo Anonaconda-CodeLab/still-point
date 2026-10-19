@@ -42,8 +42,11 @@ The **HRV** tab (the first tab) asks what you'd like to do:
 4. Tap **Begin**. The first 15 seconds let you settle; if you're already still and ready, tap **Skip settling**. Then
    the reading runs. Stay still and breathe normally.
 
-While it runs you see your heart rate, your **HRV** (RMSSD over the last minute), your **breathing rate** and the
-signal quality. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to
+While it runs you see a live **heart-rate trace** of the last minute, beat by beat, and your heart rate, your **HRV**
+(RMSSD over the last minute), your **breathing rate** and the signal quality. In the trace, the area above your average
+is shaded teal where your heart speeds up (usually as you breathe in) and lavender where it slows (as you breathe out),
+so each breath shows as a gentle wave: taller waves mean higher HRV. Beats left out as glitches appear as small grey
+rings off the line. In the standing test, a dashed line marks the moment you stood up. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to
 steer them: just breathe normally.
 5. When it finishes, look over the result and tap **Save reading**, or **Discard** if something went wrong (you moved,
    talked, or it wasn't your usual routine).
@@ -60,6 +63,15 @@ food or exercise, in the same position. Consistency matters far more than the ex
   slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.
 - **Signal**: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are
   left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.
+
+### Your reading, beat by beat
+Every result shows the whole reading as a heart-rate trace with the same teal and lavender shading (the faded strip at
+the start is the settle period). A standing test gets its own trace with the moment you stood up and your peak heart
+rate marked.
+
+Next to it, the **beat-to-beat pattern** plots each beat against the next (a Poincaré plot). A wide, round cloud means
+a lot of variation from beat to beat (higher HRV); a narrow cloud along the diagonal means less. Grey rings are beats
+that were left out.
 
 ### Breathing and HRV
 How you breathe moves HRV: slow, deep breathing raises it and faster breathing lowers it. So breathe the way you
