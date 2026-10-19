@@ -15,7 +15,7 @@ const PROJECT = {
   name: 'Still Point',     // working name: change here and everything follows
   filePrefix: 'StillPoint',
   appUrl: 'https://stillpoint.anonacondacodelab.com', // the public address of the app (used in help texts)
-  repoUrl: 'https://github.com/Anonaconda-CodeLab/still-point', // shown in Settings > About
+  repoUrl: '',            // 'https://github.com/Anonaconda-CodeLab/still-point' once the repository is public (shown in Settings > About)
   kofi: 'anonacondacodelab' // your Ko-fi username; leave empty to hide the support link
 };
 const APP = { APP_NAME: PROJECT.name, FILE_PREFIX: PROJECT.filePrefix, VERSION: pkg.version };
