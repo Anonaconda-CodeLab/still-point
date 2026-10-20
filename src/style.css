@@ -319,3 +319,7 @@ a.btn:not(.coffee){color:var(--fg)}
 .poincare .pc-bad{fill:none;stroke:var(--muted);stroke-width:1.4}
 .poincare text{font-family:var(--f-mono);font-size:8.5px;fill:var(--muted)}
 @media (max-width:360px){.pc-row{grid-template-columns:1fr}.poincare{margin:0 auto}}
+
+/* thank-you note at the foot of the home screen */
+.thanks{color:var(--muted);font-size:14px;line-height:1.5;margin:22px 4px 6px}
+.thanks a{color:var(--fg);font-weight:500;text-underline-offset:3px}

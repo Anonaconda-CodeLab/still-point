@@ -30,6 +30,8 @@ const about = `<div class="card" id="aboutCard">
       <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button>${repo ? `<a class="btn" href="${repo}" target="_blank" rel="noopener noreferrer">Source code</a>` : ''}${kofi ? `<a class="btn coffee" href="${kofi}" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>` : ''}</div>
     </div>`;
 
+const thanks = kofi ? `<p class="thanks">If you find this app useful, please consider <a href="${kofi}" target="_blank" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>` : '';
+
 const src = f => readFileSync(join(root, 'src', f), 'utf8');
 
 // minimal Markdown renderer for docs/MANUAL.md (headings, paragraphs, lists, '> ' callouts, bold, italics, code, https links)
@@ -60,7 +62,7 @@ function md(text) {
 }
 const manual = md(readFileSync(join(root, 'docs', 'MANUAL.md'), 'utf8'));
 const b64 = f => readFileSync(join(root, 'src', 'fonts', f)).toString('base64');
-const fill = s => s.replace(/\{\{(APP_NAME|FILE_PREFIX|VERSION|APP_URL|APP_HOST)\}\}/g, (_, k) => APP[k]).replace('{{ABOUT}}', about).replace('{{MANUAL}}', () => manual);
+const fill = s => s.replace(/\{\{(APP_NAME|FILE_PREFIX|VERSION|APP_URL|APP_HOST)\}\}/g, (_, k) => APP[k]).replace('{{ABOUT}}', about).replace('{{THANKS}}', thanks).replace('{{MANUAL}}', () => manual);
 
 const fonts = `@font-face{font-family:"Instrument Sans";font-style:normal;font-display:swap;font-weight:400 700;font-stretch:75% 100%;src:url(data:font/woff2;base64,${b64('InstrumentSans-latin-variable.woff2')}) format("woff2-variations")}
 @font-face{font-family:"IBM Plex Mono";font-style:normal;font-display:swap;font-weight:400;src:url(data:font/woff2;base64,${b64('IBMPlexMono-latin-400.woff2')}) format("woff2")}
