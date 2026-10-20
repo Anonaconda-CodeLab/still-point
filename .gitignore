@@ -11,3 +11,4 @@ node_modules/
 dist/fragment.html
 .DS_Store
 Thumbs.db
+!dist/robots.txt

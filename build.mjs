@@ -84,7 +84,17 @@ const page = `<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2b6f68" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1416" media="(prefers-color-scheme: dark)">
-<meta name="description" content="${APP.APP_NAME}: a calm morning HRV reading, standing test and paced breathing with a chest-strap heart-rate monitor. Runs entirely in your browser.">
+<meta name="description" content="${APP.APP_NAME}: a free, private morning HRV reading, standing test and calm breathing guide for the Polar H10. No account; runs entirely in your browser.">
+${appUrl ? `<link rel="canonical" href="${appUrl}/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Anonaconda Code Lab">
+<meta property="og:title" content="${APP.APP_NAME}: free HRV and breathing app for the Polar H10">
+<meta property="og:description" content="A calm morning HRV reading, standing test and breathing guide. Compared with your own baseline. No account; your data stays on your phone.">
+<meta property="og:url" content="${appUrl}/">
+<meta property="og:image" content="https://anonacondacodelab.com/social/og-still-point.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">` : ''}
 ${title}
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -107,6 +117,11 @@ writeFileSync(file, out);
 if (!fragment) {
   const icons = ['icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
   for (const f of icons) copyFileSync(join(root, 'src', 'icons', f), join(root, 'dist', f));
+  /* search engines: the app is one page; its full description lives on the studio site */
+  if (appUrl) {
+    writeFileSync(join(root, 'dist', 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${appUrl}/sitemap.xml\n`);
+    writeFileSync(join(root, 'dist', 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${appUrl}/</loc></url>\n</urlset>\n`);
+  }
   writeFileSync(join(root, 'dist', 'manifest.webmanifest'), JSON.stringify({
     name: APP.APP_NAME, short_name: APP.APP_NAME, description: 'Morning HRV, standing test and calm breathing with a Polar H10. Everything stays on your device.',
     start_url: './', scope: './', display: 'standalone', orientation: 'portrait', background_color: '#0e1416', theme_color: '#2b6f68',
@@ -131,6 +146,6 @@ self.addEventListener('fetch', e => {
 new Function(js.slice(8, -9));
 const stripped = out.replace(/<code>[^<]*<\/code>/g, '');
 // anything the page would load by itself (scripts, styles, images, frames) must be local; plain <a href> links are allowed
-const remote = stripped.match(/\bsrc\s*=\s*["']https?:|<link\b[^>]*href\s*=\s*["']https?:|url\(\s*["']?https?:/gi);
+const remote = stripped.match(/\bsrc\s*=\s*["']https?:|<link\b(?![^>]*rel="canonical")[^>]*href\s*=\s*["']https?:|url\(\s*["']?https?:/gi);
 if (remote) { console.error('Remote resource reference found:', remote); process.exit(1); }
 console.log(`${APP.APP_NAME} ${APP.VERSION} -> ${file} (${(out.length / 1024).toFixed(0)} KB)`);
