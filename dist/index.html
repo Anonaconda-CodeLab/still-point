@@ -353,6 +353,11 @@ a.btn:not(.coffee){color:var(--fg)}
 
 /* Android app: hide guidance that only applies to browsers */
 .native .browser-req{display:none}
+
+/* unsaved result: Save and Discard stay pinned at the bottom of the screen until one is chosen */
+.save-bar{position:sticky;bottom:0;z-index:15;margin:14px -16px 0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -10px 24px -16px rgba(0,0,0,.35)}
+.save-bar .acts-row{justify-content:center}
+.save-note{font-size:13px;font-weight:600;color:var(--muted)}
 </style>
 </head><body>
 <main id="app">
@@ -457,7 +462,7 @@ a.btn:not(.coffee){color:var(--fg)}
   <!-- READING RESULT -->
   <section id="scrResult" class="screen" hidden>
     <div id="resultBody"></div>
-    <div class="acts-row" id="resActsNew" style="justify-content:center"><button id="btnResSave" class="btn primary">Save reading</button><button id="btnResDiscard" class="btn ghost">Discard</button></div>
+    <div class="save-bar" id="resActsNew"><span class="save-note">This reading isn’t saved yet</span><div class="acts-row"><button id="btnResSave" class="btn primary">Save reading</button><button id="btnResDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="resActsSaved" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultFile" class="btn">Save to file</button><button id="btnResultDelete" class="btn ghost">Delete</button></div>
   </section>
 
@@ -522,7 +527,7 @@ a.btn:not(.coffee){color:var(--fg)}
   <!-- BREATHING DONE -->
   <section id="scrSessDone" class="screen" hidden>
     <div id="sessDoneBody"></div>
-    <div class="acts-row" id="sessActsNew" style="justify-content:center"><button id="btnSessSave" class="btn primary">Save session</button><button id="btnSessDiscard" class="btn ghost">Discard</button></div>
+    <div class="save-bar" id="sessActsNew"><span class="save-note">This session isn’t saved yet</span><div class="acts-row"><button id="btnSessSave" class="btn primary">Save session</button><button id="btnSessDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="sessActsSaved" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button><button id="btnSessDelete" class="btn ghost">Delete</button></div>
   </section>
 

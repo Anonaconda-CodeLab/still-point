@@ -327,3 +327,8 @@ a.btn:not(.coffee){color:var(--fg)}
 
 /* Android app: hide guidance that only applies to browsers */
 .native .browser-req{display:none}
+
+/* unsaved result: Save and Discard stay pinned at the bottom of the screen until one is chosen */
+.save-bar{position:sticky;bottom:0;z-index:15;margin:14px -16px 0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -10px 24px -16px rgba(0,0,0,.35)}
+.save-bar .acts-row{justify-content:center}
+.save-note{font-size:13px;font-weight:600;color:var(--muted)}
