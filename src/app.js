@@ -81,7 +81,20 @@ async function loadAll() {
   S.sessions = ((await idb('sessions', 'readonly', s => s.getAll())) || []).sort((a, b) => a.t - b.t);
 }
 async function persistStorage() { try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) {} }
-const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, type: r.type || 'morning', ln: r.m.ln, hr: r.m.hr, quality: r.m.quality, tags: r.tags || [], sleepScore: r.sleepScore, sleepHours: r.sleepHours });
+/* sleep aids are typed by the person ("magnesium, chamomile tea"); each one is compared like a tag */
+const aidKey = a => 'aid:' + a.toLowerCase();
+function cleanAids(v) {
+  const list = Array.isArray(v) ? v : String(v || '').split(/[,;\n]/), seen = new Set(), out = [];
+  for (let a of list) {
+    a = String(a || '').replace(/[\u0000-\u001f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    if (a && !seen.has(a.toLowerCase())) { seen.add(a.toLowerCase()); out.push(a); }
+  }
+  return out.slice(0, 6);
+}
+/* sleep aids used before, most recent first (spelling as last typed) */
+function knownAids() { const m = new Map(); for (const r of S.readings.slice().sort((a, b) => b.t - a.t)) for (const a of r.sleepAids || []) if (!m.has(a.toLowerCase())) m.set(a.toLowerCase(), a); return [...m.values()]; }
+const effectLabels = () => Object.assign({}, TAG_LABEL, Object.fromEntries(knownAids().map(a => [aidKey(a), 'Sleep aid: ' + a])));
+const forBaseline = r => ({ id: r.id, t: r.t, pos: r.pos, type: r.type || 'morning', ln: r.m.ln, hr: r.m.hr, quality: r.m.quality, tags: (r.tags || []).concat((r.sleepAids || []).map(aidKey)), sleepScore: r.sleepScore, sleepHours: r.sleepHours });
 const lenTxt = sec => sec % 60 ? `${Math.round(sec / 6) / 10} min` : `${sec / 60} min`;
 /* optional morning tags: things that often move HRV */
 const TAGS = [['slept_badly', 'Slept badly'], ['slept_well', 'Slept well'], ['alcohol', 'Alcohol last night'], ['hard_training', 'Hard training yesterday'], ['rest_day', 'Rest day yesterday'],
@@ -499,14 +512,16 @@ function trainingHtml(r, b) {
   return `<div class="train ${a.level}"><span class="tr-l">Training today</span><b>${esc(a.title)}</b><p>${esc(a.text)}</p></div>`;
 }
 function tagsHtml(r) {
-  const has = (r.tags && r.tags.length) || fin(r.sleepScore) || fin(r.sleepHours);
-  const sum = [...(r.tags || []).map(k => TAG_LABEL[k] || k), fin(r.sleepScore) ? `sleep score ${r.sleepScore}` : '', fin(r.sleepHours) ? `${r.sleepHours} h sleep` : ''].filter(Boolean).join(' · ');
+  const aids = r.sleepAids || [], has = (r.tags && r.tags.length) || fin(r.sleepScore) || fin(r.sleepHours) || aids.length;
+  const sum = [...(r.tags || []).map(k => TAG_LABEL[k] || k), fin(r.sleepScore) ? `sleep score ${r.sleepScore}` : '', fin(r.sleepHours) ? `${r.sleepHours} h sleep` : '', aids.length ? 'sleep aid: ' + aids.join(', ') : ''].filter(Boolean).join(' · ');
   return `<div class="tagbox"><div class="tag-top"><span><b>Tags</b> <small class="opt">optional</small>${has ? `<br><span class="dev-meta">${esc(sum)}</span>` : ''}</span><button class="btn" id="btnTags" aria-expanded="false">${has ? 'Edit tags' : '+ Add tags'}</button></div>
     <div id="tagEdit" class="tag-edit" hidden>
       <p class="fine">Tag anything that might have affected this reading. After a few weeks, Trends shows what affects your HRV.</p>
       <div class="chips" id="tagChips"></div>
       <div class="two"><div class="field"><label for="inSleepScore">Sleep score <small class="opt">0–100, from a watch or ring</small></label><input id="inSleepScore" type="number" inputmode="numeric" min="0" max="100" step="1" placeholder="e.g. 78" value="${fin(r.sleepScore) ? r.sleepScore : ''}"></div>
       <div class="field"><label for="inSleepHours">Hours slept</label><input id="inSleepHours" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="e.g. 7.5" value="${fin(r.sleepHours) ? r.sleepHours : ''}"></div></div>
+      <div class="field"><label for="inSleepAids">Sleep aids <small class="opt">herbal or other, taken last night; separate with commas</small></label><input id="inSleepAids" type="text" maxlength="200" autocomplete="off" placeholder="e.g. magnesium, chamomile tea" value="${esc(aids.join(', '))}">
+      <div class="chips" id="aidChips"></div></div>
       <div class="acts-row"><button class="btn primary" id="btnTagsDone">Done</button></div>
     </div></div>`;
 }
@@ -515,12 +530,20 @@ function bindTags(r) {
   const ed = $('#tagEdit'), sel = new Set(r.tags || []), chips = $('#tagChips');
   chips.innerHTML = TAGS.map(([k, l]) => `<button type="button" role="checkbox" aria-checked="${sel.has(k)}" data-k="${k}">${esc(l)}</button>`).join('');
   for (const c of chips.children) c.onclick = () => { const on = c.getAttribute('aria-checked') !== 'true'; c.setAttribute('aria-checked', String(on)); on ? sel.add(c.dataset.k) : sel.delete(c.dataset.k); };
+  /* sleep aids used before: one tap adds or removes them */
+  const aidIn = $('#inSleepAids'), aidChips = $('#aidChips'), known = knownAids().slice(0, 8);
+  const drawAids = () => { const cur = cleanAids(aidIn.value).map(a => a.toLowerCase());
+    aidChips.innerHTML = known.map(a => `<button type="button" role="checkbox" aria-checked="${cur.includes(a.toLowerCase())}" data-a="${esc(a)}">${esc(a)}</button>`).join(''); aidChips.hidden = !known.length;
+    for (const c of aidChips.children) c.onclick = () => { const a = c.dataset.a, list = cleanAids(aidIn.value), i = list.findIndex(x => x.toLowerCase() === a.toLowerCase());
+      if (i >= 0) list.splice(i, 1); else list.push(a); aidIn.value = list.join(', '); drawAids(); }; };
+  aidIn.oninput = drawAids; drawAids();
   btn.onclick = () => { ed.hidden = !ed.hidden; btn.setAttribute('aria-expanded', String(!ed.hidden)); };
   $('#btnTagsDone').onclick = async () => {
     const sc = parseFloat($('#inSleepScore').value), hr = parseFloat($('#inSleepHours').value);
     r.tags = TAGS.map(t => t[0]).filter(k => sel.has(k));
     r.sleepScore = fin(sc) && sc >= 0 && sc <= 100 ? Math.round(sc) : undefined;
     r.sleepHours = fin(hr) && hr >= 0 && hr <= 24 ? Math.round(hr * 4) / 4 : undefined;
+    const aids = cleanAids(aidIn.value); r.sleepAids = aids.length ? aids : undefined;
     if (S.pending !== r) { try { await idb('readings', 'readwrite', s => s.put(r)); } catch (e) { toast('The tags could not be saved.'); } }
     openResult(r.id); toast(S.pending === r ? 'Tags added. Save the reading to keep them.' : 'Tags saved.');
   };
@@ -880,10 +903,10 @@ function weekHtml(at, title, id = '') {
     ${cur.top ? `<div class="kv"><span>Most-used tag</span><b>${esc(cur.top)}</b></div>` : ''}</div>`;
 }
 function effectsHtml(R, pos) {
-  const e = tagEffects(R, pos, TAG_LABEL);
+  const e = tagEffects(R, pos, effectLabels());
   const any = R.some(r => r.pos === pos && ((r.tags && r.tags.length) || fin(r.sleepScore) || fin(r.sleepHours)));
   let body;
-  if (!any) body = `<p class="dev-meta" style="margin:0">Add tags after your morning readings (tap <b>+ Add tags</b> on a result): alcohol, hard training, poor sleep, your sleep score and so on. Once a tag has been used on at least ${TAG_MIN} mornings, with at least ${TAG_MIN_WITHOUT} mornings without it, this card shows how it relates to your HRV. Sleep score and hours slept need 8 mornings.</p>`;
+  if (!any) body = `<p class="dev-meta" style="margin:0">Add tags after your morning readings (tap <b>+ Add tags</b> on a result): alcohol, hard training, poor sleep, your sleep score, a sleep aid you took and so on. Once a tag has been used on at least ${TAG_MIN} mornings, with at least ${TAG_MIN_WITHOUT} mornings without it, this card shows how it relates to your HRV. Sleep score and hours slept need 8 mornings.</p>`;
   else {
     const line = x => x.unit !== undefined
       ? `<li class="${x.pct < 0 ? 'watch' : 'ok'}"><b>${esc(x.label)} below ${x.cut}${x.unit}</b><span>HRV about ${Math.abs(Math.round(x.pct))} % ${x.pct < 0 ? 'lower' : 'higher'} than after higher values (${x.n} mornings)</span></li>`
@@ -1032,7 +1055,7 @@ $('#btnEliteGo').onclick = async () => {
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
   const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: '{{APP_NAME}} {{VERSION}}', exported: new Date().toISOString(), settings: s,
-    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, src: r.src })), sessions: S.sessions };
+    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, sleepAids: r.sleepAids, src: r.src })), sessions: S.sessions };
   const d = new Date(); downloadFile(`{{FILE_PREFIX}}-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
 $('#btnSaveInfo').onclick = e => { e.stopPropagation(); const p = $('#saveInfo'), open = p.hidden; p.hidden = !open; $('#btnSaveInfo').setAttribute('aria-expanded', String(open)); };
@@ -1041,7 +1064,7 @@ $('#btnExport2').onclick = () => $('#btnExport').click();
 /* one row per reading and per breathing session, for spreadsheets */
 function csvText() {
   const cols = ['kind', 'date', 'time', 'type', 'position', 'minutes', 'score', 'lnRMSSD', 'RMSSD_ms', 'SDNN_ms', 'heart_rate_bpm', 'breaths_per_min', 'signal', 'beats_left_out',
-    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'pattern', 'swing_bpm', 'resonance_pace', 'tags', 'sleep_score', 'hours_slept'];
+    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'pattern', 'swing_bpm', 'resonance_pace', 'tags', 'sleep_score', 'hours_slept', 'sleep_aids'];
   const n = (v, d = 1) => fin(v) ? v.toFixed(d) : '', q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   const dt = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, `${pad2(d.getHours())}:${pad2(d.getMinutes())}`]; };
   const rows = [cols.join(',')], items = [...S.readings.map(r => ({ t: r.t, r })), ...S.sessions.map(x => ({ t: x.t, x }))].sort((a, b) => a.t - b.t);
@@ -1049,7 +1072,7 @@ function csvText() {
     const o = {}; [o.date, o.time] = dt(it.t);
     if (it.r) {
       const r = it.r, m = r.m; Object.assign(o, { kind: 'reading', type: typeLabel(r), position: POS[r.pos], minutes: n(r.len / 60), score: m.score ?? '', lnRMSSD: n(m.ln, 2), RMSSD_ms: n(m.rmssd), SDNN_ms: n(m.sdnn),
-        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '', tags: (r.tags || []).map(k => TAG_LABEL[k] || k).join('; '), sleep_score: r.sleepScore ?? '', hours_slept: r.sleepHours ?? '' });
+        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '', tags: (r.tags || []).map(k => TAG_LABEL[k] || k).join('; '), sleep_score: r.sleepScore ?? '', hours_slept: r.sleepHours ?? '', sleep_aids: (r.sleepAids || []).join('; ') });
       if (r.o) Object.assign(o, { stand_peak_bpm: n(r.o.peakHr), stand_rise_bpm: n(r.o.rise), stand_settle_bpm: n(r.o.settle), ratio_30_15: n(r.o.ratio3015, 2) });
     } else {
       const x = it.x; Object.assign(o, { kind: x.kind === 'resonance' ? 'resonance test' : x.kind === 'meditation' ? 'open session' : 'breathing', minutes: n(x.dur / 60), pace_per_min: x.pace ?? '', pattern: x.patternName || '', resonance_pace: x.best ?? '' });
@@ -1072,6 +1095,7 @@ function cleanReadingIn(r) {
   if (Array.isArray(r.tags)) o.tags = r.tags.filter(k => TAG_LABEL[k]);
   if (fin(r.sleepScore) && r.sleepScore >= 0 && r.sleepScore <= 100) o.sleepScore = Math.round(r.sleepScore);
   if (fin(r.sleepHours) && r.sleepHours >= 0 && r.sleepHours <= 24) o.sleepHours = r.sleepHours;
+  if (Array.isArray(r.sleepAids)) { const a = cleanAids(r.sleepAids.filter(x => typeof x === 'string')); if (a.length) o.sleepAids = a; }
   if (r.src === 'elite') o.src = 'elite';
   return o;
 }

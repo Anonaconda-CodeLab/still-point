@@ -116,7 +116,9 @@ It's a suggestion: how you feel counts too. Switch it off in **Settings → Opti
 Under each result, **+ Add tags** lets you note anything that may have affected the reading: slept badly or well,
 alcohol last night, hard training or a rest day yesterday, sore muscles, feeling ill, stressed, a late or heavy meal,
 caffeine before the reading, travel or jet lag, period. You can also enter a **sleep score** (0–100, as shown by a
-Garmin, Oura, Fitbit or similar) and **hours slept**. Tags are entirely optional; you can add or change them later by
+Garmin, Oura, Fitbit or similar), **hours slept** and any **sleep aids** you took the night before (herbal or other,
+such as magnesium or chamomile tea; separate several with commas). Aids you've used before appear as buttons, so
+they're one tap next time. Tags are entirely optional; you can add or change them later by
 opening the reading.
 
 ### Something about skipped beats
@@ -173,7 +175,7 @@ At the start of each week, the HRV tab shows **Your week**, the same summary for
 
 ### What affects you
 Once you've tagged some mornings, this card shows how each tag relates to your HRV, for example "Alcohol last night:
-HRV about 12 % lower than on other mornings". A tag needs at least **3 mornings with it and 5 without**; sleep score
+HRV about 12 % lower than on other mornings". Each sleep aid is compared the same way as a tag. A tag needs at least **3 mornings with it and 5 without**; sleep score
 and hours slept need **8 mornings** and compare your lower half with your upper half. Only differences of 5 % or more
 are listed. These are patterns in your own readings, not proof of cause.
 
