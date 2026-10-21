@@ -1,0 +1,4 @@
+# The website is dist/ (built and committed). Skip the deploy (it costs credits) when nothing in dist/ changed,
+# for example when only the Android app, tests or notes changed. Other settings stay as set on Netlify.
+[build]
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- dist"
