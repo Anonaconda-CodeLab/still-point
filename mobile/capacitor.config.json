@@ -1,0 +1,10 @@
+{
+  "appId": "com.anonacondacodelab.stillpoint",
+  "appName": "Still Point",
+  "webDir": "../dist",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

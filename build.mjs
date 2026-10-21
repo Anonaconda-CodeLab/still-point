@@ -69,7 +69,7 @@ const fonts = `@font-face{font-family:"Instrument Sans";font-style:normal;font-d
 @font-face{font-family:"IBM Plex Mono";font-style:normal;font-display:swap;font-weight:500;src:url(data:font/woff2;base64,${b64('IBMPlexMono-latin-500.woff2')}) format("woff2")}`;
 
 const css = `<style>${fonts}\n${src('style.css')}</style>`;
-const js = `<script>\n${fill(src('core.js'))}\n${fill(src('app.js'))}\n</script>`;
+const js = `<script>\n${fill(src('core.js'))}\n${fill(src('native.js'))}\n${fill(src('app.js'))}\n</script>`;
 const body = fill(src('body.html'));
 const title = `<title>${APP.APP_NAME}</title>`;
 

@@ -1,0 +1,2 @@
+    <path android:pathData="M12,3a9,9 0,1 1,0 18a9,9 0,1 1,0 -18z" android:strokeColor="#FFFFFF" android:strokeWidth="2" android:fillColor="#00000000" />
+    <path android:pathData="M12,7.5a4.5,4.5 0,1 1,0 9a4.5,4.5 0,1 1,0 -9z" android:fillColor="#FFFFFF" />

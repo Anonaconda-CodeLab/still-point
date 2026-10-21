@@ -41,12 +41,19 @@ function show(id) {
   if (id === 'scrToday') renderToday(); if (id === 'scrTrends') renderTrends(); if (id === 'scrBreathe') renderBreathe();
 }
 function downloadFile(name, text, type = 'application/json') {
+  if (NATIVE) { AppNative.saveFile(name, text, type).then(r => { if (r.saved) toast('Saved.'); }).catch(e => toast('Could not save the file: ' + (e && e.message || e), 6000)); return; }
   if (FRAMED) { toast('Saving files works when the app is opened from its own web address in Chrome.', 6000); return; }
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
 }
-async function keepAwake() { try { if (navigator.wakeLock) S.wake = await navigator.wakeLock.request('screen'); } catch (e) {} }
-function letSleep() { try { S.wake && S.wake.release(); } catch (e) {} S.wake = null; }
+async function keepAwake() {
+  if (NATIVE) { AppNative.keepScreenOn(true); AppNative.active(true, S.act && S.act.kind === 'reading' ? 'Reading in progress' : 'Session in progress'); return; }
+  try { if (navigator.wakeLock) S.wake = await navigator.wakeLock.request('screen'); } catch (e) {}
+}
+function letSleep() {
+  if (NATIVE) { AppNative.keepScreenOn(false); AppNative.active(false); return; }
+  try { S.wake && S.wake.release(); } catch (e) {} S.wake = null;
+}
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.act) keepAwake(); });
 
 /* ---------- settings ---------- */
@@ -100,6 +107,7 @@ $('#btnAckManual').onclick = () => { S.helpBack = 'scrAck'; show('scrHelp'); };
 
 /* ---------- Bluetooth ---------- */
 function btProblem() {
+  if (NATIVE) return '';
   const ua = navigator.userAgent, linux = /Linux/.test(ua) && !/Android/.test(ua), brave = !!navigator.brave;
   const scheme = brave ? 'brave' : 'chrome', flag = f => `<code>${scheme}://flags/#${f}</code>`;
   if (FRAMED) return '<b>Bluetooth is blocked in this preview.</b> To use your strap, open the app from {{APP_URL}}. The simulated strap works here.';
@@ -596,7 +604,7 @@ function chime(freq, force, at = 0) {
     });
   } catch (e) {}
 }
-function vibrate(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+function vibrate(p) { if (NATIVE) { AppNative.vibrate(p); return; } try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
 
 /* ---------- BREATHE ---------- */
 function updateBreatheAvail() {
@@ -648,6 +656,29 @@ $('#btnBreathe').onclick = () => {
 $('#btnResonance').onclick = () => { if (!S.connected) return; const k = rhythmOf(getSettings()); startSession('resonance', RESONANCE_STEPS.map(p => ({ pace: p, dur: 120 })), k === '0.5' ? 0.5 : 0.4); };
 $('#btnMeditate').onclick = () => { if (!acked()) return show('scrAck'); startMeditation(getSettings().medLen); };
 
+/* With the screen off (Android app) animation frames stop and timers slow down, so the session is advanced from a
+   timer instead and the breathing cues for the next few seconds are scheduled ahead on the audio clock. */
+function hiddenTick() {
+  const a = S.act; if (!a || a.kind === 'reading' || !document.hidden) return;
+  cancelAnimationFrame(S.raf); frame();
+  if (S.act !== a || !a.steps.length) return;
+  const el = actClock(), from = Math.max(el, a.cuedUntil || 0, 0), to = Math.min(el + 3, a.total), s = getSettings();
+  if (to <= from) return;
+  let prev = null;
+  for (let t = from; t < to; t += 0.05) {
+    const st = a.stepAt(t), p = st.pc.at(t - st.t0), key = a.steps.indexOf(st) + p.phase + p.cycle;
+    if (prev !== null && key !== prev) {
+      const at = t - el;
+      if (p.phase === 'in') { chime(396, false, at); if (s.vibe) setTimeout(() => vibrate(50), at * 1000); }
+      else if (p.phase === 'out') { chime(297, false, at); if (s.vibe) setTimeout(() => vibrate([20, 60, 20]), at * 1000); }
+    }
+    prev = key;
+  }
+  a.cuedUntil = to;
+}
+if (NATIVE) setInterval(hiddenTick, 500);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && S.act && S.act.kind !== 'reading') { cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(frame); } });
+
 function startSession(kind, steps, ratio, patternName, pattern) {
   let t = 0; for (const st of steps) { st.t0 = t; t += st.dur; st.t1 = t; st.pc = st.pc || pacer(st.pace, ratio); }
   const a = S.act = { kind, t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps, ratio, total: t, simOff: null, lastPhase: '', lastStep: -1, strap: S.connected, patternName, pattern };
@@ -697,7 +728,8 @@ function frame() {
   const key = si + p.phase + p.cycle;
   if (key !== a.lastPhase) {
     a.lastPhase = key; word.textContent = p.phase === 'in' ? 'Breathe in' : p.phase === 'out' ? 'Breathe out' : 'Hold';
-    if (p.phase === 'in') { chime(396, false); if (getSettings().vibe) vibrate(50); } else if (p.phase === 'out') { chime(297, false); if (getSettings().vibe) vibrate([20, 60, 20]); } else if (getSettings().vibe) vibrate(15);
+    if (el < (a.cuedUntil || 0)) { /* this cue was already scheduled while the screen was off */ }
+    else if (p.phase === 'in') { chime(396, false); if (getSettings().vibe) vibrate(50); } else if (p.phase === 'out') { chime(297, false); if (getSettings().vibe) vibrate([20, 60, 20]); } else if (getSettings().vibe) vibrate(15);
   }
   cnt.textContent = Math.ceil(p.left);
   if (si !== a.lastStep) { a.lastStep = si; if (a.kind === 'resonance') { $('#sessStep').textContent = `Pace ${si + 1} of ${a.steps.length} · ${paceTxt(st.pace)} per min`; if (si > 0) toast(`Now ${paceTxt(st.pace)} breaths a minute. Follow the circle.`, 3000); } }
@@ -1072,9 +1104,18 @@ $('#btnClear').onclick = async function () {
 };
 
 /* ---------- tabs and start-up ---------- */
+/* Android Back button: go back inside the app; on the main screen, or during a reading or session, the app moves to the background */
+window.appBack = () => {
+  const scr = document.body.dataset.screen || 'scrToday';
+  if (S.act || scr === 'scrToday' || scr === 'scrAck' || scr === 'scrReading' || scr === 'scrSession') return false;
+  if (scr === 'scrResult' && S.pending || scr === 'scrSessDone' && S.pendingSess) { toast('Save or discard this first.'); return true; }
+  const btn = { scrSetup: '#btnSetupBack', scrResult: '#btnResultDone', scrSessDone: '#btnSessDone', scrSettings: '#btnSettingsBack', scrHelp: '#btnHelpBack' }[scr];
+  if (btn) $(btn).click(); else show('scrToday');
+  return true;
+};
 for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { if (!S.act && !S.pending && !S.pendingSess) { S.resultBack = null; show(b.dataset.tab); } };
 (async function init() {
-  try { if ('serviceWorker' in navigator && !FRAMED && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
+  try { if ('serviceWorker' in navigator && !FRAMED && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
   await loadAll();
   envCheck();
   setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.');

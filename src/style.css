@@ -323,3 +323,6 @@ a.btn:not(.coffee){color:var(--fg)}
 /* thank-you note at the foot of the home screen */
 .thanks{color:var(--muted);font-size:14px;line-height:1.5;margin:22px 4px 6px}
 .thanks a{color:var(--fg);font-weight:500;text-underline-offset:3px}
+
+/* Android app: hide guidance that only applies to browsers */
+.native .browser-req{display:none}

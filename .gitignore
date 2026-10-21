@@ -12,3 +12,10 @@ dist/fragment.html
 .DS_Store
 Thumbs.db
 !dist/robots.txt
+
+# Android app: config files are kept, signing keys never go in the repository
+!mobile/package.json
+!mobile/package-lock.json
+!mobile/capacitor.config.json
+*.jks
+*.keystore
