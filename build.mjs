@@ -15,7 +15,10 @@ const PROJECT = {
   name: 'Still Point',     // working name: change here and everything follows
   filePrefix: 'StillPoint',
   appUrl: 'https://stillpoint.anonacondacodelab.com', // the public address of the app (used in help texts)
-  repoUrl: '',            // 'https://github.com/Anonaconda-CodeLab/still-point' once the repository is public (shown in Settings > About)
+  repoUrl: 'https://github.com/Anonaconda-CodeLab/still-point',   // shown in Settings > About and on the Android page
+  contact: 'hello@anonacondacodelab.com',   // support address shown in Settings > About and the manual; leave empty to hide
+  // SHA-256 of the Android signing certificate (the studio key shared by all apps), published so people can check an APK
+  certSha256: '4D:6C:EA:58:94:C0:D7:D8:E9:AB:74:BC:3A:1E:9C:A5:47:BD:40:A2:02:B6:70:99:AF:66:5B:29:7F:7A:8F:47',
   kofi: 'anonacondacodelab' // your Ko-fi username; leave empty to hide the support link
 };
 const APP = { APP_NAME: PROJECT.name, FILE_PREFIX: PROJECT.filePrefix, VERSION: pkg.version };
@@ -23,11 +26,15 @@ const appUrl = /^https:\/\/[\w.-]+\/?$/.test(PROJECT.appUrl) ? PROJECT.appUrl.re
 APP.APP_URL = appUrl || 'its https web address';
 APP.APP_HOST = appUrl ? appUrl.replace('https://', '') : 'the https address';
 const safeUrl = u => /^https:\/\/[\w.-]+(\/[\w./%-]*)?$/.test(u) ? u : '';
+const contact = /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/.test(PROJECT.contact) ? PROJECT.contact : '';
+// the commit an APK was built from: the Android workflow sets APP_BUILD_ID; the committed web page shows the version only
+const BUILD = /^[0-9a-f]{40}$/.test(process.env.APP_BUILD_ID || '') ? process.env.APP_BUILD_ID.slice(0, 7) : '';
 const repo = safeUrl(PROJECT.repoUrl), kofi = /^[A-Za-z0-9_]{1,60}$/.test(PROJECT.kofi) ? 'https://ko-fi.com/' + PROJECT.kofi : '';
 const about = `<div class="card" id="aboutCard">
-      <div><div class="dev-name">About ${APP.APP_NAME}</div><div class="dev-meta">Version ${APP.VERSION} · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
+      <div><div class="dev-name">About ${APP.APP_NAME}</div><div class="dev-meta">Version ${APP.VERSION}${BUILD ? ` · build ${BUILD}` : ''} · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
       <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro. Not a medical device.</p>
-      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button>${repo ? `<a class="btn" href="${repo}" target="_blank" rel="noopener noreferrer">Source code</a>` : ''}${kofi ? `<a class="btn coffee" href="${kofi}" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>` : ''}</div>
+      ${contact ? `<p class="dev-meta" style="margin:0">Questions or problems: <a href="mailto:${contact}">${contact}</a>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data.</p>` : ''}
+      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button>${appUrl ? `<a class="btn native-only" href="${appUrl}/android.html?v=${APP.VERSION}" target="_blank" rel="noopener noreferrer">Check for updates</a>` : ''}${repo ? `<a class="btn" href="${repo}" target="_blank" rel="noopener noreferrer">Source code</a>` : ''}${kofi ? `<a class="btn coffee" href="${kofi}" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>` : ''}</div>
     </div>`;
 
 const thanks = kofi ? `<p class="thanks">If you find this app useful, please consider <a href="${kofi}" target="_blank" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>` : '';
@@ -120,8 +127,12 @@ if (!fragment) {
   /* search engines: the app is one page; its full description lives on the studio site */
   if (appUrl) {
     writeFileSync(join(root, 'dist', 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${appUrl}/sitemap.xml\n`);
-    writeFileSync(join(root, 'dist', 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${appUrl}/</loc></url>\n</urlset>\n`);
+    writeFileSync(join(root, 'dist', 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${appUrl}/</loc></url>\n  <url><loc>${appUrl}/android.html</loc></url>\n</urlset>\n`);
   }
+  // the Android download page (also the target of the app's Check for updates button: android.html?v=<installed version>)
+  writeFileSync(join(root, 'dist', 'android.html'), src('android.html').replace(/\{\{(VERSION|REPO|CERT|CONTACT_LINE|APP_NAME|APP_URL|FILE_PREFIX)\}\}/g, (_, k) =>
+    ({ VERSION: APP.VERSION, REPO: repo, CERT: PROJECT.certSha256, APP_NAME: APP.APP_NAME, APP_URL: appUrl || '', FILE_PREFIX: APP.FILE_PREFIX,
+       CONTACT_LINE: contact ? ` · Questions or problems: <a href="mailto:${contact}">${contact}</a>` : '' })[k]));
   writeFileSync(join(root, 'dist', 'manifest.webmanifest'), JSON.stringify({
     name: APP.APP_NAME, short_name: APP.APP_NAME, description: 'Morning HRV, standing test and calm breathing with a Polar H10. Everything stays on your device.',
     start_url: './', scope: './', display: 'standalone', orientation: 'portrait', background_color: '#0e1416', theme_color: '#2b6f68',

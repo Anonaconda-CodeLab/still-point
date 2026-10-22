@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
 package com.anonacondacodelab.stillpoint;
 
 import android.Manifest;
@@ -34,6 +35,21 @@ import java.util.Locale;
     permissions = { @Permission(alias = "notifications", strings = { Manifest.permission.POST_NOTIFICATIONS }) }
 )
 public class AppPlugin extends Plugin {
+
+    /* Links to websites and email open in the phone's browser or mail app (the app itself has no internet access). */
+    @PluginMethod
+    public void openUrl(PluginCall call) {
+        String u = call.getString("url", "");
+        if (!(u.startsWith("https://") || u.startsWith("mailto:"))) { call.reject("unsupported link"); return; }
+        try {
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(u));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getActivity().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject(e.getMessage() != null ? e.getMessage() : "no app can open this link");
+        }
+    }
 
     /* Saving a file is two steps: pickSaveLocation opens Android's "save as" screen with only the file name (Android
        limits what a pending call may carry while that screen is open), then writeChunk writes the data in pieces. */

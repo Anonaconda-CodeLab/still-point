@@ -21,16 +21,30 @@ Everything runs in your browser: no account, no server, no data leaves your devi
 - **Breathing patterns**: box breathing, 4-7-8, or your own in / hold / out / hold timings, plus an **open session**
   with no guide and a quiet heart-rate and HRV summary.
 - **Import from Elite HRV** (the .zip export), recalculated from the beat intervals.
-- **Installable** on Android (home-screen icon, works offline).
+- **Android app**: the same app, with readings and sessions that keep going while the screen is off, and no internet
+  permission at all. Or install the web app to your home screen (works offline).
 - **Simulated strap** for trying the app without a Polar H10.
 - History export/import.
+
+## Android app
+Download the APK from the [latest release](https://github.com/Anonaconda-CodeLab/still-point/releases/latest). The
+[install guide](https://stillpoint.anonacondacodelab.com/android.html) explains how to install it, check that it's the
+official build (SHA-256 checksum and signing-certificate fingerprint) and keep it up to date, for example with Obtainium.
+It isn't on Google Play: we support [Keep Android Open](https://keepandroidopen.org). How it's built, and how to build
+and sign your own: [mobile/README.md](mobile/README.md).
+
+## Support
+Questions or problems: **hello@anonacondacodelab.com**. A description or a screenshot is usually enough; please don't
+send exported files unless you are happy to share them, because they contain your health data. Security issues: see
+[SECURITY.md](SECURITY.md).
 
 ## Development
 ```sh
 npm run build   # writes dist/index.html (no dependencies, Node 18+)
 npm test        # builds and runs the tests
 ```
-The app name, address, source link and Ko-fi username are set at the top of `build.mjs`.
+The app name, address, source link, contact address, signing-certificate fingerprint and Ko-fi username are set at
+the top of `build.mjs`. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 Methods are documented in [docs/MANUAL.md](docs/MANUAL.md), which is also built into the app.
 
 ## Hosting
@@ -43,5 +57,5 @@ any regulator, and must not be used to diagnose, treat, rule out or monitor any 
 of Polar Electro Oy; this project is independent and not affiliated with Polar.
 
 ## Licence
-Copyright © 2026 Anonaconda Code Lab. Free software under the [GNU GPL v3 or later](LICENSE). Embedded fonts: SIL Open
-Font License 1.1 (see [NOTICE.md](NOTICE.md)).
+Copyright © 2026 Anonaconda Code Lab. Free software under the [GNU GPL v3 or later](LICENSE). Embedded fonts (SIL Open
+Font License 1.1) and the Android app's components (MIT and Apache-2.0) are listed in [NOTICE.md](NOTICE.md).

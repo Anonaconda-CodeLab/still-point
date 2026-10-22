@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
 package com.anonacondacodelab.stillpoint;
 
 import android.os.Bundle;

@@ -225,6 +225,17 @@ If they line up, it says so. If there's a clear step, usually from a change in r
 or reading length, it explains this and offers **Start my baseline from** the switch date, so the old routine doesn't
 skew your baseline. Old readings stay in your history and charts, and you can go back to your full history at any time.
 
+## The Android app
+Still Point is also an Android app: the same app, with readings, breathing sessions and chimes that keep going while
+the screen is off, and **no internet permission** at all. It is not on Google Play; download it from
+**stillpoint.anonacondacodelab.com/android.html**, which also explains how to install it and how to check that it's the
+official build. When you start your first reading or session, it asks to show a notification: that notification is
+what keeps it running with the screen off.
+
+The Android app keeps its own history, separate from the web app. To move your history across, use **Settings → Save
+all to file** in the web app, then **Import history** in the Android app. Updates install over the old version and keep
+your history; **Settings → About → Check for updates** tells you when a new version is out.
+
 ## Install as an app
 In Chrome on Android, the HRV tab offers **Install** (also in **Settings → Options**, or Chrome's menu →
 **Add to Home screen** / **Install app**). It then has its own icon, opens full screen and works without a connection;
@@ -236,3 +247,10 @@ and the web page share the same storage.
   sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.
 - **Noisy reading:** moisten the electrodes, tighten the strap a little, keep still and don't talk.
 - **The screen turns off during a session:** the app asks the phone to stay awake; keep the page in the foreground.
+  The Android app keeps going with the screen off. If a phone still stops it after a few minutes, set the app's battery
+  use to *Unrestricted* in Android's settings.
+
+## Support
+Questions or problems: **hello@anonacondacodelab.com**. A description or a screenshot is usually enough; please don't
+send exported files unless you are happy to share them, because they contain your health data. Still Point is free
+software under the GNU GPL v3; the source code is at https://github.com/Anonaconda-CodeLab/still-point

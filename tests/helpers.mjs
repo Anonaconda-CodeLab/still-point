@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later
 // Loads the HRV maths into a sandbox (no browser needed).
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

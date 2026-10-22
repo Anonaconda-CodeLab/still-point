@@ -1,4 +1,5 @@
-/* Still Point · same bones as Lead One ECG, calmer palette. Phone-first single column. */
+/* Still Point · same bones as Lead One ECG, calmer palette. Phone-first single column.
+   Copyright (C) 2026 Anonaconda Code Lab · SPDX-License-Identifier: GPL-3.0-or-later */
 :root{
   --bg:#f1f4f2; --surface:#ffffff; --surface-2:#e7ecea; --fg:#172123; --muted:#5a6869; --line:#dae2df;
   --accent:#2b6f68; --accent-fg:#ffffff; --accent-soft:#dcebe7; --ok:#2c7a55; --warn:#9a5d00; --low:#a5532e;
@@ -332,3 +333,5 @@ a.btn:not(.coffee){color:var(--fg)}
 .save-bar{position:sticky;bottom:0;z-index:15;margin:14px -16px 0;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:8px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);box-shadow:0 -10px 24px -16px rgba(0,0,0,.35)}
 .save-bar .acts-row{justify-content:center}
 .save-note{font-size:13px;font-weight:600;color:var(--muted)}
+/* Android app only (Check for updates) */
+.native-only{display:none} .native .native-only{display:revert}
