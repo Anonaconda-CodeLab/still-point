@@ -122,3 +122,12 @@ jobs:
           gh release create android-test "$APK_NAME-$VER.apk" --prerelease --latest=false --target "$GITHUB_SHA" \
             --title "Android test build $VER (build ${{ github.run_number }})" \
             --notes "Test build of the Android app, made automatically from commit ${GITHUB_SHA::7}. Install over the previous test build; your history is kept."
+      - name: Publish as the android-preview pre-release (a branch built by hand, for testing before it is merged)
+        if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && !inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete android-preview --yes --cleanup-tag || true
+          gh release create android-preview "$APK_NAME-$VER.apk" --prerelease --latest=false --target "$GITHUB_SHA" \
+            --title "Android preview $VER from ${GITHUB_REF_NAME} (build ${{ github.run_number }})" \
+            --notes "Preview of unreleased changes from the ${GITHUB_REF_NAME} branch, commit ${GITHUB_SHA::7}. For testing only."
