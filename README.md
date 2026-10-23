@@ -1,6 +1,6 @@
 # Still Point
 
-**A calm morning HRV check-in, standing test and paced breathing for the Polar H10.**
+**A calm morning HRV check-in, standing test and paced breathing for the Polar H10 or any standard Bluetooth chest strap.**
 Everything runs in your browser: no account, no server, no data leaves your device. A sibling of
 [Lead One ECG](https://leadone.anonacondacodelab.com) from Anonaconda Code Lab.
 
@@ -23,7 +23,10 @@ Everything runs in your browser: no account, no server, no data leaves your devi
 - **Import from Elite HRV** (the .zip export), recalculated from the beat intervals.
 - **Android app**: the same app, with readings and sessions that keep going while the screen is off, and no internet
   permission at all. Or install the web app to your home screen (works offline).
-- **Simulated strap** for trying the app without a Polar H10.
+- **Any standard chest strap**: a Polar H10, or any strap that sends the standard Bluetooth Heart Rate signal with
+  beat-to-beat intervals (Garmin HRM-Dual/Pro, Wahoo TICKR, Coospo, Magene, Decathlon…). Devices that send heart rate
+  only are recognised and can't start a reading.
+- **Simulated strap** for trying the app without a strap.
 - History export/import.
 
 ## Android app
@@ -53,8 +56,9 @@ The whole app is one file, `dist/index.html`. On Netlify, link the repository an
 
 ## Disclaimer
 Still Point is for general wellness, relaxation and training only. It is not a medical device, has not been evaluated by
-any regulator, and must not be used to diagnose, treat, rule out or monitor any condition. Polar and H10 are trademarks
-of Polar Electro Oy; this project is independent and not affiliated with Polar.
+any regulator, and must not be used to diagnose, treat, rule out or monitor any condition. Polar and H10 are trademarks of Polar Electro Oy;
+Garmin, HRM-Dual and HRM-Pro of Garmin Ltd.; Wahoo and TICKR of Wahoo Fitness; Coospo, Magene and Decathlon of their respective owners. This project is independent and not affiliated
+with any of them.
 
 ## Licence
 Copyright © 2026 Anonaconda Code Lab. Free software under the [GNU GPL v3 or later](LICENSE). Embedded fonts (SIL Open

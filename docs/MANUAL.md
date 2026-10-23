@@ -1,6 +1,7 @@
 # Still Point user manual
 
-Still Point turns a Polar H10 chest strap into a calm morning check-in. A short reading each day tracks your heart rate
+Still Point turns a heart-rate chest strap (a Polar H10 or any standard Bluetooth chest strap) into a calm morning
+check-in. A short reading each day tracks your heart rate
 variability (HRV) against your own usual range, an optional standing test adds how your heart rate responds to getting up,
 and a breathing guide helps you slow down. It is free, needs no account, and nothing leaves your device.
 
@@ -19,7 +20,9 @@ heart, lung or blood-pressure condition, check with your doctor before slow-brea
 where you can sit down straight away.
 
 ## What you need
-- A **Polar H10** chest strap (a Polar H9 also works).
+- A **Polar H10** or **any standard Bluetooth chest strap** that sends beat-to-beat intervals: for example a Garmin
+  HRM-Dual or HRM-Pro, Wahoo TICKR, Coospo, Magene or Decathlon strap (a Polar H9 also works). Watches that broadcast
+  heart rate usually don't send the beat-to-beat data HRV needs; Still Point tells you if a device doesn't.
 - **Google Chrome or Chromium on Android.** On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.
 - The app opened from its https address: https://stillpoint.anonacondacodelab.com
 
@@ -36,7 +39,7 @@ The **HRV** tab (the first tab) asks what you'd like to do:
 
 ## The morning reading
 1. Moisten the electrodes, put the strap on and close other apps connected to it.
-2. On the **HRV** tab, tap **Connect H10** and choose your strap.
+2. On the **HRV** tab, tap **Connect strap** and choose your strap from the list.
 3. Choose **Morning reading**, then your **position** and **reading length**. Two minutes is plenty; use the same
    choices every day. The app remembers them.
 4. Tap **Begin**. The first 15 seconds let you settle; if you're already still and ready, tap **Skip settling**. Then
@@ -63,6 +66,8 @@ food or exercise, in the same position. Consistency matters far more than the ex
   slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.
 - **Signal**: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are
   left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.
+  During a reading, the **Signal** box shows the quality of the last few dozen beats (good, fair or poor).
+- **Strap**: the strap's model is saved with each reading (just the model, such as "Polar H10", not its serial number).
 
 ### Your reading, beat by beat
 Every result shows the whole reading as a heart-rate trace with the same teal and lavender shading (the faded strip at
@@ -101,6 +106,10 @@ each reading is compared with your own usual range:
   being run down.
 
 Only the first good reading of each day counts, and each position has its own baseline.
+
+**Changing straps.** Chest straps time each beat slightly differently. If your baseline mixes readings from different
+strap models, Trends says so, because a step in your trend around a switch may be partly the strap. For the fairest
+comparison, use the same strap each morning.
 
 ### Training guidance
 Once your baseline is ready, morning results include a suggestion for today's training, based on the published
@@ -243,8 +252,11 @@ Bluetooth still needs Chrome underneath, which it uses automatically. Your readi
 and the web page share the same storage.
 
 ## Troubleshooting
-- **Connect does nothing or the strap isn't listed:** close Polar Beat, Polar Flow and other apps using the strap, make
-  sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.
+- **Connect does nothing or the strap isn't listed:** close Polar Beat, Polar Flow, Garmin Connect, Wahoo and other apps
+  using the strap, make sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.
+- **"Heart rate only: no beat-to-beat data":** the device sends your heart rate but not the time between beats, so it
+  can't measure HRV. This is common with watches broadcasting heart rate. Breathing sessions still work and show your
+  heart rate; for readings, use a chest strap.
 - **Noisy reading:** moisten the electrodes, tighten the strap a little, keep still and don't talk.
 - **The screen turns off during a session:** the app asks the phone to stay awake; keep the page in the foreground.
   The Android app keeps going with the screen off. If a phone still stops it after a few minutes, set the app's battery
@@ -254,3 +266,5 @@ and the web page share the same storage.
 Questions or problems: **hello@anonacondacodelab.com**. A description or a screenshot is usually enough; please don't
 send exported files unless you are happy to share them, because they contain your health data. Still Point is free
 software under the GNU GPL v3; the source code is at https://github.com/Anonaconda-CodeLab/still-point
+
+Polar and H10 are trademarks of Polar Electro Oy; Garmin, HRM-Dual and HRM-Pro of Garmin Ltd.; Wahoo and TICKR of Wahoo Fitness; Coospo, Magene and Decathlon of their respective owners. Still Point is independent and not affiliated with any of them.

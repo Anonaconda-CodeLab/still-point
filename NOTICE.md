@@ -6,8 +6,10 @@ cleared or approved by any regulator, and must not be used to diagnose, treat or
 [disclaimer in the README](README.md#disclaimer).
 
 ## Trademarks
-Polar and H10 are trademarks of Polar Electro Oy. Still Point is an independent project and is not affiliated with,
-endorsed by or sponsored by Polar Electro. Device names are used only to describe compatibility.
+Polar and H10 are trademarks of Polar Electro Oy. Garmin, HRM-Dual and HRM-Pro are trademarks of Garmin Ltd. or its
+subsidiaries. Wahoo and TICKR are trademarks of Wahoo Fitness. Coospo, Magene and Decathlon are trademarks of their
+respective owners. Still Point is an independent project and is not affiliated with, endorsed by or sponsored by any of
+them. Device names are used only to describe compatibility.
 
 ## Third-party components
 The built app embeds two typefaces, each licensed under the SIL Open Font License 1.1:
@@ -30,5 +32,5 @@ The **Android app** (built from `mobile/`) also includes:
 MIT and Apache-2.0 are compatible with the GNU GPL v3, under which the app as a whole is distributed. Their licence
 texts travel with each package (`mobile/node_modules/*/LICENSE`, and the AndroidX and Kotlin artifacts).
 
-No other third-party code is included. The Bluetooth protocol implementation is written from Polar's publicly documented
-heart-rate service; see also the [Polar BLE SDK](https://github.com/polarofficial/polar-ble-sdk).
+No other third-party code is included. The Bluetooth code follows the Bluetooth SIG's public Heart Rate Service and
+Heart Rate Measurement specification, which the Polar H10 and other standard chest straps implement.

@@ -131,7 +131,9 @@ if (NATIVE) (() => {
       const prefixes = filters.map(f => f.namePrefix).filter(Boolean);
       const services = [...new Set(filters.flatMap(f => f.services || []).map(uuid))];
       let common = prefixes[0] || ''; for (const p of prefixes) while (!p.startsWith(common)) common = common.slice(0, -1);
-      const q = {}; if (common) q.namePrefix = common; if (services.length) q.services = services;
+      // Android filters are combined with AND, so a service filter is used on its own when there is one
+      // (a Polar H10 offers the standard Heart Rate service too); otherwise the common name prefix
+      const q = services.length ? { services } : common ? { namePrefix: common } : {};
       try {
         const d = await nativeCall(BLE, 'requestDevice', q);
         return new Device(d.deviceId, d.name);

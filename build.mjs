@@ -32,7 +32,7 @@ const BUILD = /^[0-9a-f]{40}$/.test(process.env.APP_BUILD_ID || '') ? process.en
 const repo = safeUrl(PROJECT.repoUrl), kofi = /^[A-Za-z0-9_]{1,60}$/.test(PROJECT.kofi) ? 'https://ko-fi.com/' + PROJECT.kofi : '';
 const about = `<div class="card" id="aboutCard">
       <div><div class="dev-name">About ${APP.APP_NAME}</div><div class="dev-meta">Version ${APP.VERSION}${BUILD ? ` · build ${BUILD}` : ''} · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
-      <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro. Not a medical device.</p>
+      <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro or any strap maker. Not a medical device.</p>
       ${contact ? `<p class="dev-meta" style="margin:0">Questions or problems: <a href="mailto:${contact}">${contact}</a>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data.</p>` : ''}
       <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button>${appUrl ? `<a class="btn native-only" href="${appUrl}/android.html?v=${APP.VERSION}" target="_blank" rel="noopener noreferrer">Check for updates</a>` : ''}${repo ? `<a class="btn" href="${repo}" target="_blank" rel="noopener noreferrer">Source code</a>` : ''}${kofi ? `<a class="btn coffee" href="${kofi}" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a>` : ''}</div>
     </div>`;
@@ -91,11 +91,11 @@ const page = `<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2b6f68" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1416" media="(prefers-color-scheme: dark)">
-<meta name="description" content="${APP.APP_NAME}: a free, private morning HRV reading, standing test and calm breathing guide for the Polar H10. No account; runs entirely in your browser.">
+<meta name="description" content="${APP.APP_NAME}: a free, private morning HRV reading, standing test and calm breathing guide for the Polar H10 or any standard chest strap. No account; runs entirely in your browser.">
 ${appUrl ? `<link rel="canonical" href="${appUrl}/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Anonaconda Code Lab">
-<meta property="og:title" content="${APP.APP_NAME}: free HRV and breathing app for the Polar H10">
+<meta property="og:title" content="${APP.APP_NAME}: free HRV and breathing app for the Polar H10 and other chest straps">
 <meta property="og:description" content="A calm morning HRV reading, standing test and breathing guide. Compared with your own baseline. No account; your data stays on your phone.">
 <meta property="og:url" content="${appUrl}/">
 <meta property="og:image" content="https://anonacondacodelab.com/social/og-still-point.jpg">
@@ -134,7 +134,7 @@ if (!fragment) {
     ({ VERSION: APP.VERSION, REPO: repo, CERT: PROJECT.certSha256, APP_NAME: APP.APP_NAME, APP_URL: appUrl || '', FILE_PREFIX: APP.FILE_PREFIX,
        CONTACT_LINE: contact ? ` · Questions or problems: <a href="mailto:${contact}">${contact}</a>` : '' })[k]));
   writeFileSync(join(root, 'dist', 'manifest.webmanifest'), JSON.stringify({
-    name: APP.APP_NAME, short_name: APP.APP_NAME, description: 'Morning HRV, standing test and calm breathing with a Polar H10. Everything stays on your device.',
+    name: APP.APP_NAME, short_name: APP.APP_NAME, description: 'Morning HRV, standing test and calm breathing with a Polar H10 or other chest strap. Everything stays on your device.',
     start_url: './', scope: './', display: 'standalone', orientation: 'portrait', background_color: '#0e1416', theme_color: '#2b6f68',
     icons: [{ src: 'icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
       { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }]

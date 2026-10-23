@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#2b6f68" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1416" media="(prefers-color-scheme: dark)">
-<meta name="description" content="Still Point: a free, private morning HRV reading, standing test and calm breathing guide for the Polar H10. No account; runs entirely in your browser.">
+<meta name="description" content="Still Point: a free, private morning HRV reading, standing test and calm breathing guide for the Polar H10 or any standard chest strap. No account; runs entirely in your browser.">
 <link rel="canonical" href="https://stillpoint.anonacondacodelab.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Anonaconda Code Lab">
-<meta property="og:title" content="Still Point: free HRV and breathing app for the Polar H10">
+<meta property="og:title" content="Still Point: free HRV and breathing app for the Polar H10 and other chest straps">
 <meta property="og:description" content="A calm morning HRV reading, standing test and breathing guide. Compared with your own baseline. No account; your data stays on your phone.">
 <meta property="og:url" content="https://stillpoint.anonacondacodelab.com/">
 <meta property="og:image" content="https://anonacondacodelab.com/social/og-still-point.jpg">
@@ -371,7 +371,7 @@ a.btn:not(.coffee){color:var(--fg)}
       <span>Still Point</span>
     </div>
     <div class="bar-r">
-      <span id="strapPill" class="pill" hidden><i></i><span id="strapPillTxt">H10</span></span>
+      <span id="strapPill" class="pill" hidden><i></i><span id="strapPillTxt">Strap</span></span>
       <button id="btnSettings" class="icon-btn" aria-label="Settings" title="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.5 4.5l1.8 1.8M17.7 17.7l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.5 19.5l1.8-1.8M17.7 6.3l1.8-1.8"/></svg>
       </button>
@@ -402,10 +402,12 @@ a.btn:not(.coffee){color:var(--fg)}
     <div class="card" id="connCard">
       <div class="dev-row">
         <span id="devDot" class="dot"></span>
-        <div><div id="devName" class="dev-name">Polar H10 not connected</div>
+        <div><div id="devName" class="dev-name">Strap not connected</div>
         <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
       </div>
-      <div class="acts-row"><button id="btnConnect" class="btn primary">Connect H10</button></div>
+      <div class="acts-row"><button id="btnConnect" class="btn primary">Connect strap</button></div>
+      <p id="noRRNote" class="note" style="margin:0" hidden></p>
+      <p id="strapHint" class="dev-meta" style="margin:0">A Polar H10 or any standard Bluetooth chest strap (Garmin, Wahoo, Coospo, Magene, Decathlon and others).</p>
       <p class="dev-meta browser-req" style="margin:0"><b>On a phone, use Google Chrome or Chromium on Android.</b> On a computer, use Chrome or Edge. iPhone, iPad, Safari and Firefox can’t connect to the strap.</p>
     </div>
     <div id="envNote" class="note" hidden></div>
@@ -436,7 +438,8 @@ a.btn:not(.coffee){color:var(--fg)}
       <div class="field"><label>Reading length</label><div class="chips" id="lenChips" role="radiogroup" aria-label="Reading length"></div></div>
       <p class="dev-meta" id="setupHint" style="margin:0"></p>
     </div>
-    <div id="setupConn" class="note" hidden><b>Connect your strap first.</b> <button class="linkbtn" id="btnSetupConnect">Connect H10</button> or <button class="linkbtn" id="btnSetupDemo">try a simulated strap</button>.</div>
+    <div id="setupConn" class="note" hidden><b>Connect your strap first.</b> <button class="linkbtn" id="btnSetupConnect">Connect strap</button> or <button class="linkbtn" id="btnSetupDemo">try a simulated strap</button>.</div>
+    <div id="setupNoRR" class="note" hidden></div>
     <button id="btnBegin" class="btn-start" disabled>Begin</button>
     <p class="hint" id="beginHint">Breathe normally and keep still.</p>
   </section>
@@ -585,7 +588,7 @@ a.btn:not(.coffee){color:var(--fg)}
     </div>
     <div class="card" id="aboutCard">
       <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 1.0.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
-      <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro. Not a medical device.</p>
+      <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro or any strap maker. Not a medical device.</p>
       <p class="dev-meta" style="margin:0">Questions or problems: <a href="mailto:hello@anonacondacodelab.com">hello@anonacondacodelab.com</a>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data.</p>
       <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn native-only" href="https://stillpoint.anonacondacodelab.com/android.html?v=1.0.0" target="_blank" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/still-point" target="_blank" rel="noopener noreferrer">Source code</a><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
     </div>
@@ -594,25 +597,25 @@ a.btn:not(.coffee){color:var(--fg)}
   <!-- HELP / USER MANUAL (generated from docs/MANUAL.md) -->
   <section id="scrHelp" class="screen" hidden>
     <div class="acts-row"><button id="btnHelpBack" class="btn">‹ Back</button></div>
-    <article class="manual"><p>Still Point turns a Polar H10 chest strap into a calm morning check-in. A short reading each day tracks your heart rate variability (HRV) against your own usual range, an optional standing test adds how your heart rate responds to getting up, and a breathing guide helps you slow down. It is free, needs no account, and nothing leaves your device.</p>
+    <article class="manual"><p>Still Point turns a heart-rate chest strap (a Polar H10 or any standard Bluetooth chest strap) into a calm morning check-in. A short reading each day tracks your heart rate variability (HRV) against your own usual range, an optional standing test adds how your heart rate responds to getting up, and a breathing guide helps you slow down. It is free, needs no account, and nothing leaves your device.</p>
 <div class="callout"><p><b>For general wellness only. Still Point is not a medical device.</b></p>
 <p>If you feel unwell, with chest pain or pressure, fainting, severe shortness of breath, or a racing or very irregular heartbeat, <b>call your local emergency number now.</b></p></div>
 <h2>Wellness use only</h2>
 <p>Still Point is for <b>general wellness, training and relaxation</b>. It has not been tested, cleared or approved by any medical regulator. Do not use it to diagnose, rule out or monitor any illness, or to make decisions about medicines or treatment. Words such as &quot;usual range&quot; describe how a reading compares with <b>your own</b> earlier readings. They are not medical findings.</p>
 <p>Slow breathing can make some people light-headed. If that happens, stop and breathe normally. If you are pregnant or have a heart, lung or blood-pressure condition, check with your doctor before slow-breathing practice. Do the standing test only where you can sit down straight away.</p>
 <h2>What you need</h2>
-<ul><li>A <b>Polar H10</b> chest strap (a Polar H9 also works).</li><li><b>Google Chrome or Chromium on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
+<ul><li>A <b>Polar H10</b> or <b>any standard Bluetooth chest strap</b> that sends beat-to-beat intervals: for example a Garmin HRM-Dual or HRM-Pro, Wahoo TICKR, Coospo, Magene or Decathlon strap (a Polar H9 also works). Watches that broadcast heart rate usually don't send the beat-to-beat data HRV needs; Still Point tells you if a device doesn't.</li><li><b>Google Chrome or Chromium on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
 <p>No strap to hand? Choose any reading and, where it asks you to connect your strap, tap <b>try a simulated strap</b>. It produces made-up heart beats so you can explore the app. At the end of a reading, tap <b>Discard</b> so made-up readings stay out of your history.</p>
 <h2>Choosing what to do</h2>
 <p>The <b>HRV</b> tab (the first tab) asks what you'd like to do:</p>
 <ul><li><b>Morning reading</b>: the daily check-in that builds your baseline.</li><li><b>Morning reading + standing test</b>: the same reading, then you stand up for 2 minutes (see below).</li><li><b>Spot check</b>: a reading at any other time. It is saved and charted but never changes your baseline, because HRV naturally runs lower later in the day.</li><li><b>Breathe</b>: the breathing guide.</li></ul>
 <h2>The morning reading</h2>
-<ol><li>Moisten the electrodes, put the strap on and close other apps connected to it.</li><li>On the <b>HRV</b> tab, tap <b>Connect H10</b> and choose your strap.</li><li>Choose <b>Morning reading</b>, then your <b>position</b> and <b>reading length</b>. Two minutes is plenty; use the same choices every day. The app remembers them.</li><li>Tap <b>Begin</b>. The first 15 seconds let you settle; if you're already still and ready, tap <b>Skip settling</b>. Then the reading runs. Stay still and breathe normally.</li></ol>
+<ol><li>Moisten the electrodes, put the strap on and close other apps connected to it.</li><li>On the <b>HRV</b> tab, tap <b>Connect strap</b> and choose your strap from the list.</li><li>Choose <b>Morning reading</b>, then your <b>position</b> and <b>reading length</b>. Two minutes is plenty; use the same choices every day. The app remembers them.</li><li>Tap <b>Begin</b>. The first 15 seconds let you settle; if you're already still and ready, tap <b>Skip settling</b>. Then the reading runs. Stay still and breathe normally.</li></ol>
 <p>While it runs you see a live <b>heart-rate trace</b> of the last minute, beat by beat, and your heart rate, your <b>HRV</b> (RMSSD over the last minute), your <b>breathing rate</b> and the signal quality. In the trace, the area above your average is shaded teal where your heart speeds up (usually as you breathe in) and lavender where it slows (as you breathe out), so each breath shows as a gentle wave: taller waves mean higher HRV. Beats left out as glitches appear as small grey rings off the line. In the standing test, a dashed line marks the moment you stood up. HRV and breathing appear after about half a minute and update every couple of seconds. Don't try to steer them: just breathe normally.</p>
 <ol><li>When it finishes, look over the result and tap <b>Save reading</b>, or <b>Discard</b> if something went wrong (you moved, talked, or it wasn't your usual routine).</li></ol>
 <p><b>Get the most from it:</b> read at the same time each morning, soon after waking, after the bathroom and before coffee, food or exercise, in the same position. Consistency matters far more than the exact routine you choose.</p>
 <h3>Your result</h3>
-<ul><li><b>HRV score</b>: lnRMSSD on a 0–100 scale (lnRMSSD × 100 / 6.5). Several apps use a similar scale, but the numbers are not interchangeable between apps.</li><li><b>lnRMSSD</b> and <b>RMSSD</b>: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.</li><li><b>Heart rate</b>: average over the reading.</li><li><b>Breathing</b>: about how many breaths a minute you took (3 to 30). It is estimated from your heart rhythm, which rises and falls slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.</li><li><b>Signal</b>: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline.</li></ul>
+<ul><li><b>HRV score</b>: lnRMSSD on a 0–100 scale (lnRMSSD × 100 / 6.5). Several apps use a similar scale, but the numbers are not interchangeable between apps.</li><li><b>lnRMSSD</b> and <b>RMSSD</b>: the standard short-reading HRV measure, from the strap's own beat-to-beat intervals.</li><li><b>Heart rate</b>: average over the reading.</li><li><b>Breathing</b>: about how many breaths a minute you took (3 to 30). It is estimated from your heart rhythm, which rises and falls slightly with each breath, so it is approximate and may be missing if your rhythm didn't show a clear pattern.</li><li><b>Signal</b>: beats that differ by more than 20 % from their neighbours (a missed or extra beat, or a strap glitch) are left out. If more than 10 % are left out, the reading is marked noisy and does not count towards your baseline. During a reading, the <b>Signal</b> box shows the quality of the last few dozen beats (good, fair or poor).</li><li><b>Strap</b>: the strap's model is saved with each reading (just the model, such as &quot;Polar H10&quot;, not its serial number).</li></ul>
 <h3>Your reading, beat by beat</h3>
 <p>Every result shows the whole reading as a heart-rate trace with the same teal and lavender shading (the faded strip at the start is the settle period). A standing test gets its own trace with the moment you stood up and your peak heart rate marked.</p>
 <p>Next to it, the <b>beat-to-beat pattern</b> plots each beat against the next (a Poincaré plot). A wide, round cloud means a lot of variation from beat to beat (higher HRV); a narrow cloud along the diagonal means less. Grey rings are beats that were left out.</p>
@@ -625,6 +628,7 @@ a.btn:not(.coffee){color:var(--fg)}
 <p>HRV varies a lot between people, so a single number means little. After <b>7 earlier mornings</b> in the same position, each reading is compared with your own usual range:</p>
 <ul><li><b>Usual range</b> is your 60-day average ± half a standard deviation of your daily values.</li><li>Your <b>7-day average</b> is compared with it, because day-to-day values bounce around.</li><li><b>In your usual range</b>: nothing stands out.</li><li><b>Lower than usual</b>: often follows hard training, short or poor sleep, alcohol, illness, travel or stress. An easier day and an early night are sensible.</li><li><b>Higher than usual</b>: usually good recovery; occasionally, with unusual tiredness after very heavy training, a sign of being run down.</li></ul>
 <p>Only the first good reading of each day counts, and each position has its own baseline.</p>
+<p><b>Changing straps.</b> Chest straps time each beat slightly differently. If your baseline mixes readings from different strap models, Trends says so, because a step in your trend around a switch may be partly the strap. For the fairest comparison, use the same strap each morning.</p>
 <h3>Training guidance</h3>
 <p>Once your baseline is ready, morning results include a suggestion for today's training, based on the published HRV-guided training approach (Kiviniemi 2007, Plews 2013):</p>
 <ul><li><b>Go as planned</b>, or <b>Good day for a harder session</b> when you are above your usual range and today isn't low.</li><li><b>Keep it easy</b>: your 7-day average is below your usual range, or today is clearly lower than your usual.</li><li><b>Rest or very light</b>: today is well below your usual <i>and</i> either your week is low or your resting heart rate is 5 or more beats up.</li></ul>
@@ -669,9 +673,10 @@ a.btn:not(.coffee){color:var(--fg)}
 <h2>Install as an app</h2>
 <p>In Chrome on Android, the HRV tab offers <b>Install</b> (also in <b>Settings → Options</b>, or Chrome's menu → <b>Add to Home screen</b> / <b>Install app</b>). It then has its own icon, opens full screen and works without a connection; Bluetooth still needs Chrome underneath, which it uses automatically. Your readings stay the same: the installed app and the web page share the same storage.</p>
 <h2>Troubleshooting</h2>
-<ul><li><b>Connect does nothing or the strap isn't listed:</b> close Polar Beat, Polar Flow and other apps using the strap, make sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.</li><li><b>Noisy reading:</b> moisten the electrodes, tighten the strap a little, keep still and don't talk.</li><li><b>The screen turns off during a session:</b> the app asks the phone to stay awake; keep the page in the foreground. The Android app keeps going with the screen off. If a phone still stops it after a few minutes, set the app's battery use to <i>Unrestricted</i> in Android's settings.</li></ul>
+<ul><li><b>Connect does nothing or the strap isn't listed:</b> close Polar Beat, Polar Flow, Garmin Connect, Wahoo and other apps using the strap, make sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.</li><li><b>&quot;Heart rate only: no beat-to-beat data&quot;:</b> the device sends your heart rate but not the time between beats, so it can't measure HRV. This is common with watches broadcasting heart rate. Breathing sessions still work and show your heart rate; for readings, use a chest strap.</li><li><b>Noisy reading:</b> moisten the electrodes, tighten the strap a little, keep still and don't talk.</li><li><b>The screen turns off during a session:</b> the app asks the phone to stay awake; keep the page in the foreground. The Android app keeps going with the screen off. If a phone still stops it after a few minutes, set the app's battery use to <i>Unrestricted</i> in Android's settings.</li></ul>
 <h2>Support</h2>
-<p>Questions or problems: <b>hello@anonacondacodelab.com</b>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data. Still Point is free software under the GNU GPL v3; the source code is at <a href="https://github.com/Anonaconda-CodeLab/still-point" target="_blank" rel="noopener noreferrer">github.com/Anonaconda-CodeLab/still-point</a></p></article>
+<p>Questions or problems: <b>hello@anonacondacodelab.com</b>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data. Still Point is free software under the GNU GPL v3; the source code is at <a href="https://github.com/Anonaconda-CodeLab/still-point" target="_blank" rel="noopener noreferrer">github.com/Anonaconda-CodeLab/still-point</a></p>
+<p>Polar and H10 are trademarks of Polar Electro Oy; Garmin, HRM-Dual and HRM-Pro of Garmin Ltd.; Wahoo and TICKR of Wahoo Fitness; Coospo, Magene and Decathlon of their respective owners. Still Point is independent and not affiliated with any of them.</p></article>
     <div class="acts-row"><button id="btnHelpBack2" class="btn">‹ Back</button></div>
   </section>
 
@@ -992,6 +997,32 @@ function timeFromName(name) {
 }
 
 /* ---------- simulated strap (demo mode and tests) ---------- */
+/* ---------- standard Bluetooth Heart Rate Measurement (0x2A37) ----------
+   Flags byte: bit 0 = heart rate is 16-bit (else 8-bit); bit 3 = 2 bytes of energy expended follow (skipped);
+   bit 4 = RR intervals follow, each 16-bit in units of 1/1024 s, several per notification possible.
+   Works the same for a Polar H10 and any standard chest strap (Garmin, Wahoo, Coospo, Magene, Decathlon…). */
+function parseHRM(v) {
+  if (!v || v.byteLength < 2) return { hr: 0, rrs: [] };
+  const f = v.getUint8(0); let o = 1;
+  if (f & 1 && v.byteLength < 3) return { hr: 0, rrs: [] };
+  const hr = f & 1 ? v.getUint16(1, true) : v.getUint8(1); o += f & 1 ? 2 : 1;
+  if (f & 8) o += 2;
+  const rrs = [];
+  if (f & 16) for (; o + 1 < v.byteLength; o += 2) { const rr = v.getUint16(o, true) / 1024 * 1000; if (rr > 0) rrs.push(rr); }
+  return { hr, rrs, hasRR: !!(f & 16) };
+}
+/* a strap's model name without the serial number many straps add ("Polar H10 1A2B3C4D" -> "Polar H10"),
+   so readings store the model, not something that identifies the device */
+function strapModel(name) {
+  const n = String(name || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40);
+  return n.replace(/[\s:_#-]*[0-9A-F]{4,}$/i, '').trim() || n;
+}
+/* the straps behind a set of readings (by model), most used first */
+function strapsOf(readings) {
+  const c = new Map(); for (const r of readings) if (r.strap) c.set(r.strap, (c.get(r.strap) || 0) + 1);
+  return [...c.entries()].sort((a, b) => b[1] - a[1]).map(([name, n]) => ({ name, n }));
+}
+
 function makeSim(seed = 7) {
   let s = seed >>> 0;
   const rnd = () => { s += 0x6D2B79F5; let q = s; q = Math.imul(q ^ (q >>> 15), q | 1); q ^= q + Math.imul(q ^ (q >>> 7), q | 61); return ((q ^ (q >>> 14)) >>> 0) / 4294967296; };
@@ -1149,7 +1180,9 @@ if (NATIVE) (() => {
       const prefixes = filters.map(f => f.namePrefix).filter(Boolean);
       const services = [...new Set(filters.flatMap(f => f.services || []).map(uuid))];
       let common = prefixes[0] || ''; for (const p of prefixes) while (!p.startsWith(common)) common = common.slice(0, -1);
-      const q = {}; if (common) q.namePrefix = common; if (services.length) q.services = services;
+      // Android filters are combined with AND, so a service filter is used on its own when there is one
+      // (a Polar H10 offers the standard Heart Rate service too); otherwise the common name prefix
+      const q = services.length ? { services } : common ? { namePrefix: common } : {};
       try {
         const d = await nativeCall(BLE, 'requestDevice', q);
         return new Device(d.deviceId, d.name);
@@ -1302,10 +1335,10 @@ function envCheck() { const n = $('#envNote'), msg = btProblem(); n.innerHTML = 
 function setDev(state, name, meta) {
   const dot = $('#devDot'); dot.className = 'dot' + (state === 'on' ? ' on' : state === 'busy' ? ' busy' : '');
   if (name) $('#devName').textContent = name; if (meta !== undefined) $('#devMeta').textContent = meta;
-  $('#btnConnect').textContent = state === 'on' ? 'Disconnect' : 'Connect H10';
+  $('#btnConnect').textContent = state === 'on' ? 'Disconnect' : 'Connect strap';
   $('#btnConnect').disabled = state === 'busy';
-  const on = state === 'on';
-  $('#strapPill').hidden = !on; $('#strapPillTxt').textContent = S.demo ? 'Simulated' : 'H10' + (S.battery != null ? ' · ' + S.battery + '%' : '');
+  const on = state === 'on'; $('#strapHint').hidden = on;
+  $('#strapPill').hidden = !on; $('#strapPillTxt').textContent = S.demo ? 'Simulated' : (S.strapShort || 'Strap') + (S.battery != null ? ' · ' + S.battery + '%' : '');
   updateBreatheAvail(); if (document.body.dataset.screen === 'scrSetup') setupHint();
 }
 async function connectFlow() {
@@ -1314,14 +1347,17 @@ async function connectFlow() {
   if (S.connected && S.device) { S.manualDisconnect = true; try { S.device.gatt.disconnect(); } catch (e) {} return; }
   if (!('bluetooth' in navigator) || FRAMED) { envCheck(); $('#envNote').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   try {
-    setDev('busy', 'Searching for Polar H10…', 'Select your strap in the list that appears.');
-    S.device = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'Polar H10' }, { namePrefix: 'Polar H9' }], optionalServices: ['heart_rate', 'battery_service'] });
+    setDev('busy', 'Searching for heart-rate straps…', 'Select your strap in the list that appears.');
+    /* a Polar H10 (as before) or any device offering the standard Heart Rate service */
+    S.device = await navigator.bluetooth.requestDevice({ filters: [{ services: ['heart_rate'] }, { namePrefix: 'Polar H10' }, { namePrefix: 'Polar H9' }], optionalServices: ['heart_rate', 'battery_service'] });
     S.device.addEventListener('gattserverdisconnected', onDisconnected);
+    S.strap = strapModel(S.device.name) || 'Heart-rate strap'; S.strapShort = S.strap.replace(/^Polar\s+/i, '');
+    S.rrSeen = false; S.noRR = false; S.hrOnly = 0;
     await gattSetup();
-    setDev('on', S.device.name || 'Polar H10', S.battery != null ? 'Battery ' + S.battery + '%' : 'Connected');
+    setDev('on', S.device.name || S.strap, S.battery != null ? 'Battery ' + S.battery + '%' : 'Connected');
   } catch (e) {
     S.connected = false;
-    setDev('off', 'Polar H10 not connected', e && e.name === 'NotFoundError' ? 'No strap was selected.' : 'Connection failed: ' + (e && e.message ? e.message : e));
+    setDev('off', 'Strap not connected', e && e.name === 'NotFoundError' ? 'No strap was selected.' : 'Connection failed: ' + (e && e.message ? e.message : e));
   }
 }
 async function gattSetup() {
@@ -1333,23 +1369,32 @@ async function gattSetup() {
   try { const b = await server.getPrimaryService('battery_service'); const c = await b.getCharacteristic('battery_level'); S.battery = (await c.readValue()).getUint8(0); } catch (e) {}
 }
 function onHR(ev) {
-  const v = ev.target.value, f = v.getUint8(0); let o = 1;
-  const hr = f & 1 ? v.getUint16(1, true) : v.getUint8(1); o += f & 1 ? 2 : 1; if (f & 8) o += 2;
-  const rrs = []; if (f & 16) for (; o + 1 < v.byteLength; o += 2) rrs.push(v.getUint16(o, true) / 1024 * 1000);
+  const { hr, rrs } = parseHRM(ev.target.value);
+  /* some devices (often watches broadcasting heart rate) send heart rate but never the beat-to-beat intervals HRV needs */
+  if (rrs.length) { if (S.noRR) { S.noRR = false; noRRChanged(); } S.rrSeen = true; S.hrOnly = 0; }
+  else if (hr && !S.rrSeen && ++S.hrOnly === 10) { S.noRR = true; noRRChanged(); }
   beats(rrs, performance.now(), hr);
+}
+const NO_RR = 'This device sends your heart rate but not the time between beats, so it can’t measure HRV. Heart-rate watches often work like this. For readings, use a chest strap such as a Polar H10 or another standard Bluetooth chest strap.';
+function noRRChanged() {
+  if (S.noRR) setDev('on', S.device ? S.device.name || S.strap : S.strap, 'Heart rate only: no beat-to-beat data');
+  else if (S.connected) setDev('on', S.device ? S.device.name || S.strap : S.strap, S.battery != null ? 'Battery ' + S.battery + '%' : 'Connected');
+  const n = $('#noRRNote'); if (n) { n.textContent = NO_RR; n.hidden = !S.noRR; }
+  if (document.body.dataset.screen === 'scrSetup') setupHint();
+  if (S.noRR && S.act && S.act.kind === 'reading') { endActivity(); show('scrSetup'); toast(NO_RR, 9000); }
 }
 async function onDisconnected() {
   S.connected = false; S.hrc = null;
   if (S.act) S.act.list.push([actClock(), -1]);
-  if (S.manualDisconnect) { S.manualDisconnect = false; setDev('off', 'Polar H10 not connected', 'Disconnected.'); return; }
+  if (S.manualDisconnect) { S.manualDisconnect = false; S.noRR = false; noRRChanged(); setDev('off', 'Strap not connected', 'Disconnected.'); return; }
   setDev('busy', 'Reconnecting…', 'The strap dropped out. Trying again.');
   $('#rdConn').textContent = 'Reconnecting…'; $('#rdConn').classList.add('bad');
   for (let i = 0; i < 6 && !S.connected; i++) {
     await new Promise(r => setTimeout(r, 1500 + i * 1000));
     try { await gattSetup(); } catch (e) {}
   }
-  if (S.connected) { setDev('on', S.device.name || 'Polar H10', 'Reconnected'); $('#rdConn').textContent = 'Reconnected'; $('#rdConn').classList.remove('bad'); }
-  else setDev('off', 'Polar H10 not connected', 'Lost the connection. Check the strap is on and moist, then connect again.');
+  if (S.connected) { setDev('on', S.device.name || S.strap, 'Reconnected'); $('#rdConn').textContent = 'Reconnected'; $('#rdConn').classList.remove('bad'); }
+  else setDev('off', 'Strap not connected', 'Lost the connection. Check the strap is on and moist, then connect again.');
 }
 
 /* simulated strap: produces beat intervals that follow the breathing guide and the standing test */
@@ -1363,7 +1408,7 @@ function startDemo() {
   }, 1000);
   setDev('on', 'Simulated strap', 'Made-up heart beats for trying the app. Tap Discard at the end so they stay out of your history.');
 }
-function stopDemo() { clearInterval(S.demoTimer); S.demo = false; S.connected = false; S.sim = null; setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.'); }
+function stopDemo() { clearInterval(S.demoTimer); S.demo = false; S.connected = false; S.sim = null; setDev('off', 'Strap not connected', 'Moisten the electrodes, fit the strap, then connect.'); }
 function simCtx() {
   const a = S.act; if (!a || a.simOff == null) return {};
   const c = {}, off = a.simOff;
@@ -1451,7 +1496,8 @@ function setupHint() {
   const kind = S.setup; if (!kind) return;
   const T = TYPES[kind], c = cfgOf(kind), total = SETTLE + c.len + (T.ortho ? STAND : 0);
   $('#setupHint').textContent = `About ${Math.ceil(total / 60)} min in total, including ${SETTLE} s to settle.` + (kind !== 'spot' ? ' Use the same position and length every morning so readings compare.' : '');
-  $('#setupConn').hidden = S.connected; $('#btnBegin').disabled = !S.connected;
+  $('#setupConn').hidden = S.connected; $('#btnBegin').disabled = !S.connected || !!S.noRR;
+  $('#setupNoRR').textContent = NO_RR; $('#setupNoRR').hidden = !(S.connected && S.noRR);
   $('#beginHint').textContent = T.ortho ? 'Have somewhere to sit down nearby. Stop if you feel faint.' : 'Breathe normally and keep still.';
 }
 $('#btnSetupBack').onclick = () => show('scrToday');
@@ -1467,8 +1513,9 @@ function scoreRing(score, size = 104) {
 /* reading in progress */
 $('#btnBegin').onclick = async () => {
   if (!S.connected || !S.setup) return;
+  if (S.noRR) { toast(NO_RR, 9000); return; }
   const T = TYPES[S.setup], c = cfgOf(S.setup), ortho = T.ortho && c.pos !== 'standing';
-  S.act = { kind: 'reading', t0: performance.now(), wall: Date.now(), list: [], beatClock: null, simOff: S.demo ? S.sim.t : null, type: T.type, pos: c.pos, len: c.len, ortho, standAt: null, phase: '' };
+  S.act = { kind: 'reading', t0: performance.now(), wall: Date.now(), list: [], beatClock: null, simOff: S.demo ? S.sim.t : null, type: T.type, pos: c.pos, len: c.len, ortho, standAt: null, phase: '', strap: S.demo ? 'Simulated strap' : S.strap };
   ensureAudio(); keepAwake(); show('scrReading');
   $('#rdConn').textContent = S.demo ? 'Simulated' : 'Connected'; $('#rdConn').classList.remove('bad');
   clearInterval(S.timer); S.timer = setInterval(tickReading, 250); tickReading();
@@ -1514,6 +1561,7 @@ function endActivity() { clearInterval(S.timer); cancelAnimationFrame(S.raf); S.
 async function finishReading() {
   const a = S.act; endActivity(); chime(392, false); chime(523, false, .3);
   const r = computeReading({ id: 'r' + a.wall, t: a.wall + SETTLE * 1000, type: a.type, pos: a.pos, len: a.len, settle: SETTLE, standAt: a.standAt, rr: a.list });
+  r.strap = a.strap;   // the strap's model (no serial number), so a baseline that mixes straps can be pointed out
   if (r.m.beats < 30 || !fin(r.m.ln)) { toast('Not enough clean beats were received. Check the strap is moist and snug, then try again.', 7000); show('scrSetup'); return; }
   S.pending = r; S.resultBack = 'scrToday'; openResult(r.id);
 }
@@ -1717,7 +1765,7 @@ function bindTags(r) {
 /* several recent readings with beats left out despite a good signal: point to the ECG app, calmly */
 const skipped = x => x && x.m && x.m.quality !== 'poor' && x.m.quality !== 'short' && x.m.beats > 0 && (x.m.fixed >= 3 || x.m.fixed / x.m.beats >= 0.03);
 function leadOneHtml(r) {
-  if (!skipped(r)) return '';
+  if (!skipped(r) || r.strap && !/Polar H10/i.test(r.strap)) return '';   // Lead One records ECG from a Polar H10 only
   const recent = allReadings().filter(x => x.t <= r.t).sort((a, b) => a.t - b.t).slice(-7);
   if (recent.filter(skipped).length < 3) return '';
   return `<div class="leadone"><p>Some beats in your recent readings didn’t fit the usual rhythm. Usually this is the strap: a dry electrode or a little movement. If you’re curious what’s behind it, <b>Lead One ECG</b> can record the actual heart trace from the same strap, so you can see each beat. Disconnect here first; the strap talks to one app at a time.</p>
@@ -1728,7 +1776,7 @@ function resultHtml(r) {
   const b = baseline(baseR(allReadings()), r.pos, r.t), v = verdictOf(b, r), m = r.m;
   const q = { good: 'good signal', fair: 'fair signal', poor: 'noisy signal', short: 'too short' }[m.quality];
   return `<div class="card result-card">
-    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}${r.src === 'elite' ? ' · from Elite HRV' : ''}<br>${POS[r.pos]} · ${lenTxt(r.len)} · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
+    <div class="res-head">${scoreRing(m.score)}<div><h2>${typeLabel(r)}</h2><p>${esc(when(r.t))}${r.src === 'elite' ? ' · from Elite HRV' : r.strap ? ' · ' + esc(r.strap) : ''}<br>${POS[r.pos]} · ${lenTxt(r.len)} · ${q}${fin(m.br) ? ` · breathing about ${Math.round(m.br)}/min` : ''}${m.fixed ? ` · ${m.fixed} beat${m.fixed > 1 ? 's' : ''} left out` : ''}</p></div></div>
     <div class="kpis"><div><b>${f1(m.ln)}</b><span>lnRMSSD</span></div><div><b>${f0(m.rmssd)}<small>ms</small></b><span>RMSSD</span></div><div><b>${f0(m.hr)}<small>bpm</small></b><span>Heart rate</span></div></div>
     <div class="verdict ${v.cls}"><h3><i></i>${esc(v.title)}</h3><p>${esc(v.text)}</p>${r.type === 'spot' ? '' : bandHtml(b, r)}</div>
     ${breathNoteHtml(r)}
@@ -1870,7 +1918,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && S.
 
 function startSession(kind, steps, ratio, patternName, pattern) {
   let t = 0; for (const st of steps) { st.t0 = t; t += st.dur; st.t1 = t; st.pc = st.pc || pacer(st.pace, ratio); }
-  const a = S.act = { kind, t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps, ratio, total: t, simOff: null, lastPhase: '', lastStep: -1, strap: S.connected, patternName, pattern };
+  const a = S.act = { kind, t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps, ratio, total: t, simOff: null, lastPhase: '', lastStep: -1, strap: S.connected && !S.noRR, patternName, pattern };
   /* activity clock starts after the lead-in; the simulated strap aligns to it then */
   a.stepAt = tt => steps.find(st => tt < st.t1) || steps[steps.length - 1];
   a.lungAt = tt => { if (tt < 0) return 0; const st = a.stepAt(tt); return st.pc.at(tt - st.t0).lung; };
@@ -1884,7 +1932,7 @@ function startSession(kind, steps, ratio, patternName, pattern) {
 /* open session: no guide; heart rate and HRV tracked quietly */
 function startMeditation(min) {
   const total = min ? min * 60 : Infinity;
-  S.act = { kind: 'meditation', t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps: [], total, simOff: null, strap: S.connected, lastMin: 0 };
+  S.act = { kind: 'meditation', t0: performance.now() + LEAD * 1000, wall: Date.now() + LEAD * 1000, list: [], beatClock: null, steps: [], total, simOff: null, strap: S.connected && !S.noRR, lastMin: 0 };
   ensureAudio(); keepAwake(); show('scrSession');
   $('#sessHrBox').hidden = !S.connected; $('#sessSwing').textContent = '';
   $('#sessStep').textContent = 'Open session';
@@ -2083,6 +2131,13 @@ function effectsHtml(R, pos) {
   }
   return `<div class="card commentary"><div class="dev-name">What affects you</div>${body}<p class="fine">These are patterns in your own readings, not proof of cause: days often differ in more than one way.</p></div>`;
 }
+/* readings in the baseline window taken with different strap models: say so, gently */
+function strapMixHtml(pos, now) {
+  const f = getSettings().baseFrom, win = S.readings.filter(r => r.pos === pos && r.type !== 'spot' && r.t > now - 60 * DAY && (!f || r.t >= f));
+  const straps = strapsOf(win.filter(r => r.strap !== 'Simulated strap'));
+  if (straps.length < 2) return '';
+  return `<div class="card"><div class="dev-name">Readings from different straps</div><p class="dev-meta" style="margin:0">Your baseline mixes readings from ${straps.map(s => `${esc(s.name)} (${s.n})`).join(', ')}. Chest straps time each beat slightly differently, so a step in your trend around a switch may be partly the strap. For the fairest comparison, use the same strap each morning.</p></div>`;
+}
 /* after moving from Elite HRV: compare the first Still Point mornings with the last Elite ones */
 function firstPerDay(list) { const by = new Map(); for (const r of list.slice().sort((a, b) => a.t - b.t)) { const k = dayKey(r.t); if (!by.has(k)) by.set(k, r); } return [...by.values()]; }
 function switchHtml(pos) {
@@ -2112,7 +2167,7 @@ function renderTrends() {
   if (tr.length) html += `<div class="card commentary"><div class="dev-name">What your trend shows</div>${ins.ready
     ? `<ul class="ins">${ins.items.map(i => `<li class="${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></li>`).join('')}</ul>`
     : `<p class="dev-meta" style="margin:0">Comments start on your ${ins.need}th morning reading in this position: ${ins.have} of ${ins.need} so far. A few need more: about two weeks of mornings for “drifting”, 5 readings in a week for “up-and-down”, and 6 standing tests for the standing trend.</p>`}<p class="fine">${DISCLAIMER}</p></div>`;
-  html += switchHtml(pos);
+  html += switchHtml(pos) + strapMixHtml(pos, now);
   html += weekHtml(now, 'This week');
   html += effectsHtml(R, pos);
   if (!tr.length) html = `<div class="card"><p class="dev-meta" style="margin:0">No ${POS[pos].toLowerCase()} readings in the last 60 days yet. Take one each morning and your trend appears here.</p></div>`;
@@ -2221,7 +2276,7 @@ $('#btnEliteGo').onclick = async () => {
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
   const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 1.0.0', exported: new Date().toISOString(), settings: s,
-    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, sleepAids: r.sleepAids, src: r.src })), sessions: S.sessions };
+    readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, sleepAids: r.sleepAids, strap: r.strap, src: r.src })), sessions: S.sessions };
   const d = new Date(); downloadFile(`StillPoint-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };
 $('#btnSaveInfo').onclick = e => { e.stopPropagation(); const p = $('#saveInfo'), open = p.hidden; p.hidden = !open; $('#btnSaveInfo').setAttribute('aria-expanded', String(open)); };
@@ -2230,7 +2285,7 @@ $('#btnExport2').onclick = () => $('#btnExport').click();
 /* one row per reading and per breathing session, for spreadsheets */
 function csvText() {
   const cols = ['kind', 'date', 'time', 'type', 'position', 'minutes', 'score', 'lnRMSSD', 'RMSSD_ms', 'SDNN_ms', 'heart_rate_bpm', 'breaths_per_min', 'signal', 'beats_left_out',
-    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'pattern', 'swing_bpm', 'resonance_pace', 'tags', 'sleep_score', 'hours_slept', 'sleep_aids'];
+    'stand_peak_bpm', 'stand_rise_bpm', 'stand_settle_bpm', 'ratio_30_15', 'pace_per_min', 'pattern', 'swing_bpm', 'resonance_pace', 'tags', 'sleep_score', 'hours_slept', 'sleep_aids', 'strap'];
   const n = (v, d = 1) => fin(v) ? v.toFixed(d) : '', q = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   const dt = t => { const d = new Date(t); return [`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, `${pad2(d.getHours())}:${pad2(d.getMinutes())}`]; };
   const rows = [cols.join(',')], items = [...S.readings.map(r => ({ t: r.t, r })), ...S.sessions.map(x => ({ t: x.t, x }))].sort((a, b) => a.t - b.t);
@@ -2238,7 +2293,7 @@ function csvText() {
     const o = {}; [o.date, o.time] = dt(it.t);
     if (it.r) {
       const r = it.r, m = r.m; Object.assign(o, { kind: 'reading', type: typeLabel(r), position: POS[r.pos], minutes: n(r.len / 60), score: m.score ?? '', lnRMSSD: n(m.ln, 2), RMSSD_ms: n(m.rmssd), SDNN_ms: n(m.sdnn),
-        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '', tags: (r.tags || []).map(k => TAG_LABEL[k] || k).join('; '), sleep_score: r.sleepScore ?? '', hours_slept: r.sleepHours ?? '', sleep_aids: (r.sleepAids || []).join('; ') });
+        heart_rate_bpm: n(m.hr), breaths_per_min: n(m.br), signal: m.quality, beats_left_out: m.fixed ?? '', tags: (r.tags || []).map(k => TAG_LABEL[k] || k).join('; '), sleep_score: r.sleepScore ?? '', hours_slept: r.sleepHours ?? '', sleep_aids: (r.sleepAids || []).join('; '), strap: r.strap || (r.src === 'elite' ? 'Elite HRV' : '') });
       if (r.o) Object.assign(o, { stand_peak_bpm: n(r.o.peakHr), stand_rise_bpm: n(r.o.rise), stand_settle_bpm: n(r.o.settle), ratio_30_15: n(r.o.ratio3015, 2) });
     } else {
       const x = it.x; Object.assign(o, { kind: x.kind === 'resonance' ? 'resonance test' : x.kind === 'meditation' ? 'open session' : 'breathing', minutes: n(x.dur / 60), pace_per_min: x.pace ?? '', pattern: x.patternName || '', resonance_pace: x.best ?? '' });
@@ -2262,6 +2317,7 @@ function cleanReadingIn(r) {
   if (fin(r.sleepScore) && r.sleepScore >= 0 && r.sleepScore <= 100) o.sleepScore = Math.round(r.sleepScore);
   if (fin(r.sleepHours) && r.sleepHours >= 0 && r.sleepHours <= 24) o.sleepHours = r.sleepHours;
   if (Array.isArray(r.sleepAids)) { const a = cleanAids(r.sleepAids.filter(x => typeof x === 'string')); if (a.length) o.sleepAids = a; }
+  if (typeof r.strap === 'string' && r.strap.trim()) o.strap = strapModel(r.strap);
   if (r.src === 'elite') o.src = 'elite';
   return o;
 }
@@ -2308,7 +2364,7 @@ for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => { i
   try { if ('serviceWorker' in navigator && !FRAMED && !NATIVE && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}
   await loadAll();
   envCheck();
-  setDev('off', 'Polar H10 not connected', 'Moisten the electrodes, fit the strap, then connect.');
+  setDev('off', 'Strap not connected', 'Moisten the electrodes, fit the strap, then connect.');
   const start = acked() ? 'scrToday' : 'scrAck';
   if (location.hash === '#manual') { S.helpBack = start; show('scrHelp'); } else show(start);
   window.addEventListener('hashchange', () => { if (location.hash === '#manual' && !S.act) { S.helpBack = document.body.dataset.screen || start; show('scrHelp'); } });

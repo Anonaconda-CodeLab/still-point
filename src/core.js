@@ -302,6 +302,32 @@ function timeFromName(name) {
 }
 
 /* ---------- simulated strap (demo mode and tests) ---------- */
+/* ---------- standard Bluetooth Heart Rate Measurement (0x2A37) ----------
+   Flags byte: bit 0 = heart rate is 16-bit (else 8-bit); bit 3 = 2 bytes of energy expended follow (skipped);
+   bit 4 = RR intervals follow, each 16-bit in units of 1/1024 s, several per notification possible.
+   Works the same for a Polar H10 and any standard chest strap (Garmin, Wahoo, Coospo, Magene, Decathlon…). */
+function parseHRM(v) {
+  if (!v || v.byteLength < 2) return { hr: 0, rrs: [] };
+  const f = v.getUint8(0); let o = 1;
+  if (f & 1 && v.byteLength < 3) return { hr: 0, rrs: [] };
+  const hr = f & 1 ? v.getUint16(1, true) : v.getUint8(1); o += f & 1 ? 2 : 1;
+  if (f & 8) o += 2;
+  const rrs = [];
+  if (f & 16) for (; o + 1 < v.byteLength; o += 2) { const rr = v.getUint16(o, true) / 1024 * 1000; if (rr > 0) rrs.push(rr); }
+  return { hr, rrs, hasRR: !!(f & 16) };
+}
+/* a strap's model name without the serial number many straps add ("Polar H10 1A2B3C4D" -> "Polar H10"),
+   so readings store the model, not something that identifies the device */
+function strapModel(name) {
+  const n = String(name || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 40);
+  return n.replace(/[\s:_#-]*[0-9A-F]{4,}$/i, '').trim() || n;
+}
+/* the straps behind a set of readings (by model), most used first */
+function strapsOf(readings) {
+  const c = new Map(); for (const r of readings) if (r.strap) c.set(r.strap, (c.get(r.strap) || 0) + 1);
+  return [...c.entries()].sort((a, b) => b[1] - a[1]).map(([name, n]) => ({ name, n }));
+}
+
 function makeSim(seed = 7) {
   let s = seed >>> 0;
   const rnd = () => { s += 0x6D2B79F5; let q = s; q = Math.imul(q ^ (q >>> 15), q | 1); q ^= q + Math.imul(q ^ (q >>> 7), q | 61); return ((q ^ (q >>> 14)) >>> 0) / 4294967296; };

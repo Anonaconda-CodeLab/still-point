@@ -1,6 +1,10 @@
 # Changelog
 
 ## 1.0.0
+- **Any standard Bluetooth chest strap** now works, not just the Polar H10: Garmin HRM-Dual/Pro, Wahoo TICKR, Coospo,
+  Magene, Decathlon and others that send beat-to-beat intervals. Devices that send heart rate only (often watches) are
+  recognised and can't start a reading. Each reading saves the strap's model, and Trends points out when your baseline
+  mixes straps.
 - First public release, with the **Android app** alongside the web app. Download, install guide and checksums:
   https://stillpoint.anonacondacodelab.com/android.html
 - Android app: readings, breathing sessions and chimes keep going with the screen off; no internet permission at all;

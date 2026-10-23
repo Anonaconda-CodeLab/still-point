@@ -172,3 +172,28 @@ test('slow, deep breathing is not mistaken for artifacts, and 4 breaths a minute
   assert.ok(h.beats - h.good <= 2, 'left out ' + (h.beats - h.good));
   const br = A.breathRate(C, 0, 200); assert.ok(br && Math.abs(br - 4) <= 0.6, 'breathing ' + br);
 });
+
+test('standard heart-rate notifications: 8/16-bit heart rate, energy field skipped, several RR intervals', () => {
+  const dv = bytes => new DataView(Uint8Array.from(bytes).buffer);
+  // 8-bit HR 60, RR 1024 (= 1000 ms)
+  let p = A.parseHRM(dv([0x10, 60, 0x00, 0x04]));
+  assert.equal(p.hr, 60); assert.deepEqual([...p.rrs], [1000]);
+  // 16-bit HR 72, energy expended (2 bytes) then two RR values 800/1024 and 850/1024 s
+  p = A.parseHRM(dv([0x19, 72, 0, 0x10, 0x27, 0x20, 0x03, 0x52, 0x03]));
+  assert.equal(p.hr, 72); assert.equal(p.rrs.length, 2);
+  assert.ok(Math.abs(p.rrs[0] - 800 / 1.024) < 1e-9 && Math.abs(p.rrs[1] - 850 / 1.024) < 1e-9);
+  // heart rate only (a watch broadcasting heart rate): no RR
+  p = A.parseHRM(dv([0x00, 65])); assert.equal(p.hr, 65); assert.equal(p.rrs.length, 0); assert.equal(p.hasRR, false);
+  // a truncated notification doesn't throw
+  assert.equal(A.parseHRM(dv([0x01, 5])).hr, 0);
+});
+
+test('strap names: serial numbers are dropped, models counted', () => {
+  assert.equal(A.strapModel('Polar H10 1A2B3C4D'), 'Polar H10');
+  assert.equal(A.strapModel('HRM-Dual:123456'), 'HRM-Dual');
+  assert.equal(A.strapModel('TICKR 2E4F'), 'TICKR');
+  assert.equal(A.strapModel('HRM-Pro'), 'HRM-Pro');
+  assert.equal(A.strapModel('Coospo H6'), 'Coospo H6');
+  const s = A.strapsOf([{ strap: 'Polar H10' }, { strap: 'TICKR' }, { strap: 'Polar H10' }, {}]);
+  assert.deepEqual([...s.map(x => x.name + x.n)], ['Polar H102', 'TICKR1']);
+});

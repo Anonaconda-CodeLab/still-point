@@ -9,8 +9,9 @@
   the user's own device. Nothing is uploaded. Data leaves the device only when the user exports a file.
 - **Untrusted input.** History imports and Elite HRV exports are validated (types, ranges, lengths, known values) and all
   text is HTML-escaped before display.
-- **Bluetooth scope.** The app requests only devices named `Polar H10`/`Polar H9`, and only the heart-rate and battery
-  services.
+- **Bluetooth scope.** The app requests only devices offering the standard Heart Rate service (or named `Polar H10`/
+  `Polar H9`), and only the heart-rate and battery services. Readings store the strap's model name, not its serial
+  number.
 
 ## Android app
 - **No internet permission.** It is removed in the manifest, and every build fails if it reappears. The app cannot
