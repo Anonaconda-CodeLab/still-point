@@ -5,6 +5,8 @@
   Magene, Decathlon and others that send beat-to-beat intervals. Devices that send heart rate only (often watches) are
   recognised and can't start a reading. Each reading saves the strap's model, and Trends points out when your baseline
   mixes straps.
+- Breathing chimes are scheduled a moment ahead and allow for the phone's audio delay, so each one sounds exactly as the
+  circle turns; chimes still due when you end a session early are cancelled.
 - First public release, with the **Android app** alongside the web app. Download, install guide and checksums:
   https://stillpoint.anonacondacodelab.com/android.html
 - Android app: readings, breathing sessions and chimes keep going with the screen off; no internet permission at all;

@@ -358,7 +358,13 @@ $('#btnSkipSettle').onclick = () => {
   a.t0 -= left * 1000; if (a.simOff != null) a.simOff -= left; a.beatClock = null; tickReading();
 };
 $('#btnCancelReading').onclick = () => { endActivity(); show('scrSetup'); toast('Reading cancelled.'); };
-function endActivity() { clearInterval(S.timer); cancelAnimationFrame(S.raf); S.act = null; letSleep(); $('#dim').hidden = true; }
+/* chimes and buzzes already scheduled for the next seconds of a session must not play after it ends */
+function cancelCues() {
+  const now = S.audio ? S.audio.currentTime : 0;
+  for (const x of S.cues || []) if (x.t > now + 0.01) { try { x.o.stop(); x.o.disconnect(); } catch (e) {} }
+  S.cues = []; for (const id of S.cueTimers || []) clearTimeout(id); S.cueTimers = [];
+}
+function endActivity() { cancelCues(); clearInterval(S.timer); cancelAnimationFrame(S.raf); S.act = null; letSleep(); $('#dim').hidden = true; }
 async function finishReading() {
   const a = S.act; endActivity(); chime(392, false); chime(523, false, .3);
   const r = computeReading({ id: 'r' + a.wall, t: a.wall + SETTLE * 1000, type: a.type, pos: a.pos, len: a.len, settle: SETTLE, standAt: a.standAt, rr: a.list });
@@ -639,6 +645,7 @@ function chime(freq, force, at = 0) {
       const o = a.createOscillator(), e = a.createGain(); o.type = 'sine'; o.frequency.value = freq * k;
       e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(g, t + 0.06); e.gain.exponentialRampToValueAtTime(0.0001, t + 2.6 - i * 0.4);
       o.connect(e); e.connect(out); o.start(t); o.stop(t + 2.7);
+      if (!force) { S.cues = (S.cues || []).filter(x => x.t > a.currentTime - 5); S.cues.push({ o, t }); }   // session cues can be cancelled if the session ends early
     });
   } catch (e) {}
 }
@@ -694,27 +701,31 @@ $('#btnBreathe').onclick = () => {
 $('#btnResonance').onclick = () => { if (!S.connected) return; const k = rhythmOf(getSettings()); startSession('resonance', RESONANCE_STEPS.map(p => ({ pace: p, dur: 120 })), k === '0.5' ? 0.5 : 0.4); };
 $('#btnMeditate').onclick = () => { if (!acked()) return show('scrAck'); startMeditation(getSettings().medLen); };
 
-/* With the screen off (Android app) animation frames stop and timers slow down, so the session is advanced from a
-   timer instead and the breathing cues for the next few seconds are scheduled ahead on the audio clock. */
-function hiddenTick() {
-  const a = S.act; if (!a || a.kind === 'reading' || !document.hidden) return;
-  cancelAnimationFrame(S.raf); frame();
-  if (S.act !== a || !a.steps.length) return;
-  const el = actClock(), from = Math.max(el, a.cuedUntil || 0, 0), to = Math.min(el + 3, a.total), s = getSettings();
+/* Breathing cues are scheduled a couple of seconds ahead on the audio clock, and earlier by the device's output latency
+   (often 0.1 to 0.3 s on Android), so each chime is heard exactly as the circle turns, also with the screen off. With the
+   screen off, animation frames stop and timers slow down, so the session is then advanced from this timer too. */
+const audioLag = () => { const a = S.audio; return a ? Math.min(0.5, Math.max(0, (a.outputLatency || 0) + (a.baseLatency || 0))) : 0; };
+function cueAhead() {
+  const a = S.act; if (!a || a.kind === 'reading') return;
+  if (document.hidden) { cancelAnimationFrame(S.raf); frame(); }
+  if (S.act !== a || !a.steps || !a.steps.length) return;
+  const el = actClock(), from = Math.max(el, a.cuedUntil || 0, 0), to = Math.min(el + 2, a.total), s = getSettings(), lag = audioLag();
   if (to <= from) return;
-  let prev = null;
+  const keyAt = t => { const st = a.stepAt(t), p = st.pc.at(t - st.t0); return [a.steps.indexOf(st) + p.phase + p.cycle, p.phase]; };
+  let prev = a.cueKey !== undefined ? a.cueKey : 'lead-in';   // the first breath in, right after the lead-in, gets its chime too
   for (let t = from; t < to; t += 0.05) {
-    const st = a.stepAt(t), p = st.pc.at(t - st.t0), key = a.steps.indexOf(st) + p.phase + p.cycle;
-    if (prev !== null && key !== prev) {
+    const [key, phase] = keyAt(t);
+    if (key !== prev) {
       const at = t - el;
-      if (p.phase === 'in') { chime(396, false, at); if (s.vibe) setTimeout(() => vibrate(50), at * 1000); }
-      else if (p.phase === 'out') { chime(297, false, at); if (s.vibe) setTimeout(() => vibrate([20, 60, 20]), at * 1000); }
+      if (phase === 'in') { chime(396, false, Math.max(0, at - lag)); if (s.vibe) (S.cueTimers = S.cueTimers || []).push(setTimeout(() => vibrate(50), at * 1000)); }
+      else if (phase === 'out') { chime(297, false, Math.max(0, at - lag)); if (s.vibe) (S.cueTimers = S.cueTimers || []).push(setTimeout(() => vibrate([20, 60, 20]), at * 1000)); }
+      else if (s.vibe) (S.cueTimers = S.cueTimers || []).push(setTimeout(() => vibrate(15), at * 1000));
     }
     prev = key;
   }
-  a.cuedUntil = to;
+  a.cueKey = prev; a.cuedUntil = to;
 }
-if (NATIVE) setInterval(hiddenTick, 500);
+setInterval(cueAhead, 250);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && S.act && S.act.kind !== 'reading') { cancelAnimationFrame(S.raf); S.raf = requestAnimationFrame(frame); } });
 
 function startSession(kind, steps, ratio, patternName, pattern) {
@@ -766,7 +777,7 @@ function frame() {
   const key = si + p.phase + p.cycle;
   if (key !== a.lastPhase) {
     a.lastPhase = key; word.textContent = p.phase === 'in' ? 'Breathe in' : p.phase === 'out' ? 'Breathe out' : 'Hold';
-    if (el < (a.cuedUntil || 0)) { /* this cue was already scheduled while the screen was off */ }
+    if (el < (a.cuedUntil || 0)) { /* this cue was already scheduled ahead on the audio clock (cueAhead) */ }
     else if (p.phase === 'in') { chime(396, false); if (getSettings().vibe) vibrate(50); } else if (p.phase === 'out') { chime(297, false); if (getSettings().vibe) vibrate([20, 60, 20]); } else if (getSettings().vibe) vibrate(15);
   }
   cnt.textContent = Math.ceil(p.left);
