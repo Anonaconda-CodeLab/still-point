@@ -121,6 +121,12 @@ public class AppPlugin extends Plugin {
     private TextToSpeech tts;
     private boolean ttsReady = false;
 
+    private static Bundle fullVolume() {
+        Bundle b = new Bundle();
+        b.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+        return b;
+    }
+
     @PluginMethod
     public void speak(PluginCall call) {
         final String text = call.getString("text", "");
@@ -129,11 +135,12 @@ public class AppPlugin extends Plugin {
                 ttsReady = status == TextToSpeech.SUCCESS;
                 if (ttsReady) {
                     tts.setLanguage(Locale.getDefault());
-                    tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
-                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "cue");
+                    // media usage: the voice follows the media volume, like the beeps (sonification used the much quieter system volume)
+                    tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, fullVolume(), "cue");
                 }
             });
-        } else if (ttsReady) tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "cue");
+        } else if (ttsReady) tts.speak(text, TextToSpeech.QUEUE_FLUSH, fullVolume(), "cue");
         call.resolve();
     }
 
