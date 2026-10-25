@@ -402,8 +402,8 @@ a.btn:not(.coffee){color:var(--fg)}
     <div class="card" id="connCard">
       <div class="dev-row">
         <span id="devDot" class="dot"></span>
-        <div><div id="devName" class="dev-name">Strap not connected</div>
-        <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
+        <div><div id="devName" translate="no" class="dev-name">Strap not connected</div>
+        <div id="devMeta" translate="no" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
       </div>
       <div class="acts-row"><button id="btnConnect" class="btn primary">Connect strap</button></div>
       <p id="noRRNote" class="note" style="margin:0" hidden></p>
@@ -423,10 +423,10 @@ a.btn:not(.coffee){color:var(--fg)}
         <span class="ch-t"><b>Breathe</b><small>Slow, guided breathing from 3 to 7 breaths a minute.</small></span></button>
     </div>
 
-    <div id="weekCard" class="card" hidden></div>
-    <div id="todayResult" class="card result-card" hidden></div>
+    <div id="weekCard" translate="no" class="card" hidden></div>
+    <div id="todayResult" translate="no" class="card result-card" hidden></div>
     <div id="installCard" class="banner-soft" hidden><div><b>Install Still Point</b><span class="dev-meta">Add it to your home screen: its own icon, full screen, and it opens without a connection.</span></div><div class="acts-row"><button class="btn primary" id="btnInstall">Install</button><button class="btn ghost" id="btnInstallLater">Not now</button></div></div>
-    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>
+    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>
   </section>
 
   <!-- READING SETUP -->
@@ -458,17 +458,17 @@ a.btn:not(.coffee){color:var(--fg)}
     <button id="btnSkipSettle" class="btn" style="align-self:center">Skip settling</button>
     <div class="wave-card"><div class="wave-top"><span>Heart rate, last minute</span><span class="wave-key"><span><i class="k-up"></i>speeding up</span><span><i class="k-down"></i>slowing down</span></span></div><canvas id="rdWave" aria-label="Live heart rate, beat by beat"></canvas></div>
     <div class="vitals v4">
-      <div><span id="rdHR">--</span><label>Heart rate</label></div>
-      <div><span id="rdHRV">--</span><label>HRV · RMSSD ms</label></div>
-      <div><span id="rdBr">--</span><label>Breaths / min</label></div>
-      <div><span id="rdQual">—</span><label>Signal</label></div>
+      <div><span id="rdHR" translate="no">--</span><label>Heart rate</label></div>
+      <div><span id="rdHRV" translate="no">--</span><label>HRV · RMSSD ms</label></div>
+      <div><span id="rdBr" translate="no">--</span><label>Breaths / min</label></div>
+      <div><span id="rdQual" translate="no">—</span><label>Signal</label></div>
     </div>
     <button id="btnCancelReading" class="btn ghost" style="align-self:center">Cancel reading</button>
   </section>
 
   <!-- READING RESULT -->
   <section id="scrResult" class="screen" hidden>
-    <div id="resultBody"></div>
+    <div id="resultBody" translate="no"></div>
     <div class="save-bar" id="resActsNew"><span class="save-note">This reading isn’t saved yet</span><div class="acts-row"><button id="btnResSave" class="btn primary">Save reading</button><button id="btnResDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="resActsSaved" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultFile" class="btn">Save to file</button><button id="btnResultDelete" class="btn ghost">Delete</button></div>
   </section>
@@ -525,7 +525,7 @@ a.btn:not(.coffee){color:var(--fg)}
       <div class="orb-txt"><div id="orbWord">Breathe in</div><div id="orbCount" class="orb-count"></div></div>
     </div>
     <div class="sess-hr" id="sessHrBox" hidden>
-      <div class="sess-hr-top"><span><b id="sessHR">--</b> bpm</span><span id="sessSwing" class="dev-meta"></span></div>
+      <div class="sess-hr-top"><span><b id="sessHR">--</b> bpm</span><span id="sessSwing" translate="no" class="dev-meta"></span></div>
       <canvas id="hrCanvas" aria-label="Heart rate following your breathing"></canvas>
     </div>
     <div class="sess-acts"><button id="btnSessDim" class="btn ghost">Dim</button><button id="btnSessEnd" class="btn">End</button></div>
@@ -533,7 +533,7 @@ a.btn:not(.coffee){color:var(--fg)}
 
   <!-- BREATHING DONE -->
   <section id="scrSessDone" class="screen" hidden>
-    <div id="sessDoneBody"></div>
+    <div id="sessDoneBody" translate="no"></div>
     <div class="save-bar" id="sessActsNew"><span class="save-note">This session isn’t saved yet</span><div class="acts-row"><button id="btnSessSave" class="btn primary">Save session</button><button id="btnSessDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="sessActsSaved" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button><button id="btnSessDelete" class="btn ghost">Delete</button></div>
   </section>
@@ -542,20 +542,20 @@ a.btn:not(.coffee){color:var(--fg)}
   <section id="scrTrends" class="screen tab-screen" hidden>
     <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
     <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
-    <div id="trendBody"></div>
+    <div id="trendBody" translate="no"></div>
     <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="info-btn" id="btnSaveInfo" aria-label="What do Save all and Spreadsheet do?" aria-expanded="false" aria-controls="saveInfo">i</button><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
     <div class="info-pop" id="saveInfo" role="note" hidden>
       <p><b>Save all</b> saves every reading and breathing session, including every beat interval, in one backup file. Keep it somewhere safe, or use <i>Import history</i> in Settings to bring everything onto another phone.</p>
       <p><b>Spreadsheet</b> saves a summary with one row per reading or session (date, score, HRV, heart rate, breathing and more) as a CSV file for Excel or Google Sheets. It can’t be imported back, so keep the backup file too.</p>
     </div>
-    <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
+    <ul id="histList" translate="no" class="past"><li class="empty">No readings yet.</li></ul>
   </section>
 
   <!-- SETTINGS -->
   <section id="scrSettings" class="screen" hidden>
     <div class="acts-row"><button id="btnSettingsBack" class="btn">‹ Back</button></div>
     <div class="card">
-      <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount">No readings yet.</div></div>
+      <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount" translate="no">No readings yet.</div></div>
       <p class="dev-meta" style="margin:0">Saved readings and breathing sessions are stored only in this browser. <b>Save all to file</b> puts everything, with every beat interval, in one backup file you can import on another phone. <b>Save as spreadsheet</b> gives one row per reading and session (CSV) for Excel, Google Sheets or other HRV tools.</p>
       <div class="acts-row">
         <button id="btnExport" class="btn">Save all to file</button>
@@ -569,10 +569,10 @@ a.btn:not(.coffee){color:var(--fg)}
       <div><div class="dev-name">Import from Elite HRV</div><div class="dev-meta">Bring your Elite HRV history across so your baseline is ready straight away.</div></div>
       <p class="dev-meta" style="margin:0">In Elite HRV, request your data export; you get a link by email. Download it, then choose the downloaded .zip file here, or the .txt files inside it (one per reading).</p>
       <div class="acts-row"><button id="btnElite" class="btn">Choose Elite HRV files</button><button id="btnEliteRemove" class="btn ghost" hidden>Remove all Elite HRV imports</button></div>
-      <p class="dev-meta" id="eliteCount" style="margin:0"></p>
+      <p class="dev-meta" id="eliteCount" translate="no" style="margin:0"></p>
       <input type="file" id="eliteIn" accept=".zip,.txt,application/zip,text/plain,application/octet-stream" multiple hidden>
       <div id="elitePanel" class="elite-panel" hidden>
-        <p id="eliteFound" style="margin:0"></p>
+        <p id="eliteFound" translate="no" style="margin:0"></p>
         <div class="field"><label>These readings were taken</label><div class="chips" id="elitePos" role="radiogroup" aria-label="Position"></div></div>
         <label class="switch"><input type="checkbox" id="eliteMorning" checked><span class="track"><span class="knob"></span></span><span>Readings before 11:00 count as morning readings <small class="opt">later ones, and any longer than 5½ minutes, become spot checks</small></span></label>
         <div class="acts-row"><button id="btnEliteGo" class="btn primary">Import</button><button id="btnEliteCancel" class="btn ghost">Cancel</button></div>
@@ -590,7 +590,7 @@ a.btn:not(.coffee){color:var(--fg)}
       <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 1.0.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
       <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro or any strap maker. Not a medical device.</p>
       <p class="dev-meta" style="margin:0">Questions or problems: <a href="mailto:hello@anonacondacodelab.com">hello@anonacondacodelab.com</a>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data.</p>
-      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn native-only" href="https://stillpoint.anonacondacodelab.com/android.html?v=1.0.0" target="_blank" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/still-point" target="_blank" rel="noopener noreferrer">Source code</a><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" target="_blank" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
+      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn native-only" href="https://stillpoint.anonacondacodelab.com/android.html?v=1.0.0" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/still-point" rel="noopener noreferrer">Source code</a><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
     </div>
   </section>
 
@@ -604,7 +604,7 @@ a.btn:not(.coffee){color:var(--fg)}
 <p>Still Point is for <b>general wellness, training and relaxation</b>. It has not been tested, cleared or approved by any medical regulator. Do not use it to diagnose, rule out or monitor any illness, or to make decisions about medicines or treatment. Words such as &quot;usual range&quot; describe how a reading compares with <b>your own</b> earlier readings. They are not medical findings.</p>
 <p>Slow breathing can make some people light-headed. If that happens, stop and breathe normally. If you are pregnant or have a heart, lung or blood-pressure condition, check with your doctor before slow-breathing practice. Do the standing test only where you can sit down straight away.</p>
 <h2>What you need</h2>
-<ul><li>A <b>Polar H10</b> or <b>any standard Bluetooth chest strap</b> that sends beat-to-beat intervals: for example a Garmin HRM-Dual or HRM-Pro, Wahoo TICKR, Coospo, Magene or Decathlon strap (a Polar H9 also works). Watches that broadcast heart rate usually don't send the beat-to-beat data HRV needs; Still Point tells you if a device doesn't.</li><li><b>Google Chrome or Chromium on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
+<ul><li>A <b>Polar H10</b> or <b>any standard Bluetooth chest strap</b> that sends beat-to-beat intervals: for example a Garmin HRM-Dual or HRM-Pro, Wahoo TICKR, Coospo, Magene or Decathlon strap (a Polar H9 also works). Watches that broadcast heart rate usually don't send the beat-to-beat data HRV needs; Still Point tells you if a device doesn't.</li><li><b>Google Chrome or Chromium on Android.</b> On a computer, Chrome or Edge. iPhone, iPad, Safari and Firefox cannot connect to the strap.</li><li>The app opened from its https address: <a href="https://stillpoint.anonacondacodelab.com" rel="noopener noreferrer">stillpoint.anonacondacodelab.com</a></li></ul>
 <p>No strap to hand? Choose any reading and, where it asks you to connect your strap, tap <b>try a simulated strap</b>. It produces made-up heart beats so you can explore the app. At the end of a reading, tap <b>Discard</b> so made-up readings stay out of your history.</p>
 <h2>Choosing what to do</h2>
 <p>The <b>HRV</b> tab (the first tab) asks what you'd like to do:</p>
@@ -667,6 +667,9 @@ a.btn:not(.coffee){color:var(--fg)}
 <p>In Elite HRV, request your data export; you'll get a download link by email. Download the .zip, then in <b>Settings → Import from Elite HRV</b> choose that .zip (or the .txt files inside it, one per reading). Pick the position you took your readings in.</p>
 <ul><li>Readings before 11:00 that last up to 5½ minutes become morning readings; later or longer ones (open readings, meditations, guided breathing) become spot checks, so they can't skew your baseline. You can switch this off.</li><li>Everything is recalculated from the beat intervals with Still Point's own method, so old and new readings are measured the same way and your baseline and trends are ready straight away. On clean readings the score matches Elite's HRV number; on readings with a skipped or extra beat it can differ by a few points, because the two apps handle such beats differently.</li><li>Imported readings are marked <b>from Elite HRV</b>. If a batch went in with the wrong position, <b>Remove all Elite HRV imports</b> in the same place takes them out again. Elite's tags and moods aren't in the export, so they don't come across.</li></ul>
 <p><b>After you switch</b>, once you have 5 mornings in Still Point, Trends compares them with your last Elite HRV mornings. If they line up, it says so. If there's a clear step, usually from a change in routine such as breathing, position, time or reading length, it explains this and offers <b>Start my baseline from</b> the switch date, so the old routine doesn't skew your baseline. Old readings stay in your history and charts, and you can go back to your full history at any time.</p>
+<h2>Privacy</h2>
+<p>Still Point has no server, no account and no tracking, and never sends your readings anywhere. Opening the web app is an ordinary visit to its website, like any page; after that, the only thing it ever asks that website for is a newer copy of itself, so updates arrive. The Android app has no internet permission at all.</p>
+<p><b>Translating the page.</b> If you use your browser's <i>Translate</i> button, the browser sends the page's text to its translation service (Google's, in Chrome). Still Point marks your readings, sessions, history and strap details so the translator leaves them out: only the app's own buttons and labels are translated.</p>
 <h2>The Android app</h2>
 <p>Still Point is also an Android app: the same app, with readings, breathing sessions and chimes that keep going while the screen is off, and <b>no internet permission</b> at all. It is not on Google Play; download it from <b>stillpoint.anonacondacodelab.com/android.html</b>, which also explains how to install it and how to check that it's the official build. When you start your first reading or session, it asks to show a notification: that notification is what keeps it running with the screen off.</p>
 <p>The Android app keeps its own history, separate from the web app. To move your history across, use <b>Settings → Save all to file</b> in the web app, then <b>Import history</b> in the Android app. Updates install over the old version and keep your history; <b>Settings → About → Check for updates</b> tells you when a new version is out.</p>
@@ -675,7 +678,7 @@ a.btn:not(.coffee){color:var(--fg)}
 <h2>Troubleshooting</h2>
 <ul><li><b>Connect does nothing or the strap isn't listed:</b> close Polar Beat, Polar Flow, Garmin Connect, Wahoo and other apps using the strap, make sure the strap is worn and moist (it sleeps when dry), and that Bluetooth and location are on.</li><li><b>&quot;Heart rate only: no beat-to-beat data&quot;:</b> the device sends your heart rate but not the time between beats, so it can't measure HRV. This is common with watches broadcasting heart rate. Breathing sessions still work and show your heart rate; for readings, use a chest strap.</li><li><b>Noisy reading:</b> moisten the electrodes, tighten the strap a little, keep still and don't talk.</li><li><b>The screen turns off during a session:</b> the app asks the phone to stay awake; keep the page in the foreground. The Android app keeps going with the screen off. If a phone still stops it after a few minutes, set the app's battery use to <i>Unrestricted</i> in Android's settings.</li></ul>
 <h2>Support</h2>
-<p>Questions or problems: <b>hello@anonacondacodelab.com</b>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data. Still Point is free software under the GNU GPL v3; the source code is at <a href="https://github.com/Anonaconda-CodeLab/still-point" target="_blank" rel="noopener noreferrer">github.com/Anonaconda-CodeLab/still-point</a></p>
+<p>Questions or problems: <b>hello@anonacondacodelab.com</b>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data. Still Point is free software under the GNU GPL v3; the source code is at <a href="https://github.com/Anonaconda-CodeLab/still-point" rel="noopener noreferrer">github.com/Anonaconda-CodeLab/still-point</a></p>
 <p>Polar and H10 are trademarks of Polar Electro Oy; Garmin, HRM-Dual and HRM-Pro of Garmin Ltd.; Wahoo and TICKR of Wahoo Fitness; Coospo, Magene and Decathlon of their respective owners. Still Point is independent and not affiliated with any of them.</p></article>
     <div class="acts-row"><button id="btnHelpBack2" class="btn">‹ Back</button></div>
   </section>
@@ -1775,7 +1778,7 @@ function leadOneHtml(r) {
   const recent = allReadings().filter(x => x.t <= r.t).sort((a, b) => a.t - b.t).slice(-7);
   if (recent.filter(skipped).length < 3) return '';
   return `<div class="leadone"><p>Some beats in your recent readings didn’t fit the usual rhythm. Usually this is the strap: a dry electrode or a little movement. If you’re curious what’s behind it, <b>Lead One ECG</b> can record the actual heart trace from the same strap, so you can see each beat. Disconnect here first; the strap talks to one app at a time.</p>
-    <a class="btn" href="https://leadone.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">Open Lead One ECG</a>
+    <a class="btn" href="https://leadone.anonacondacodelab.com" rel="noopener noreferrer">Open Lead One ECG</a>
     <p class="fine">Occasional early or skipped beats are common and usually harmless. If you have symptoms such as palpitations, dizziness or chest discomfort, see a doctor.</p></div>`;
 }
 function resultHtml(r) {

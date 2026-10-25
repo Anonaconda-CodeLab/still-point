@@ -37,8 +37,8 @@
     <div class="card" id="connCard">
       <div class="dev-row">
         <span id="devDot" class="dot"></span>
-        <div><div id="devName" class="dev-name">Strap not connected</div>
-        <div id="devMeta" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
+        <div><div id="devName" translate="no" class="dev-name">Strap not connected</div>
+        <div id="devMeta" translate="no" class="dev-meta">Moisten the electrodes, fit the strap, then connect.</div></div>
       </div>
       <div class="acts-row"><button id="btnConnect" class="btn primary">Connect strap</button></div>
       <p id="noRRNote" class="note" style="margin:0" hidden></p>
@@ -58,8 +58,8 @@
         <span class="ch-t"><b>Breathe</b><small>Slow, guided breathing from 3 to 7 breaths a minute.</small></span></button>
     </div>
 
-    <div id="weekCard" class="card" hidden></div>
-    <div id="todayResult" class="card result-card" hidden></div>
+    <div id="weekCard" translate="no" class="card" hidden></div>
+    <div id="todayResult" translate="no" class="card result-card" hidden></div>
     <div id="installCard" class="banner-soft" hidden><div><b>Install {{APP_NAME}}</b><span class="dev-meta">Add it to your home screen: its own icon, full screen, and it opens without a connection.</span></div><div class="acts-row"><button class="btn primary" id="btnInstall">Install</button><button class="btn ghost" id="btnInstallLater">Not now</button></div></div>
     {{THANKS}}
   </section>
@@ -93,17 +93,17 @@
     <button id="btnSkipSettle" class="btn" style="align-self:center">Skip settling</button>
     <div class="wave-card"><div class="wave-top"><span>Heart rate, last minute</span><span class="wave-key"><span><i class="k-up"></i>speeding up</span><span><i class="k-down"></i>slowing down</span></span></div><canvas id="rdWave" aria-label="Live heart rate, beat by beat"></canvas></div>
     <div class="vitals v4">
-      <div><span id="rdHR">--</span><label>Heart rate</label></div>
-      <div><span id="rdHRV">--</span><label>HRV · RMSSD ms</label></div>
-      <div><span id="rdBr">--</span><label>Breaths / min</label></div>
-      <div><span id="rdQual">—</span><label>Signal</label></div>
+      <div><span id="rdHR" translate="no">--</span><label>Heart rate</label></div>
+      <div><span id="rdHRV" translate="no">--</span><label>HRV · RMSSD ms</label></div>
+      <div><span id="rdBr" translate="no">--</span><label>Breaths / min</label></div>
+      <div><span id="rdQual" translate="no">—</span><label>Signal</label></div>
     </div>
     <button id="btnCancelReading" class="btn ghost" style="align-self:center">Cancel reading</button>
   </section>
 
   <!-- READING RESULT -->
   <section id="scrResult" class="screen" hidden>
-    <div id="resultBody"></div>
+    <div id="resultBody" translate="no"></div>
     <div class="save-bar" id="resActsNew"><span class="save-note">This reading isn’t saved yet</span><div class="acts-row"><button id="btnResSave" class="btn primary">Save reading</button><button id="btnResDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="resActsSaved" style="justify-content:center"><button id="btnResultDone" class="btn primary">Done</button><button id="btnResultFile" class="btn">Save to file</button><button id="btnResultDelete" class="btn ghost">Delete</button></div>
   </section>
@@ -160,7 +160,7 @@
       <div class="orb-txt"><div id="orbWord">Breathe in</div><div id="orbCount" class="orb-count"></div></div>
     </div>
     <div class="sess-hr" id="sessHrBox" hidden>
-      <div class="sess-hr-top"><span><b id="sessHR">--</b> bpm</span><span id="sessSwing" class="dev-meta"></span></div>
+      <div class="sess-hr-top"><span><b id="sessHR">--</b> bpm</span><span id="sessSwing" translate="no" class="dev-meta"></span></div>
       <canvas id="hrCanvas" aria-label="Heart rate following your breathing"></canvas>
     </div>
     <div class="sess-acts"><button id="btnSessDim" class="btn ghost">Dim</button><button id="btnSessEnd" class="btn">End</button></div>
@@ -168,7 +168,7 @@
 
   <!-- BREATHING DONE -->
   <section id="scrSessDone" class="screen" hidden>
-    <div id="sessDoneBody"></div>
+    <div id="sessDoneBody" translate="no"></div>
     <div class="save-bar" id="sessActsNew"><span class="save-note">This session isn’t saved yet</span><div class="acts-row"><button id="btnSessSave" class="btn primary">Save session</button><button id="btnSessDiscard" class="btn ghost">Discard</button></div></div>
     <div class="acts-row" id="sessActsSaved" style="justify-content:center"><button id="btnSessDone" class="btn primary">Done</button><button id="btnSessDelete" class="btn ghost">Delete</button></div>
   </section>
@@ -177,20 +177,20 @@
   <section id="scrTrends" class="screen tab-screen" hidden>
     <div class="greet"><h1>Trends</h1><p class="dev-meta" id="trendSub">Your morning readings over the last 60 days.</p></div>
     <div class="seg" id="trendPos" role="radiogroup" aria-label="Position"></div>
-    <div id="trendBody"></div>
+    <div id="trendBody" translate="no"></div>
     <div class="sec-row"><h2 class="sec">History</h2><span class="mini-acts"><button class="info-btn" id="btnSaveInfo" aria-label="What do Save all and Spreadsheet do?" aria-expanded="false" aria-controls="saveInfo">i</button><button class="btn" id="btnExport2">Save all</button><button class="btn" id="btnCsv2">Spreadsheet</button></span></div>
     <div class="info-pop" id="saveInfo" role="note" hidden>
       <p><b>Save all</b> saves every reading and breathing session, including every beat interval, in one backup file. Keep it somewhere safe, or use <i>Import history</i> in Settings to bring everything onto another phone.</p>
       <p><b>Spreadsheet</b> saves a summary with one row per reading or session (date, score, HRV, heart rate, breathing and more) as a CSV file for Excel or Google Sheets. It can’t be imported back, so keep the backup file too.</p>
     </div>
-    <ul id="histList" class="past"><li class="empty">No readings yet.</li></ul>
+    <ul id="histList" translate="no" class="past"><li class="empty">No readings yet.</li></ul>
   </section>
 
   <!-- SETTINGS -->
   <section id="scrSettings" class="screen" hidden>
     <div class="acts-row"><button id="btnSettingsBack" class="btn">‹ Back</button></div>
     <div class="card">
-      <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount">No readings yet.</div></div>
+      <div><div class="dev-name">Your data</div><div class="dev-meta" id="histCount" translate="no">No readings yet.</div></div>
       <p class="dev-meta" style="margin:0">Saved readings and breathing sessions are stored only in this browser. <b>Save all to file</b> puts everything, with every beat interval, in one backup file you can import on another phone. <b>Save as spreadsheet</b> gives one row per reading and session (CSV) for Excel, Google Sheets or other HRV tools.</p>
       <div class="acts-row">
         <button id="btnExport" class="btn">Save all to file</button>
@@ -204,10 +204,10 @@
       <div><div class="dev-name">Import from Elite HRV</div><div class="dev-meta">Bring your Elite HRV history across so your baseline is ready straight away.</div></div>
       <p class="dev-meta" style="margin:0">In Elite HRV, request your data export; you get a link by email. Download it, then choose the downloaded .zip file here, or the .txt files inside it (one per reading).</p>
       <div class="acts-row"><button id="btnElite" class="btn">Choose Elite HRV files</button><button id="btnEliteRemove" class="btn ghost" hidden>Remove all Elite HRV imports</button></div>
-      <p class="dev-meta" id="eliteCount" style="margin:0"></p>
+      <p class="dev-meta" id="eliteCount" translate="no" style="margin:0"></p>
       <input type="file" id="eliteIn" accept=".zip,.txt,application/zip,text/plain,application/octet-stream" multiple hidden>
       <div id="elitePanel" class="elite-panel" hidden>
-        <p id="eliteFound" style="margin:0"></p>
+        <p id="eliteFound" translate="no" style="margin:0"></p>
         <div class="field"><label>These readings were taken</label><div class="chips" id="elitePos" role="radiogroup" aria-label="Position"></div></div>
         <label class="switch"><input type="checkbox" id="eliteMorning" checked><span class="track"><span class="knob"></span></span><span>Readings before 11:00 count as morning readings <small class="opt">later ones, and any longer than 5½ minutes, become spot checks</small></span></label>
         <div class="acts-row"><button id="btnEliteGo" class="btn primary">Import</button><button id="btnEliteCancel" class="btn ghost">Cancel</button></div>

@@ -234,6 +234,11 @@ If they line up, it says so. If there's a clear step, usually from a change in r
 or reading length, it explains this and offers **Start my baseline from** the switch date, so the old routine doesn't
 skew your baseline. Old readings stay in your history and charts, and you can go back to your full history at any time.
 
+## Privacy
+Still Point has no server, no account and no tracking, and never sends your readings anywhere. Opening the web app is an ordinary visit to its website, like any page; after that, the only thing it ever asks that website for is a newer copy of itself, so updates arrive. The Android app has no internet permission at all.
+
+**Translating the page.** If you use your browser's *Translate* button, the browser sends the page's text to its translation service (Google's, in Chrome). Still Point marks your readings, sessions, history and strap details so the translator leaves them out: only the app's own buttons and labels are translated.
+
 ## The Android app
 Still Point is also an Android app: the same app, with readings, breathing sessions and chimes that keep going while
 the screen is off, and **no internet permission** at all. It is not on Google Play; download it from

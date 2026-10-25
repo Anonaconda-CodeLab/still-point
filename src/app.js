@@ -576,7 +576,7 @@ function leadOneHtml(r) {
   const recent = allReadings().filter(x => x.t <= r.t).sort((a, b) => a.t - b.t).slice(-7);
   if (recent.filter(skipped).length < 3) return '';
   return `<div class="leadone"><p>Some beats in your recent readings didn’t fit the usual rhythm. Usually this is the strap: a dry electrode or a little movement. If you’re curious what’s behind it, <b>Lead One ECG</b> can record the actual heart trace from the same strap, so you can see each beat. Disconnect here first; the strap talks to one app at a time.</p>
-    <a class="btn" href="https://leadone.anonacondacodelab.com" target="_blank" rel="noopener noreferrer">Open Lead One ECG</a>
+    <a class="btn" href="https://leadone.anonacondacodelab.com" rel="noopener noreferrer">Open Lead One ECG</a>
     <p class="fine">Occasional early or skipped beats are common and usually harmless. If you have symptoms such as palpitations, dizziness or chest discomfort, see a doctor.</p></div>`;
 }
 function resultHtml(r) {
