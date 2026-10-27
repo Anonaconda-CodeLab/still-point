@@ -41,12 +41,12 @@ jobs:
         working-directory: mobile
         run: npm ci && npx cap sync android
       - name: Signing key
-        # One studio key for all apps. Accepts the STUDIO_* or LEADONE_* secrets (shared with Lead One) or the older RELEASE_* names;
-        # the key alias is read from the keystore itself unless a *_KEY_ALIAS secret is set.
+        # One studio key for all apps: the LEADONE_* secrets (named after the first app that used it). The key alias is
+        # read from the keystore itself.
         env:
-          KS: ${{ secrets.STUDIO_KEYSTORE_B64 || secrets.LEADONE_KEYSTORE_B64 || secrets.RELEASE_KEYSTORE_B64 }}
-          PW: ${{ secrets.STUDIO_KEYSTORE_PASSWORD || secrets.LEADONE_KEYSTORE_PASSWORD || secrets.RELEASE_KEYSTORE_PASSWORD }}
-          ALIAS: ${{ secrets.STUDIO_KEY_ALIAS || secrets.RELEASE_KEY_ALIAS }}
+          KS: ${{ secrets.LEADONE_KEYSTORE_B64 }}
+          PW: ${{ secrets.LEADONE_KEYSTORE_PASSWORD }}
+          ALIAS: ''
         run: |
           if [ -z "$KS" ]; then echo "No signing key in the secrets."; exit 0; fi
           echo "$KS" | tr -d ' \r\n' | base64 -d > "$RUNNER_TEMP/release.jks"
@@ -59,8 +59,8 @@ jobs:
       - name: Build the APK
         working-directory: mobile/android
         env:
-          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.STUDIO_KEYSTORE_PASSWORD || secrets.LEADONE_KEYSTORE_PASSWORD || secrets.RELEASE_KEYSTORE_PASSWORD }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.STUDIO_KEYSTORE_PASSWORD || secrets.LEADONE_KEYSTORE_PASSWORD || secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.LEADONE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.LEADONE_KEYSTORE_PASSWORD }}
         run: |
           chmod +x gradlew
           set +e; ./gradlew --no-daemon assembleRelease 2>&1 | tee "$RUNNER_TEMP/gradle.log"; status=${PIPESTATUS[0]}; set -e

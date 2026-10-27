@@ -426,7 +426,7 @@ a.btn:not(.coffee){color:var(--fg)}
     <div id="weekCard" translate="no" class="card" hidden></div>
     <div id="todayResult" translate="no" class="card result-card" hidden></div>
     <div id="installCard" class="banner-soft" hidden><div><b>Install Still Point</b><span class="dev-meta">Add it to your home screen: its own icon, full screen, and it opens without a connection.</span></div><div class="acts-row"><button class="btn primary" id="btnInstall">Install</button><button class="btn ghost" id="btnInstallLater">Not now</button></div></div>
-    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a>. This is a one-man show, and your support encourages me to keep going. Thank you!</p>
+    <p class="thanks">If you find this app useful, please consider <a href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">a small donation</a>. It's made by one person, with no ads or tracking. Thank you!</p>
   </section>
 
   <!-- READING SETUP -->
@@ -587,10 +587,10 @@ a.btn:not(.coffee){color:var(--fg)}
       <button id="btnHelp" class="row-btn"><span>User manual<small>Readings, the standing test, breathing and your baseline</small></span><span class="chev">›</span></button>
     </div>
     <div class="card" id="aboutCard">
-      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 1.0.0 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
+      <div><div class="dev-name">About Still Point</div><div class="dev-meta">Version 1.0.1 · free and open source (GNU GPL v3) · runs entirely on this device</div></div>
       <p class="dev-meta" style="margin:0">© 2026 Anonaconda Code Lab. You may use, share and modify this app under the GNU General Public License v3 or later; it comes with no warranty. Independent software, not affiliated with Polar Electro or any strap maker. Not a medical device.</p>
       <p class="dev-meta" style="margin:0">Questions or problems: <a href="mailto:hello@anonacondacodelab.com">hello@anonacondacodelab.com</a>. A description or a screenshot is usually enough; please don't send exported files unless you are happy to share them, because they contain your health data.</p>
-      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn native-only" href="https://stillpoint.anonacondacodelab.com/android.html?v=1.0.0" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/still-point" rel="noopener noreferrer">Source code</a><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
+      <div class="acts-row"><button id="btnHelp2" class="btn">User manual</button><a class="btn native-only" href="https://stillpoint.anonacondacodelab.com/android.html?v=1.0.1" rel="noopener noreferrer">Check for updates</a><a class="btn" href="https://github.com/Anonaconda-CodeLab/still-point" rel="noopener noreferrer">Source code</a><a class="btn coffee" href="https://ko-fi.com/anonacondacodelab" rel="noopener noreferrer">☕ Support on Ko-fi</a></div>
     </div>
   </section>
 
@@ -1826,7 +1826,7 @@ $('#btnResultDone').onclick = resBack;
 $('#btnResultFile').onclick = () => {
   const r = S.readings.find(x => x.id === S.openId); if (!r) return;
   const d = new Date(r.t), stamp = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}`;
-  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 1.0.0', exported: new Date().toISOString(),
+  downloadFile(`StillPoint-reading-${stamp}.json`, JSON.stringify({ format: READING_FORMAT, version: 1, app: 'Still Point 1.0.1', exported: new Date().toISOString(),
     reading: { id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr }, summary: { score: r.m.score, lnRMSSD: r.m.ln, rmssd: r.m.rmssd, hr: r.m.hr, quality: r.m.quality, standing: r.o } }));
 };
 $('#btnResultDelete').onclick = async function () {
@@ -2289,7 +2289,7 @@ $('#btnEliteGo').onclick = async () => {
 };
 function refreshCount() { $('#histCount').textContent = `${S.readings.length} reading${S.readings.length === 1 ? '' : 's'} · ${S.sessions.length} breathing session${S.sessions.length === 1 ? '' : 's'}`; }
 $('#btnExport').onclick = () => {
-  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 1.0.0', exported: new Date().toISOString(), settings: s,
+  const s = getSettings(), out = { format: HIST_FORMAT, version: 1, app: 'Still Point 1.0.1', exported: new Date().toISOString(), settings: s,
     readings: S.readings.map(r => ({ id: r.id, t: r.t, type: r.type || 'morning', pos: r.pos, len: r.len, settle: r.settle, standAt: r.standAt, rr: r.rr, tags: r.tags, sleepScore: r.sleepScore, sleepHours: r.sleepHours, sleepAids: r.sleepAids, strap: r.strap, src: r.src })), sessions: S.sessions };
   const d = new Date(); downloadFile(`StillPoint-history-${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}.json`, JSON.stringify(out));
 };

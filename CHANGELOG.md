@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1
+- Links open in the same tab.
+- Readings, sessions, trends and strap details are marked so a browser's Translate button leaves them out
+  (translation sends the page's text to an online service). New Privacy section in the manual, which also
+  explains that opening the web app is an ordinary website visit.
+- **New home:** the website moved to Cloudflare Pages, with stricter security headers: no other site can show
+  the app inside its own page, and browsers always use HTTPS.
+- Shorter thank-you line at the bottom of the start screen.
+
 ## 1.0.0
 - **Any standard Bluetooth chest strap** now works, not just the Polar H10: Garmin HRM-Dual/Pro, Wahoo TICKR, Coospo,
   Magene, Decathlon and others that send beat-to-beat intervals. Devices that send heart rate only (often watches) are

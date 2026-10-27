@@ -1,4 +1,4 @@
-# The website is dist/ (built and committed). Skip the deploy (it costs credits) when nothing in dist/ changed,
-# for example when only the Android app, tests or notes changed. Other settings stay as set on Netlify.
+# This site has moved to Cloudflare Pages. Netlify skips every build (exit 0 = skip, which costs no credits) until the
+# old Netlify project is deleted; then this file can go.
 [build]
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- dist"
+  ignore = "exit 0"

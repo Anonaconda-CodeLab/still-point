@@ -51,8 +51,9 @@ the top of `build.mjs`. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
 Methods are documented in [docs/MANUAL.md](docs/MANUAL.md), which is also built into the app.
 
 ## Hosting
-The whole app is one file, `dist/index.html`. On Netlify, link the repository and set the publish directory to `dist`
-(no build command).
+The whole app is one file, `dist/index.html`, plus its offline helper `dist/sw.js`. The official site is on Cloudflare
+Pages: link the repository and set the publish directory to `dist` (no build command). `dist/_headers` holds the HTTP
+headers.
 
 ## Disclaimer
 Still Point is for general wellness, relaxation and training only. It is not a medical device, has not been evaluated by
